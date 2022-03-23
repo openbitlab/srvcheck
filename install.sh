@@ -24,6 +24,16 @@ print_help () {
      --validator <address> validator address to monitor (tendermint chain)"
 }
 
+install_monitor () {
+    wget -q http://<url>/$1.sh
+    chmod +x substrate_monitor.sh
+    sed -i -e "s/^name=.*/name=$name/" $1.sh
+    sed -i -e "s/^chat_id=.*/chat_id=$chat_id/" $1.sh
+    sed -i -e "s/^api_token=.*/api_token=$api_token/" $1.sh
+    sed -i -e "s/^mount_point=.*/mount_point=$mount_point/" $1.sh
+    #### Parse optionals flags
+}
+
 POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -88,13 +98,6 @@ then
     exit 1
 fi
 
-wget http://localhost:8000/substrate_monitor.sh
-chmod +x substrate_monitor.sh
-sed -i -e "s/^name=.*/name=$name/" substrate_monitor.sh
-sed -i -e "s/^chat_id=.*/chat_id=$chat_id/" substrate_monitor.sh
-sed -i -e "s/^api_token=.*/api_token=$api_token/" substrate_monitor.sh
-sed -i -e "s/^mount_point=.*/mount_point=$mount_point/" substrate_monitor.sh
-
 rpc_substrate=$(lsof -i:$rpc_substrate_port)
 #check if we're dealing with a substrate based blockchain
 if [ ! -z "$rpc_substrate" ]
@@ -105,8 +108,7 @@ then
     then
         echo "It's in a docker container"
     else
-	echo "It works!"
-    	#wget substrate_monitor.sh
+    	install_monitor "substrate_monitor"
     fi
 fi
 
@@ -120,7 +122,6 @@ then
     then
         echo "It's in a docker container"
     else
-	echo "It works!"
-    	#wget tendermint_monitor.sh
+    	install_monitor "tendermint_monitor"
     fi
 fi
