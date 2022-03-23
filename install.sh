@@ -13,7 +13,14 @@ check_docker () {
 }
 
 print_help () {
-    echo "Help output"
+    echo "Usage: install [options...]
+     --active_set <active_set_number> number of the validators in the active set (tendermint chain)
+ -b  --block-time <time> expected block time
+ -c  --chat-id <id> telegram chat id where the alerts will be sent
+     --min-space <space> minimum space that the specified mount point should have
+ -m  --mount <fs> file system where the disk to be monitored (space available) is mounted
+ -t  --token-api <token> telegram token api
+     --validator <address> validator address to monitor (tendermint chain)"
 }
 
 POSITIONAL_ARGS=()
@@ -25,17 +32,17 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    -b|--blocktime)
+    -b|--block-time)
       block_time="$2"
       shift # past argument
       shift # past value
       ;;
-    -c|--chat)
+    -c|--chat-id)
       chat_id="$2"
       shift # past argument
       shift # past value
       ;;
-    -t|--token)
+    -t|--token-api)
       api_token="$2"
       shift # past argument
       shift # past value
@@ -45,17 +52,17 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    -v|--validator)
+    --validator)
       val_address="$2"
       shift # past argument
       shift # past value
       ;;
-    -s|--space)
+    --min-space)
       min_space="$2"
       shift # past argument
       shift # past value
       ;;  
-    -n|--validators-set)
+    --active-set)
       active_set="$2"
       shift # past argument
       shift # past value
@@ -82,10 +89,10 @@ fi
 
 wget http://localhost:8000/substrate_monitor.sh
 chmod +x substrate_monitor.sh
-sed -i.bak -e "s/^name=.*/name=$name/" substrate_monitor.sh
-sed -i.bak -e "s/^chat_id=.*/chat_id=$chat_id/" substrate_monitor.sh
-sed -i.bak -e "s/^api_token=.*/api_token=$api_token/" substrate_monitor.sh
-sed -i.bak -e "s/^mount_point=.*/mount_point=$mount_point/" substrate_monitor.sh
+sed -i -e "s/^name=.*/name=$name/" substrate_monitor.sh
+sed -i -e "s/^chat_id=.*/chat_id=$chat_id/" substrate_monitor.sh
+sed -i -e "s/^api_token=.*/api_token=$api_token/" substrate_monitor.sh
+sed -i -e "s/^mount_point=.*/mount_point=$mount_point/" substrate_monitor.sh
 
 rpc_substrate=$(lsof -i:$rpc_substrate_port)
 #check if we're dealing with a substrate based blockchain
