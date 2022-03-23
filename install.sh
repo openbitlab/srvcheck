@@ -14,12 +14,13 @@ check_docker () {
 
 print_help () {
     echo "Usage: install [options...]
-     --active_set <active_set_number> number of the validators in the active set (tendermint chain)
- -b  --block-time <time> expected block time
- -c  --chat-id <id> telegram chat id where the alerts will be sent
+     --active-set <active_set_number> number of the validators in the active set (tendermint chain)
+ -b  --block-time <time> expected block time 
+ -c  --chat-id <id> telegram chat id where the alerts will be sent [required]
      --min-space <space> minimum space that the specified mount point should have
- -m  --mount <fs> file system where the disk to be monitored (space available) is mounted
- -t  --token-api <token> telegram token api
+ -m  --mount <fs> file system where the disk to be monitored (space available) is mounted [required]
+ -n  --name <name> monitor name [required]
+ -t  --token-api <token> telegram token api [required]
      --validator <address> validator address to monitor (tendermint chain)"
 }
 
