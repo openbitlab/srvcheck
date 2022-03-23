@@ -1,7 +1,7 @@
 #!/bin/bash
 name=
 chat_id=
-apiToken=
+api_token=
 local_version=
 block_time=60
 git_api=
@@ -13,7 +13,7 @@ mount_point=
 threshold_notsigned=5
 block_window=20
 
-curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name monitor started" -d chat_id=$chat_id
+curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started" -d chat_id=$chat_id
 
 st_block=$(curl -s $rpc_api/status | jq '.result.sync_info.latest_block_height' | sed s/\"//)
 st_block=$(echo $st_block | sed s/\"//)
@@ -101,14 +101,14 @@ while true; do
     if [[ $block_missed > $threshold_notsigned ]]
     then
 	echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name hasn't signed $block_missed of the blocks in the latest $block_window" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name hasn't signed $block_missed of the blocks in the latest $block_window" -d chat_id=$chat_id
     fi
 
     #check on block height
     if [[ "$first_block" == "$new_block" ]]
     then
         echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name has block height stuck" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has block height stuck" -d chat_id=$chat_id
     else
         echo "$name Signaloff: OK"
     fi
@@ -121,7 +121,7 @@ while true; do
         echo "$name Signaloff: OK"
     else
         echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name error: $health" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name error: $health" -d chat_id=$chat_id
     fi
 
     #check new version
@@ -136,7 +136,7 @@ while true; do
             echo "$name Signaloff: OK"
         else
             echo "$name Signaloff: FAIL"
-            curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name has new release: $git_version" -d chat_id=$chat_id
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has new release: $git_version" -d chat_id=$chat_id
         fi
     fi
 
@@ -147,7 +147,7 @@ while true; do
         echo "$name Signaloff: OK"
     else
         echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name is not sync" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is not sync" -d chat_id=$chat_id
     fi
 
     #check for position changes
@@ -156,7 +156,7 @@ while true; do
         echo "$name Signaloff: OK"
     else
         echo "$name Signaloff: position changed"
-        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name position changed to $new_pos" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name position changed to $new_pos" -d chat_id=$chat_id
     fi
 
     #check disk free
@@ -166,7 +166,7 @@ while true; do
         if [[ $avail -lt $min_space  ]]
         then
             echo "$name Singaloff: running out of space $((avail/1000000)) GB left"
-            curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name is running out of space, $((avail/1000000)) GB left" -d chat_id=$chat_id
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is running out of space, $((avail/1000000)) GB left" -d chat_id=$chat_id
         else
             echo "$name Signaloff: OK"
         fi
