@@ -80,6 +80,13 @@ then
     exit 1
 fi
 
+wget http://localhost:8000/substrate_monitor.sh
+chmod +x substrate_monitor.sh
+sed -i.bak -e "s/^name=.*/name=$name/" substrate_monitor.sh
+sed -i.bak -e "s/^chat_id=.*/chat_id=$chat_id/" substrate_monitor.sh
+sed -i.bak -e "s/^api_token=.*/api_token=$api_token/" substrate_monitor.sh
+sed -i.bak -e "s/^mount_point=.*/mount_point=$mount_point/" substrate_monitor.sh
+
 rpc_substrate=$(lsof -i:$rpc_substrate_port)
 #check if we're dealing with a substrate based blockchain
 if [ ! -z "$rpc_substrate" ]
@@ -90,6 +97,7 @@ then
     then
         echo "It's in a docker container"
     else
+	echo "It works!"
     	#wget substrate_monitor.sh
     fi
 fi
@@ -104,6 +112,7 @@ then
     then
         echo "It's in a docker container"
     else
+	echo "It works!"
     	#wget tendermint_monitor.sh
     fi
 fi
