@@ -3,7 +3,7 @@
 
 ## Install & Update
 ```bash 
-curl https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -e
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -es -- <flags>
 ```
 
 ## Usage
