@@ -27,7 +27,7 @@ print_help () {
 
 install_monitor () {
     wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh -O /root/$1.sh # to change in main when merged in the main branch ## TODO add args to change file path
-    chmod +x /root/substrate_monitor.sh
+    chmod +x /root/$1.sh
     sed -i -e "s/^name=.*/name=$name/" /root/$1.sh
     sed -i -e "s/^chat_id=.*/chat_id=\"$chat_id\"/" /root/$1.sh
     sed -i -e "s/^api_token=.*/api_token=\"$api_token\"/" /root/$1.sh
@@ -206,7 +206,7 @@ then
 	echo "[+] Installed substrate monitor!"
 	echo "[*] Installing substrate monitor service..."
 	install_service "/bin/bash /root/substrate_monitor.sh"
-    	echo "[*] Installed substrate monitor service!"
+    	echo "[+] Installed substrate monitor service!"
     fi
 fi
 
@@ -222,9 +222,9 @@ then
     else 	
     	echo "[*] Installing substrate monitor..."
 	install_monitor "tendermint_monitor"
-    	echo "[*] Installed tendermint monitor!"
+    	echo "[+] Installed tendermint monitor!"
 	echo "[*] Installing tendermint monitor..."
 	install_service "/bin/bash /root/tendermint_monitor.sh"
-    	echo "[*] Installed tendermint monitor service!"
+    	echo "[+] Installed tendermint monitor service!"
     fi
 fi
