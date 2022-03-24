@@ -26,12 +26,12 @@ print_help () {
 }
 
 install_monitor () {
-    wget -q http://https://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh # to change in main when merged in the main branch
+    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh # to change in main when merged in the main branch
     chmod +x substrate_monitor.sh
     sed -i -e "s/^name=.*/name=$name/" $1.sh
     sed -i -e "s/^chat_id=.*/chat_id=$chat_id/" $1.sh
     sed -i -e "s/^api_token=.*/api_token=$api_token/" $1.sh
-    sed -i -e "s/^mount_point=.*/mount_point=$mount_point/" $1.sh
+    sed -i -e "s,^mount_point=.*,mount_point=$mount_point,g" $1.sh
     if [ ! -z "$block_time" ]
     then
         sed -i -e "s/^block_time=.*/block_time=$block_time/" $1.sh
