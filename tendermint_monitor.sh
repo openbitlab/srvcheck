@@ -11,7 +11,7 @@ active_set=100
 min_space=10000000
 mount_point=
 threshold_notsigned=5
-block_window=20
+block_window=100
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started" -d chat_id=$chat_id
 
