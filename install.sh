@@ -26,11 +26,11 @@ print_help () {
 }
 
 install_monitor () {
-    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh # to change in main when merged in the main branch
+    wget http://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh # to change in main when merged in the main branch
     chmod +x substrate_monitor.sh
     sed -i -e "s/^name=.*/name=$name/" $1.sh
-    sed -i -e "s/^chat_id=.*/chat_id=$chat_id/" $1.sh
-    sed -i -e "s/^api_token=.*/api_token=$api_token/" $1.sh
+    sed -i -e "s/^chat_id=.*/chat_id=\"$chat_id\"/" $1.sh
+    sed -i -e "s/^api_token=.*/api_token=\"$api_token\"/" $1.sh
     sed -i -e "s,^mount_point=.*,mount_point=$mount_point,g" $1.sh
     if [ ! -z "$block_time" ]
     then
@@ -193,7 +193,9 @@ then
     then
         echo "It's in a docker container"
     else
-    	install_monitor "substrate_monitor"
+    	echo "[*] Installing substrate monitor..."
+	install_monitor "substrate_monitor"
+	echo "[+] Installed substrate monitor!"
     fi
 fi
 
@@ -206,7 +208,9 @@ then
     if [ -d "$1" ]
     then
         echo "It's in a docker container"
-    else
-    	install_monitor "tendermint_monitor"
+    else 	
+    	echo "[*] Installing substrate monitor..."
+	install_monitor "tendermint_monitor"
+    	echo "[*] Installed tendermint monitor!"
     fi
 fi
