@@ -26,38 +26,46 @@ print_help () {
 }
 
 install_monitor () {
-    wget http://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh # to change in main when merged in the main branch
-    chmod +x substrate_monitor.sh
-    sed -i -e "s/^name=.*/name=$name/" $1.sh
-    sed -i -e "s/^chat_id=.*/chat_id=\"$chat_id\"/" $1.sh
-    sed -i -e "s/^api_token=.*/api_token=\"$api_token\"/" $1.sh
-    sed -i -e "s,^mount_point=.*,mount_point=$mount_point,g" $1.sh
+    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh -O /root/$1.sh # to change in main when merged in the main branch ## TODO add args to change file path
+    chmod +x /root/substrate_monitor.sh
+    sed -i -e "s/^name=.*/name=$name/" /root/$1.sh
+    sed -i -e "s/^chat_id=.*/chat_id=\"$chat_id\"/" /root/$1.sh
+    sed -i -e "s/^api_token=.*/api_token=\"$api_token\"/" /root/$1.sh
+    sed -i -e "s,^mount_point=.*,mount_point=$mount_point,g" /root/$1.sh
     if [ ! -z "$block_time" ]
     then
-        sed -i -e "s/^block_time=.*/block_time=$block_time/" $1.sh
+        sed -i -e "s/^block_time=.*/block_time=$block_time/" /root/$1.sh
     fi
     if [ ! -z "$active_set" ]
     then
-        sed -i -e "s/^active_set=.*/active_set=$active_set/" $1.sh
+        sed -i -e "s/^active_set=.*/active_set=$active_set/" /root/$1.sh
     fi
     if [ ! -z "$min_space" ]
     then
-        sed -i -e "s/^min_space=.*/min_space=$min_space/" $1.sh
+        sed -i -e "s/^min_space=.*/min_space=$min_space/" /root/$1.sh
     fi
     if [ ! -z "$val_address" ]
     then
-        sed -i -e "s/^val_address=.*/val_address=$val_address/" $1.sh
+        sed -i -e "s/^val_address=.*/val_address=$val_address/" /root/$1.sh
     fi
     if [[ ! -z "$git_api" && ! -z "$local_version" ]]
     then
-        sed -i -e "s/^git_api=.*/git_api=$git_api/" $1.sh
-        sed -i -e "s/^local_version=.*/local_version=$local_version/" $1.sh
+        sed -i -e "s/^git_api=.*/git_api=$git_api/" /root/$1.sh
+        sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
-        sed -i -e "s/^threshold_notsigned=.*/threshold_notsigned=$threshold_notsigned/" $1.sh
-        sed -i -e "s/^block_window=.*/block_window=$block_window/" $1.sh
+        sed -i -e "s/^threshold_notsigned=.*/threshold_notsigned=$threshold_notsigned/" /root/$1.sh
+        sed -i -e "s/^block_window=.*/block_window=$block_window/" /root/$1.sh
     fi
+}
+
+install_service () {
+    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/node-monitor.service -O /etc/systemd/system/node-monitor.service # to change in main when merged in the main branch ## TODO add args to change service name
+    sed -i -e "s,^ExecStart=.*,ExecStart=$1,g" /etc/systemd/system/node-monitor.service
+    #systemctl daemon-reload 
+    #systemctl start node-monitor
+    #systemctl enable node-monitor
 }
 
 POSITIONAL_ARGS=()
@@ -196,6 +204,9 @@ then
     	echo "[*] Installing substrate monitor..."
 	install_monitor "substrate_monitor"
 	echo "[+] Installed substrate monitor!"
+	echo "[*] Installing substrate monitor service..."
+	install_service "/bin/bash /root/substrate_monitor.sh"
+    	echo "[*] Installed substrate monitor service!"
     fi
 fi
 
@@ -212,5 +223,8 @@ then
     	echo "[*] Installing substrate monitor..."
 	install_monitor "tendermint_monitor"
     	echo "[*] Installed tendermint monitor!"
+	echo "[*] Installing tendermint monitor..."
+	install_service "/bin/bash /root/tendermint_monitor.sh"
+    	echo "[*] Installed tendermint monitor service!"
     fi
 fi
