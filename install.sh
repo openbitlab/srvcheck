@@ -1,5 +1,6 @@
 rpc_substrate_port=9933
 rpc_cosmos_port=26657
+name=$(hostname)
 
 check_docker () {
     check=$(echo $1 | grep docker)
@@ -19,7 +20,7 @@ print_help () {
      --git <git_api> <local_version> git api to query the latest realease version and local version installed to check if there are new versions realeased
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
      --min-space <space> minimum space that the specified mount point should have
- -n  --name <name> monitor name [required]
+ -n  --name <name> monitor name
      --validator <address> validator address to monitor (tendermint chain)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window"
 }
@@ -172,7 +173,7 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ -z $name || -z $chat_id || -z $api_token ]]
+if [[ -z $chat_id || -z $api_token ]]
 then
     print_help
     exit 1
