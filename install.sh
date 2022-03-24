@@ -197,7 +197,7 @@ if [ ! -z "$rpc_substrate" ]
 then 
     echo "It's a substrate based blockchain"
     check_docker "$rpc_substrate"
-    if [ "$1" -eq 1 ]
+    if [[ $1 -eq 1 ]]
     then
         echo "It's in a docker container"
     else
@@ -216,7 +216,7 @@ if [ ! -z "$rpc_cosmos" ]
 then 
     echo "It's a cosmos based blockchain"
     check_docker "$rpc_cosmos"
-    if [ "$1" -eq 1 ]
+    if [[ $1 -eq 1 ]]
     then
         echo "It's in a docker container"
     else 	
