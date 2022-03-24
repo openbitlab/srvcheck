@@ -5,10 +5,10 @@ check_docker () {
     check=$(echo $1 | grep docker)
     if [ ! -z "$check" ]
     then
-	return true
+	return 1
 	echo "It's in a docker container"
     else
-	return false
+	return 0
     fi
 }
 
@@ -63,9 +63,9 @@ install_monitor () {
 install_service () {
     wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/node-monitor.service -O /etc/systemd/system/node-monitor.service # to change in main when merged in the main branch ## TODO add args to change service name
     sed -i -e "s,^ExecStart=.*,ExecStart=$1,g" /etc/systemd/system/node-monitor.service
-    #systemctl daemon-reload 
-    #systemctl start node-monitor
-    #systemctl enable node-monitor
+    systemctl daemon-reload 
+    systemctl start node-monitor
+    systemctl enable node-monitor
 }
 
 POSITIONAL_ARGS=()
@@ -197,7 +197,7 @@ if [ ! -z "$rpc_substrate" ]
 then 
     echo "It's a substrate based blockchain"
     check_docker "$rpc_substrate"
-    if [ -d "$1" ]
+    if [ "$1" -eq 1 ]
     then
         echo "It's in a docker container"
     else
@@ -216,7 +216,7 @@ if [ ! -z "$rpc_cosmos" ]
 then 
     echo "It's a cosmos based blockchain"
     check_docker "$rpc_cosmos"
-    if [ -d "$1" ]
+    if [ "$1" -eq 1 ]
     then
         echo "It's in a docker container"
     else 	
