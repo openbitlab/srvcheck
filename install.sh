@@ -16,22 +16,49 @@ print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain)
  -b  --block-time <time> expected block time 
- -c  --chat-id <id> telegram chat id where the alerts will be sent [required]
+     --git <git_api> <local_version> git api to query the latest realease version and local version installed to check if there are new versions realeased
+ -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
      --min-space <space> minimum space that the specified mount point should have
  -m  --mount <fs> file system where the disk to be monitored (space available) is mounted [required]
  -n  --name <name> monitor name [required]
- -t  --token-api <token> telegram token api [required]
-     --validator <address> validator address to monitor (tendermint chain)"
+     --validator <address> validator address to monitor (tendermint chain)
+     --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window"
 }
 
 install_monitor () {
-    wget -q http://<url>/$1.sh
+    wget -q http://https://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh # to change in main when merged in the main branch
     chmod +x substrate_monitor.sh
     sed -i -e "s/^name=.*/name=$name/" $1.sh
     sed -i -e "s/^chat_id=.*/chat_id=$chat_id/" $1.sh
     sed -i -e "s/^api_token=.*/api_token=$api_token/" $1.sh
     sed -i -e "s/^mount_point=.*/mount_point=$mount_point/" $1.sh
-    #### Parse optionals flags
+    if [ ! -z "$block_time" ]
+    then
+        sed -i -e "s/^block_time=.*/block_time=$block_time/" $1.sh
+    fi
+    if [ ! -z "$active_set" ]
+    then
+        sed -i -e "s/^active_set=.*/active_set=$active_set/" $1.sh
+    fi
+    if [ ! -z "$min_space" ]
+    then
+        sed -i -e "s/^min_space=.*/min_space=$min_space/" $1.sh
+    fi
+    if [ ! -z "$val_address" ]
+    then
+        sed -i -e "s/^val_address=.*/val_address=$val_address/" $1.sh
+    fi
+    if [[ ! -z "$git_api" && ! -z "$local_version" ]]
+    then
+        sed -i -e "s/^git_api=.*/git_api=$git_api/" $1.sh
+        sed -i -e "s/^local_version=.*/local_version=$local_version/" $1.sh
+    fi
+    fi
+    if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
+    then
+        sed -i -e "s/^threshold_notsigned=.*/threshold_notsigned=$threshold_notsigned/" $1.sh
+        sed -i -e "s/^block_window=.*/block_window=$block_window/" $1.sh
+    fi
 }
 
 POSITIONAL_ARGS=()
@@ -48,16 +75,25 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
-    -c|--chat-id)
+    -t|--telegram)
       chat_id="$2"
+      api_token="$3"
       shift # past argument
       shift # past value
-      ;;
-    -t|--token-api)
-      api_token="$2"
-      shift # past argument
       shift # past value
       ;;
+    --git)
+      git_api="$2"
+      local_version="$3"
+      shift # past argument
+      shift # past value
+      shift # past value
+    --signed-blocks)
+      threshold_notsigned="$2"
+      block_window="$3"
+      shift # past argument
+      shift # past value
+      shift # past value
     -m|--mount)
       mount_point="$2"
       shift # past argument
