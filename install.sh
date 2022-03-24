@@ -53,7 +53,6 @@ install_monitor () {
         sed -i -e "s/^git_api=.*/git_api=$git_api/" $1.sh
         sed -i -e "s/^local_version=.*/local_version=$local_version/" $1.sh
     fi
-    fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
         sed -i -e "s/^threshold_notsigned=.*/threshold_notsigned=$threshold_notsigned/" $1.sh
@@ -88,12 +87,14 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       shift # past value
+      ;;
     --signed-blocks)
       threshold_notsigned="$2"
       block_window="$3"
       shift # past argument
       shift # past value
       shift # past value
+      ;;
     -m|--mount)
       mount_point="$2"
       shift # past argument
