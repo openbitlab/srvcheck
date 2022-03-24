@@ -65,25 +65,49 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     -n|--name)
-      name="$2"
+      if [[ -z $2 ]]
+      then
+          print_help
+          exit 1
+      else
+          name="$2"
+      fi
       shift # past argument
       shift # past value
       ;;
     -b|--block-time)
-      block_time="$2"
+      if [[ -z $2 ]]
+      then
+          print_help
+          exit 1
+      else
+          block_time="$2"
+      fi
       shift # past argument
       shift # past value
       ;;
     -t|--telegram)
-      chat_id="$2"
-      api_token="$3"
+      if [[ -z $2 || -z $3 ]]
+      then
+          print_help
+          exit 1
+      else
+	  chat_id="$2"
+          api_token="$3"
+      fi
       shift # past argument
       shift # past value
       shift # past value
       ;;
     --git)
-      git_api="$2"
-      local_version="$3"
+      if [[ -z $2 || -z $3 ]]
+      then
+          print_help
+          exit 1
+      else
+	  git_api="$2"
+          local_version="$3"
+      fi
       shift # past argument
       shift # past value
       shift # past value
@@ -96,22 +120,46 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       ;;
     -m|--mount)
-      mount_point="$2"
+      if [[ -z $2 ]]
+      then
+          print_help
+          exit 1
+      else
+          mount_point="$2"
+      fi
       shift # past argument
       shift # past value
       ;;
     --validator)
-      val_address="$2"
+      if [[ -z $2 ]]
+      then
+          print_help
+          exit 1
+      else
+          val_address="$2"
+      fi
       shift # past argument
       shift # past value
       ;;
     --min-space)
-      min_space="$2"
+      if [[ -z $2 ]]
+      then
+          print_help
+          exit 1
+      else
+          min_space="$2"
+      fi
       shift # past argument
       shift # past value
       ;;  
     --active-set)
-      active_set="$2"
+      if [[ -z $2 ]]
+      then
+          print_help
+          exit 1
+      else
+          active_set="$2"
+      fi
       shift # past argument
       shift # past value
       ;;
