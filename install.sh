@@ -1,5 +1,6 @@
 rpc_substrate_port=9933
 rpc_cosmos_port=26657
+name=$(hostname)
 
 check_docker () {
     check=$(echo $1 | grep docker)
@@ -19,8 +20,7 @@ print_help () {
      --git <git_api> <local_version> git api to query the latest realease version and local version installed to check if there are new versions realeased
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
      --min-space <space> minimum space that the specified mount point should have
- -m  --mount <fs> file system where the disk to be monitored (space available) is mounted [required]
- -n  --name <name> monitor name [required]
+ -n  --name <name> monitor name
      --validator <address> validator address to monitor (tendermint chain)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window"
 }
@@ -31,7 +31,6 @@ install_monitor () {
     sed -i -e "s/^name=.*/name=$name/" /root/$1.sh
     sed -i -e "s/^chat_id=.*/chat_id=\"$chat_id\"/" /root/$1.sh
     sed -i -e "s/^api_token=.*/api_token=\"$api_token\"/" /root/$1.sh
-    sed -i -e "s,^mount_point=.*,mount_point=$mount_point,g" /root/$1.sh
     if [ ! -z "$block_time" ]
     then
         sed -i -e "s/^block_time=.*/block_time=$block_time/" /root/$1.sh
@@ -127,17 +126,6 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       shift # past value
       ;;
-    -m|--mount)
-      if [[ -z $2 ]]
-      then
-          print_help
-          exit 1
-      else
-          mount_point="$2"
-      fi
-      shift # past argument
-      shift # past value
-      ;;
     --validator)
       if [[ -z $2 ]]
       then
@@ -185,7 +173,7 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ -z $name || -z $chat_id || -z $api_token || -z $mount_point ]]
+if [[ -z $chat_id || -z $api_token ]]
 then
     print_help
     exit 1
