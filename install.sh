@@ -49,7 +49,7 @@ install_monitor () {
     fi
     if [[ ! -z "$git_api" && ! -z "$local_version" ]]
     then
-        sed -i -e "s/^git_api=.*/git_api=$git_api/" /root/$1.sh
+        sed -i -e "s,^git_api=.*,git_api=$git_api,g" /root/$1.sh
         sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
     fi
     if [[ "$1" == "tendermint_monitor" && ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
