@@ -3,7 +3,9 @@ chat_id=
 api_token=
 name=
 min_space=10000000
+local_version=
 block_time=60
+git_api=
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started" -d chat_id=$chat_id
 
