@@ -35,7 +35,7 @@ install_monitor () {
     then
         sed -i -e "s/^block_time=.*/block_time=$block_time/" /root/$1.sh
     fi
-    if [ ! -z "$active_set" ]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$active_set"]]
     then
         sed -i -e "s/^active_set=.*/active_set=$active_set/" /root/$1.sh
     fi
@@ -43,7 +43,7 @@ install_monitor () {
     then
         sed -i -e "s/^min_space=.*/min_space=$min_space/" /root/$1.sh
     fi
-    if [ ! -z "$val_address" ]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$val_address"]]
     then
         sed -i -e "s/^val_address=.*/val_address=$val_address/" /root/$1.sh
     fi
@@ -52,7 +52,7 @@ install_monitor () {
         sed -i -e "s/^git_api=.*/git_api=$git_api/" /root/$1.sh
         sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
     fi
-    if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
         sed -i -e "s/^threshold_notsigned=.*/threshold_notsigned=$threshold_notsigned/" /root/$1.sh
         sed -i -e "s/^block_window=.*/block_window=$block_window/" /root/$1.sh
