@@ -35,7 +35,7 @@ install_monitor () {
     then
         sed -i -e "s/^block_time=.*/block_time=$block_time/" /root/$1.sh
     fi
-    if [[ "$1" == "tendermint_monitor" && ! -z "$active_set"]]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$active_set" ]]
     then
         sed -i -e "s/^active_set=.*/active_set=$active_set/" /root/$1.sh
     fi
@@ -43,7 +43,7 @@ install_monitor () {
     then
         sed -i -e "s/^min_space=.*/min_space=$min_space/" /root/$1.sh
     fi
-    if [[ "$1" == "tendermint_monitor" && ! -z "$val_address"]]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$val_address" ]]
     then
         sed -i -e "s/^val_address=.*/val_address=$val_address/" /root/$1.sh
     fi
@@ -178,6 +178,9 @@ then
     print_help
     exit 1
 fi
+
+
+install_monitor "substrate_monitor"
 
 rpc_substrate=$(lsof -i:$rpc_substrate_port)
 #check if we're dealing with a substrate based blockchain
