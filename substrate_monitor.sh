@@ -44,9 +44,9 @@ while true; do
         echo $v1 - $v2
 	if [[ $v2 -ge $v1 ]]
         then
-            echo "$name Signaloff: OK"
+            echo "$name Signaloff: UPDATED"
         else
-            echo "$name Signaloff: FAIL"
+            echo "$name Signaloff: NEW VERSION AVAILABLE $git_version09oo"
             curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has new release: $git_version" -d chat_id=$chat_id
         fi
     fi
