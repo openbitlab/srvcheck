@@ -26,7 +26,7 @@ print_help () {
 }
 
 install_monitor () {
-    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/$1.sh -O /root/$1.sh # to change in main when merged in the main branch ## TODO add args to change file path
+    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/main/$1.sh -O /root/$1.sh ## TODO add args to change file path
     chmod +x /root/$1.sh
     sed -i -e "s/^name=.*/name=$name/" /root/$1.sh
     sed -i -e "s/^chat_id=.*/chat_id=\"$chat_id\"/" /root/$1.sh
@@ -35,7 +35,7 @@ install_monitor () {
     then
         sed -i -e "s/^block_time=.*/block_time=$block_time/" /root/$1.sh
     fi
-    if [ ! -z "$active_set" ]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$active_set" ]]
     then
         sed -i -e "s/^active_set=.*/active_set=$active_set/" /root/$1.sh
     fi
@@ -43,16 +43,16 @@ install_monitor () {
     then
         sed -i -e "s/^min_space=.*/min_space=$min_space/" /root/$1.sh
     fi
-    if [ ! -z "$val_address" ]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$val_address" ]]
     then
         sed -i -e "s/^val_address=.*/val_address=$val_address/" /root/$1.sh
     fi
     if [[ ! -z "$git_api" && ! -z "$local_version" ]]
     then
-        sed -i -e "s/^git_api=.*/git_api=$git_api/" /root/$1.sh
+        sed -i -e "s,^git_api=.*,git_api=$git_api,g" /root/$1.sh
         sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
     fi
-    if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
+    if [[ "$1" == "tendermint_monitor" && ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
         sed -i -e "s/^threshold_notsigned=.*/threshold_notsigned=$threshold_notsigned/" /root/$1.sh
         sed -i -e "s/^block_window=.*/block_window=$block_window/" /root/$1.sh
@@ -60,7 +60,7 @@ install_monitor () {
 }
 
 install_service () {
-    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/dev/node-monitor.service -O /etc/systemd/system/node-monitor.service # to change in main when merged in the main branch ## TODO add args to change service name
+    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/main/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
     sed -i -e "s,^ExecStart=.*,ExecStart=$1,g" /etc/systemd/system/node-monitor.service
     systemctl daemon-reload 
     systemctl start node-monitor

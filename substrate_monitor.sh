@@ -3,7 +3,9 @@ chat_id=
 api_token=
 name=
 min_space=10000000
+local_version=
 block_time=60
+git_api=
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started" -d chat_id=$chat_id
 
@@ -30,5 +32,22 @@ while true; do
         curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is running out of space, $((avail/1000000)) GB left" -d chat_id=$chat_id
     else
         echo "$name Signaloff: OK"
+    fi
+
+    #check new version
+    if [[ ! -z $git_api && ! -z $local_version ]]
+    then
+        git_version=$(curl -s -H 'Content-Type: application/json' $git_api |  jq -r ".tag_name")
+
+        v1=$(echo $git_version | sed 's/[^0-9]*//g')
+        v2=$(echo $local_version | sed 's/[^0-9]*//g')
+        echo $v1 - $v2
+	if [[ $v2 -ge $v1 ]]
+        then
+            echo "$name Signaloff: UPDATED"
+        else
+            echo "$name Signaloff: NEW VERSION AVAILABLE $git_version09oo"
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has new release: $git_version" -d chat_id=$chat_id
+        fi
     fi
 done
