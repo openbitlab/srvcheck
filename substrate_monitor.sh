@@ -14,6 +14,7 @@ rel_e=$'\360\237\222\277'
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started $start_e" -d chat_id=$chat_id
 
+i_rel=0
 while true; do
     a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"chain_getBlockHash", "params":[], "id": 1 }' http://localhost:9933/ | jq '.result')
     sleep $block_time 
@@ -40,8 +41,10 @@ while true; do
     fi
 
     #check new version
-    if [[ ! -z $git_api && ! -z $local_version ]]
+    i_rel_mod=$(( $i_rel % 50 ))
+    if [[ $i_rel_mod -eq 0 && ! -z $git_api && ! -z $local_version ]] 
     then
+        i_rel=0
         git_version=$(curl -s -H 'Content-Type: application/json' $git_api |  jq -r ".tag_name")
 
         v1=$(echo $git_version | sed 's/[^0-9]*//g')
@@ -55,4 +58,5 @@ while true; do
             curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has new release: $git_version $rel_e" -d chat_id=$chat_id
         fi
     fi
+    i_rel=$(( $i_rel + 1 ))
 done
