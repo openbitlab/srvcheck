@@ -7,8 +7,14 @@ local_version=
 block_time=60
 git_api=
 
-curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started" -d chat_id=$chat_id
+start_e=$'\360\237\224\224'
+disk_e=$'\360\237\222\276'
+stuck_e=$'\342\233\224'
+rel_e=$'\360\237\222\277'
 
+curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started $start_e" -d chat_id=$chat_id
+
+i_rel=0
 while true; do
     a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"chain_getBlockHash", "params":[], "id": 1 }' http://localhost:9933/ | jq '.result')
     sleep $block_time 
@@ -19,7 +25,7 @@ while true; do
     if [[ "$a" == "$b" ]]
     then
         echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is stuck" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is stuck $stuck_e" -d chat_id=$chat_id
     else
         echo "$name Signaloff: OK"
     fi
@@ -29,14 +35,16 @@ while true; do
     if [[ $avail -lt $min_space  ]]
     then
         echo "$name Singaloff: running out of space $((avail/1000000)) GB left"
-        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is running out of space, $((avail/1000000)) GB left" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is running out of space, $((avail/1000000)) GB left $disk_e" -d chat_id=$chat_id
     else
         echo "$name Signaloff: OK"
     fi
 
     #check new version
-    if [[ ! -z $git_api && ! -z $local_version ]]
+    i_rel_mod=$(( $i_rel % 50 ))
+    if [[ $i_rel_mod -eq 0 && ! -z $git_api && ! -z $local_version ]] 
     then
+        i_rel=0
         git_version=$(curl -s -H 'Content-Type: application/json' $git_api |  jq -r ".tag_name")
 
         v1=$(echo $git_version | sed 's/[^0-9]*//g')
@@ -47,7 +55,8 @@ while true; do
             echo "$name Signaloff: UPDATED"
         else
             echo "$name Signaloff: NEW VERSION AVAILABLE $git_version09oo"
-            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has new release: $git_version" -d chat_id=$chat_id
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has new release: $git_version $rel_e" -d chat_id=$chat_id
         fi
     fi
+    i_rel=$(( $i_rel + 1 ))
 done
