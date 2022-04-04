@@ -3,7 +3,6 @@ chat_id=
 api_token=
 name=
 min_space=10000000
-local_version=
 block_time=60
 git_api=
 
@@ -11,14 +10,18 @@ start_e=$'\360\237\224\224'
 disk_e=$'\360\237\222\276'
 stuck_e=$'\342\233\224'
 rel_e=$'\360\237\222\277'
+peers_down_e=$'\360\237\206\230'
+sync_e=$'\342\235\227'
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started $start_e" -d chat_id=$chat_id
 
 i_rel=0
 while true; do
     a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"chain_getBlockHash", "params":[], "id": 1 }' http://localhost:9933/ | jq '.result')
+    peers_a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"system_health", "params":[], "id": 1}' http://localhost:9933 | jq '.result.peers')
     sleep $block_time 
     b=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"chain_getBlockHash", "params":[], "id": 1 }' http://localhost:9933/ | jq '.result')
+    peers_b=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"system_health", "params":[], "id": 1}' http://localhost:9933 | jq '.result.peers')
     echo $a
     echo $b
 
@@ -42,13 +45,14 @@ while true; do
 
     #check new version
     i_rel_mod=$(( $i_rel % 50 ))
+    local_version=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"system_version", "params":[], "id": 1 }' http://localhost:9933/ | jq '.result')
     if [[ $i_rel_mod -eq 0 && ! -z $git_api && ! -z $local_version ]] 
     then
         i_rel=0
         git_version=$(curl -s -H 'Content-Type: application/json' $git_api |  jq -r ".tag_name")
 
-        v1=$(echo $git_version | sed 's/[^0-9]*//g')
-        v2=$(echo $local_version | sed 's/[^0-9]*//g')
+        v1=$(echo $git_version | sed 's/\-.*//g' | sed 's/[^0-9]//g')
+        v2=$(echo $local_version | sed 's/\-.*//g' | sed 's/[^0-9]//g')
         echo $v1 - $v2
 	if [[ $v2 -ge $v1 ]]
         then
@@ -59,4 +63,23 @@ while true; do
         fi
     fi
     i_rel=$(( $i_rel + 1 ))
+
+    #check on chatching up flag
+    catching_up=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"system_health", "params":[], "id": 1}' http://localhost:9933/ | jq '.result.isSyncing')
+    if [[ "$catching_up" == "false" ]]
+    then
+        echo "$name Signaloff: OK"
+    else
+        echo "$name Signaloff: FAIL"
+        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is not sync $sync_e" -d chat_id=$chat_id
+    fi
+
+    #check on n_peers
+    if [ $(($peers_a)) -gt $(($peers_b)) ]
+    then
+        echo "$name Signaloff: FAIL"
+        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name peers decreased from $peers_a to $peers_b $peers_down_e" -d chat_id=$chat_id
+    else
+        echo "$name Signaloff: OK"
+    fi
 done
