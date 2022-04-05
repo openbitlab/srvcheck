@@ -53,7 +53,7 @@ install_monitor () {
 	if [[ ! -z "$local_version" ]]
 	then
             sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
-	else [[ "$1" == "tendermint_monitor" ]]
+        elif [[ "$1" == "tendermint_monitor" ]]
 	    print_help
 	    exit 1
 	fi
