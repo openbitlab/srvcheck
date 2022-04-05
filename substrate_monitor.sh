@@ -16,7 +16,7 @@ sync_e=$'\342\235\227'
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started $start_e" -d chat_id=$chat_id
 
 i_rel=0
-i_sync=60
+i_sync=4
 is_stuck=0
 while true; do
     a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"chain_getBlockHash", "params":[], "id": 1 }' http://localhost:9933/ | jq '.result')
