@@ -40,7 +40,7 @@ while true; do
     then
         first_pos=$(curl -s $rpc_api/validators?per_page=$active_set | grep address | grep -n $val_address | cut -f1 -d ":")
     fi
-    prev_peers=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"net_info", "params":[], "id": 1}' $rpc_api | jq '.result.n_peers'| cut -f2 -d '"')
+    peers_a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"net_info", "params":[], "id": 1}' $rpc_api | jq '.result.n_peers'| cut -f2 -d '"')
 
     sleep $block_time
 
@@ -49,7 +49,7 @@ while true; do
     then
         new_pos=$(curl -s $rpc_api/validators?per_page=$active_set | grep address | grep -n $val_address | cut -f1 -d ":")
     fi
-    new_peers=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"net_info", "params":[], "id": 1}' $rpc_api | jq '.result.n_peers'| cut -f2 -d '"')
+    peers_b=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"net_info", "params":[], "id": 1}' $rpc_api | jq '.result.n_peers'| cut -f2 -d '"')
 
     #check for missed blocks
     block_missed=0
@@ -179,7 +179,7 @@ while true; do
     if [ $(($peers_a)) -gt $(($peers_b)) ]
     then
         echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name peers decreased from $peers_a to $peers_b $peers_donw_e" -d chat_id=$chat_id
+        curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name peers decreased from $peers_a to $peers_b $peers_down_e" -d chat_id=$chat_id
     else
         echo "$name Signaloff: OK"
     fi
