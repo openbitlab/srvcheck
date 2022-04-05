@@ -17,7 +17,7 @@ print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain)
  -b  --block-time <time> expected block time 
-     --git <git_api> <local_version> git api to query the latest realease version and local version installed to check if there are new versions realeased
+ --git <git_api> [local_version] git api to query the latest realease version and local version (optional param for substrate chain) installed to check if there are new versions realeased
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
      --min-space <space> minimum space that the specified mount point should have
  -n  --name <name> monitor name
@@ -47,10 +47,16 @@ install_monitor () {
     then
         sed -i -e "s/^val_address=.*/val_address=$val_address/" /root/$1.sh
     fi
-    if [[ ! -z "$git_api" && ! -z "$local_version" ]]
+    if [[ ! -z "$git_api" ]]
     then
         sed -i -e "s,^git_api=.*,git_api=$git_api,g" /root/$1.sh
-        sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
+	if [[ ! -z "$local_version" ]]
+	then
+            sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
+	else [[ "$1" == "tendermint_monitor" ]]
+	    print_help
+	    exit 1
+	fi
     fi
     if [[ "$1" == "tendermint_monitor" && ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -107,7 +113,7 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       ;;
     --git)
-      if [[ -z $2 || -z $3 ]]
+      if [[ -z $2 && -z $3 ]]
       then
           print_help
           exit 1
@@ -116,8 +122,14 @@ while [[ $# -gt 0 ]]; do
           local_version="$3"
       fi
       shift # past argument
-      shift # past value
-      shift # past value
+      if [[ ! -z $2 ]]
+      then
+          shift # past value
+      fi
+      if [[ ! -z $3 ]]
+      then
+	  shift # past value
+      fi
       ;;
     --signed-blocks)
       threshold_notsigned="$2"
