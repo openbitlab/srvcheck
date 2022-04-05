@@ -12,10 +12,14 @@ stuck_e=$'\342\233\224'
 rel_e=$'\360\237\222\277'
 peers_down_e=$'\360\237\206\230'
 sync_e=$'\342\235\227'
+sync_ok_e=$'\342\243\205'
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started $start_e" -d chat_id=$chat_id
 
 i_rel=0
+sync_mod=$(( 3600 / $block_time ))
+i_sync=$sync_mod
+is_stuck=0
 while true; do
     a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"chain_getBlockHash", "params":[], "id": 1 }' http://localhost:9933/ | jq '.result')
     peers_a=$(curl -s -H 'Content-Type: application/json' -d '{ "jsonrpc": "2.0", "method":"system_health", "params":[], "id": 1}' http://localhost:9933 | jq '.result.peers')
@@ -28,9 +32,23 @@ while true; do
     if [[ "$a" == "$b" ]]
     then
         echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is stuck $stuck_e" -d chat_id=$chat_id
+        is_stuck=1
+
+        i_sync_mod=$(( $i_sync % $sync_mod ))
+        if [[ $i_sync_mod -eq 0 ]]
+        then 
+            i_sync=0
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is stuck $stuck_e" -d chat_id=$chat_id
+        fi
+        i_sync=$(( $i_sync + 1 ))
     else
         echo "$name Signaloff: OK"
+        if [[ $is_stuck -eq 1 ]]
+        then 
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is now in sync $sync_ok_e" -d chat_id=$chat_id
+        fi
+        i_sync=$sync_mod
+        is_stuck=0
     fi
 
     #check disk free
