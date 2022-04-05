@@ -54,6 +54,7 @@ install_monitor () {
 	then
             sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
         elif [[ "$1" == "tendermint_monitor" ]]
+	then
 	    print_help
 	    exit 1
 	fi
