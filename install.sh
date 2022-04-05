@@ -224,7 +224,7 @@ then
     then
         echo "It's in a docker container"
     else 	
-    	echo "[*] Installing substrate monitor..."
+    	echo "[*] Installing tendermint monitor..."
 	install_monitor "tendermint_monitor"
     	echo "[+] Installed tendermint monitor!"
 	echo "[*] Installing tendermint monitor..."
