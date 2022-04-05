@@ -195,7 +195,6 @@ then
     exit 1
 fi
 
-install_monitor "substrate_monitor"
 rpc_substrate=$(lsof -i:$rpc_substrate_port)
 #check if we're dealing with a substrate based blockchain
 if [ ! -z "$rpc_substrate" ]
