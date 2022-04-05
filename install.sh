@@ -17,7 +17,8 @@ print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain)
  -b  --block-time <time> expected block time 
- --git <git_api> [local_version] git api to query the latest realease version and local version (optional param for substrate chain) installed to check if there are new versions realeased
+     --git <git_api> git api to query the latest realease version installed
+     --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
      --min-space <space> minimum space that the specified mount point should have
  -n  --name <name> monitor name
@@ -50,14 +51,10 @@ install_monitor () {
     if [[ ! -z "$git_api" ]]
     then
         sed -i -e "s,^git_api=.*,git_api=$git_api,g" /root/$1.sh
-	if [[ ! -z "$local_version" ]]
-	then
-            sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
-        elif [[ "$1" == "tendermint_monitor" ]]
-	then
-	    print_help
-	    exit 1
-	fi
+    fi
+    if [[ ! -z "$local_version" ]]
+    then
+        sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
     fi
     if [[ "$1" == "tendermint_monitor" && ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -114,23 +111,26 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       ;;
     --git)
-      if [[ -z $2 && -z $3 ]]
+      if [[ -z $2 ]]
       then
           print_help
           exit 1
       else
 	  git_api="$2"
-          local_version="$3"
       fi
       shift # past argument
-      if [[ ! -z $2 ]]
+      shift # past value
+      ;;
+    --rel)
+      if [[ -z $2 ]]
       then
-          shift # past value
+          print_help
+          exit 1
+      else
+	  local_version="$2"
       fi
-      if [[ ! -z $3 ]]
-      then
-	  shift # past value
-      fi
+      shift # past argument
+      shift # past value
       ;;
     --signed-blocks)
       threshold_notsigned="$2"
@@ -192,6 +192,7 @@ then
     exit 1
 fi
 
+install_monitor "substrate_monitor"
 rpc_substrate=$(lsof -i:$rpc_substrate_port)
 #check if we're dealing with a substrate based blockchain
 if [ ! -z "$rpc_substrate" ]
