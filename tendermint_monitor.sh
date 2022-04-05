@@ -22,6 +22,7 @@ block_e=$'\342\235\214'
 health_e=$'\360\237\232\250'
 peers_down_e=$'\360\237\206\230'
 sync_e=$'\342\235\227'
+sync_ok_e=$'\342\243\205'
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started $start_e" -d chat_id=$chat_id
 
@@ -29,6 +30,9 @@ st_block=$(curl -s $rpc_api/status | jq '.result.sync_info.latest_block_height' 
 st_block=$(echo $st_block | sed s/\"//)
 starting_mod=0
 i_rel=0
+sync_mod=$(( 3600 / $block_time ))
+i_sync=$sync_mod
+is_stuck=0
 if [ ! -z "$st_block" ]
 then
     starting_mod=$(( $st_block % $block_window ))
@@ -119,9 +123,23 @@ while true; do
     if [[ "$first_block" == "$new_block" ]]
     then
         echo "$name Signaloff: FAIL"
-        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name has block height stuck $stuck_e" -d chat_id=$chat_id
+        is_stuck=1
+
+        i_sync_mod=$(( $i_sync % $sync_mod ))
+        if [[ $i_sync_mod -eq 0 ]]
+        then 
+            i_sync=0
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is stuck $stuck_e" -d chat_id=$chat_id
+        fi
+        i_sync=$(( $i_sync + 1 ))
     else
         echo "$name Signaloff: OK"
+        if [[ $is_stuck -eq 1 ]]
+        then 
+            curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is now in sync $sync_ok_e" -d chat_id=$chat_id
+        fi
+        i_sync=$sync_mod
+        is_stuck=0
     fi
 
     #check for error status
