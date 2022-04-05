@@ -32,7 +32,7 @@ while true; do
         echo "$name Signaloff: FAIL"
         is_stuck=1
 
-        i_sync_mod=$(( $i_sync % 60 ))
+        i_sync_mod=$(( $i_sync % 4 ))
         if [[ $i_sync_mod -eq 0 ]]
         then 
             i_sync=0
