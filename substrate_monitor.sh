@@ -41,7 +41,6 @@ while true; do
             curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is stuck $stuck_e" -d chat_id=$chat_id
         fi
         i_sync=$(( $i_sync + 1 ))
-
     else
         echo "$name Signaloff: OK"
         if [[ $is_stuck -eq 1 ]]
