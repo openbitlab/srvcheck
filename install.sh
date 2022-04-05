@@ -55,6 +55,9 @@ install_monitor () {
     if [[ ! -z "$local_version" ]]
     then
         sed -i -e "s/^local_version=.*/local_version=$local_version/" /root/$1.sh
+    elif [[ "$1" == "tendermint_monitor" ]]
+    then
+	echo "[-] No local release version specified, you will not receive any alerts about future release!"
     fi
     if [[ "$1" == "tendermint_monitor" && ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
