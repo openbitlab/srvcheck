@@ -12,7 +12,7 @@ stuck_e=$'\342\233\224'
 rel_e=$'\360\237\222\277'
 peers_down_e=$'\360\237\206\230'
 sync_e=$'\342\235\227'
-sync_ok_e=$'\342\243\205'
+sync_ok_e=$'\342\234\205'
 
 curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name monitor started $start_e" -d chat_id=$chat_id
 
