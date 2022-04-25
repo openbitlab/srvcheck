@@ -15,14 +15,12 @@ check_docker () {
 
 print_help () {
     echo "Usage: install [options...]
-     --active-set <active_set_number> number of the validators in the active set (tendermint chain)
  -b  --block-time <time> expected block time 
      --git <git_api> git api to query the latest realease version installed
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
      --min-space <space> minimum space that the specified mount point should have
  -n  --name <name> monitor name
-     --validator <address> validator address to monitor (tendermint chain)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window"
 }
 
@@ -225,6 +223,8 @@ then
         echo "It's in a docker container"
     else 	
     	echo "[*] Installing tendermint monitor..."
+	val_address=$(curl -s http://localhost:26657/status | jq '.result.validator_info.address')
+	active_set=$(curl -s http://localhost:26657/validators | jq '.result.total')
 	install_monitor "tendermint_monitor"
     	echo "[+] Installed tendermint monitor!"
 	echo "[*] Installing tendermint monitor..."
