@@ -194,7 +194,7 @@ while true; do
     fi
 
     #check on n_peers
-    if [ $(($peers_a)) -gt $(($peers_b)) ]
+    if [[ $peers_a -gt $peers_b ]]
     then
         echo "$name Signaloff: FAIL"
         curl -s -X POST https://api.telegram.org/bot$apiToken/sendMessage -d text="$name peers decreased from $peers_a to $peers_b $peers_down_e" -d chat_id=$chat_id
