@@ -53,10 +53,11 @@ while true; do
 
     #check disk free
     avail=$(df --output=target,avail | grep -E "^/ +" | xargs | cut -d " " -f2)
-    if [[ $avail -lt $min_space  ]]
+    log_space=$(du -sh /var/log | awk -F 'G' '{ print $1 }')
+    if [[ $avail -lt $min_space ]]
     then
-        echo "$name Singaloff: running out of space $((avail/1000000)) GB left"
-        curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is running out of space, $((avail/1000000)) GB left $disk_e" -d chat_id=$chat_id
+	echo "$name Singaloff: running out of space $((avail/1000000)) GB left ($log_space GB used by /var/log)"
+	curl -s -X POST https://api.telegram.org/bot$api_token/sendMessage -d text="$name is running out of space, $((avail/1000000)) GB left ($log_space GB used by /var/log) $disk_e" -d chat_id=$chat_id
     else
         echo "$name Signaloff: OK"
     fi
