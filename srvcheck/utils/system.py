@@ -1,6 +1,6 @@
 from .bash import Bash 
 
-class Usage:
+class SystemUsage:
     diskSize = 0
     diskUsed = 0
     diskPercentageUsed = 0
@@ -20,14 +20,14 @@ class Usage:
     def __repr__(self):
         return self.__str__()
         
-class Node:
+class System:
     def getIP(self):
         """ Return IP address """
         return Bash('ip addr').value().split('inet ')[1].split('/')[-1]
 
     def getUsage(self):
         """ Returns an usage object """
-        u = Usage()
+        u = SystemUsage()
         u.diskSize = Bash('df -h /').value().split('\n')[1].split()[1]
         u.diskUsed = Bash('df -h /').value().split('\n')[1].split()[2]
         u.diskPercentageUsed = Bash('df -h /').value().split('\n')[1].split()[4]

@@ -5,22 +5,33 @@ class Tendermint (Chain):
     NAME = "Tendermint"
     BLOCKTIME = 15 
 
+    def __init__(self, conf):
+        super().__init__(conf)
+
     def detect():
-        """ Checks if the current server is running this chain """
-        raise Exception('Abstract detect()')
+        try:
+            Tendermint().getVersion()
+            return True
+        except:
+            return False
+
+    def getLatestVersion(self):
+        raise Exception('Abstract getLatestVersion()')
 
     def getVersion(self):
-        """ Returns software version """
         raise Exception('Abstract getVersion()')
 
     def getHeight(self):
-        """ Returns the block height """
         raise Exception('Abstract getHeight()')
 
+    def getBlockHash(self):
+        raise Exception('Abstract getHeight()')
+
+    def getPeerNumber(self):
+        raise Exception('Abstract getPeerNumber()')
+
     def getNetwork(self):
-        """ Returns network used """
         raise Exception('Abstract getNetwork()')
 
     def isStaking(self):
-        """ Returns true if the node is staking """
         raise Exception('Abstract isStaking()')

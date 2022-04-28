@@ -1,7 +1,11 @@
 #!/usr/bin/python3
 import sys 
+import time
 import argparse
-from .utils import Node
+
+from srvcheck.notification import Notification
+from .task import *
+from .utils import System
 from .chains import CHAINS
 
 if sys.version_info[0] < 3:
@@ -16,18 +20,34 @@ except:
 
 
 def main():
-	node = Node()
+	# Parse configuration
+
+	# Initialization
+	notification = Notification () #args.apiToken, args.chatIds)
+	system = System()
 	chain = None 
-	print (node.getUsage())
+	print (system.getUsage())
 
 	for x in CHAINS:
 		if x.detect():
 			chain = x()
+			print ("Detected chain %s", chain.NAME)
 			break
 
-	print ("Detected chain %s", chain.NAME)
+	# Create the list of tasks
+	tasks = []
+	tasks.append(TaskSystemUsage(notification, system))
 
+	# Mainloop
+	TTS = 60
 
+	while True:
+		for t in tasks:
+			if t.shouldBeChecked():
+				t.run()
+
+		notification.flush()
+		time.sleep(TTS)
 
 if __name__ == "__main__":
 	main()

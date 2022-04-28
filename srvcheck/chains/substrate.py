@@ -1,26 +1,38 @@
-from .chain import Chain
+from .chain import Chain, rpcCall
 import requests
 
 class Substrate (Chain):
     NAME = "Substrate"
     BLOCKTIME = 15 
+    EP = 'http://localhost:9933/'
+
+    def __init__(self, conf):
+        super().__init__(conf)
 
     def detect():
-        """ Checks if the current server is running this chain """
-        raise Exception('Abstract detect()')
+        try:
+            Substrate().getVersion()
+            return True
+        except:
+            return False
+
+    def getLatestVersion(self):
+        raise Exception('Abstract getLatestVersion()')
 
     def getVersion(self):
-        """ Returns software version """
-        raise Exception('Abstract getVersion()')
+        return rpcCall(self.EP, 'system_version')
 
     def getHeight(self):
-        """ Returns the block height """
         raise Exception('Abstract getHeight()')
 
+    def getBlockHash(self):
+        return rpcCall(self.EP, 'chain_getBlockHash')
+
+    def getPeerCount(self):
+        return rpcCall(self.EP, 'system_health')['peers']
+
     def getNetwork(self):
-        """ Returns network used """
         raise Exception('Abstract getNetwork()')
 
     def isStaking(self):
-        """ Returns true if the node is staking """
         raise Exception('Abstract isStaking()')
