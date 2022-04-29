@@ -4,7 +4,7 @@ import time
 import argparse
 
 from srvcheck.notification import Notification
-from .task import *
+from .tasks import *
 from .utils import System
 from .chains import CHAINS
 
@@ -36,7 +36,9 @@ def main():
 
 	# Create the list of tasks
 	tasks = []
-	tasks.append(TaskSystemUsage(notification, system))
+	tasks.append(TaskChainStuck(notification, system, chain))
+	tasks.append(TaskSystemUsage(notification, system, chain))
+	tasks.append(TaskSystemUsageAlert(notification, system, chain))
 
 	# Mainloop
 	TTS = 60

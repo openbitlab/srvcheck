@@ -1,8 +1,10 @@
 import time 
 
 class Task:
-	def __init__(self, name, notification, checkEvery = 15, notifyEvery = 15):
+	def __init__(self, name, notification, system, chain, checkEvery = 15, notifyEvery = 15):
 		self.name = name
+		self.system = system
+		self.chain = chain
 		self.checkEvery = checkEvery
 		self.notifyEvery = notifyEvery
 		self.notification = notification
