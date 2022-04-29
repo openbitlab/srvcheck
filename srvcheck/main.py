@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import sys 
 import time
-import argparse
 
 from srvcheck.notification import Notification
 from .tasks import *
@@ -28,6 +27,7 @@ def main():
 	chain = None 
 	print (system.getUsage())
 
+	# If we can't get the chain type from conf, we try to detect it
 	for x in CHAINS:
 		if x.detect():
 			chain = x()
@@ -46,7 +46,10 @@ def main():
 	while True:
 		for t in tasks:
 			if t.shouldBeChecked():
-				t.run()
+				try:
+					t.run()
+				except Exception as e:
+					print ('Error in task %s: %s' % (t.name, e))
 
 		notification.flush()
 		time.sleep(TTS)
