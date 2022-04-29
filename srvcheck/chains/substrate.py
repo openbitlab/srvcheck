@@ -8,6 +8,7 @@ class Substrate (Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
+        self.TASKS = []
 
     def detect():
         try:

@@ -40,6 +40,10 @@ def main():
 	tasks.append(TaskSystemUsage(notification, system, chain))
 	tasks.append(TaskSystemUsageAlert(notification, system, chain))
 
+	# Add blockchain specific tasks
+	for x in chain.TASKS:
+		tasks.append(x(notification, system, chain))
+
 	# Mainloop
 	TTS = 60
 

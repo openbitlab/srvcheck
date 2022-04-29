@@ -1,5 +1,13 @@
 from .chain import Chain
+from ..tasks import Task
 import requests
+
+class TendermintBlockMissedTask(Task):
+    def __init__(self, notification, chain, checkEvery = 15, notifyEvery = 15):
+        super().__init__('TendermintBlockMissed', notification, chain, checkEvery, notifyEvery)
+
+    def run(self):
+        pass 
 
 class Tendermint (Chain):
     NAME = "Tendermint"
@@ -7,6 +15,7 @@ class Tendermint (Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
+        self.TASKS += TendermintBlockMissedTask 
 
     def detect():
         try:
