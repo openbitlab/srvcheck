@@ -13,6 +13,8 @@ setup(name='srvcheck',
 	packages=[
 		'srvcheck',
 		'srvcheck.chains',
+		'srvcheck.utils',
+		'srvcheck.notification'
 	],
 	entry_points={
 		'console_scripts': [
