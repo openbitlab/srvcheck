@@ -1,4 +1,5 @@
 from .task import Task
 from .taskchainstuck import TaskChainStuck
 from .tasksystemusage import TaskSystemUsage
-from .tasksystemusagealert import TaskSystemUsageAlert
+from .tasksystemdiskalert import TaskSystemDiskAlert
+from .tasksystemcpualert import TaskSystemCpuAlert

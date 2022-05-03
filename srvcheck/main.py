@@ -41,7 +41,8 @@ def main():
 	tasks = []
 	tasks.append(TaskChainStuck(notification, system, chain))
 	tasks.append(TaskSystemUsage(notification, system, chain))
-	tasks.append(TaskSystemUsageAlert(notification, system, chain))
+	tasks.append(TaskSystemDiskAlert(notification, system, chain))
+	tasks.append(TaskSystemCpuAlert(notification, system, chain))
 
 	# Add blockchain specific tasks
 	for x in chain.TASKS:
