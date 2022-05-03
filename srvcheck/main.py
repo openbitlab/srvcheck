@@ -2,7 +2,7 @@
 import sys 
 import time
 
-from srvcheck.notification import Notification
+from srvcheck.notification import TelegramNotification
 from .tasks import *
 from .utils import System
 from .chains import CHAINS
@@ -22,7 +22,7 @@ def main():
 	# Parse configuration
 
 	# Initialization
-	notification = Notification () #args.apiToken, args.chatIds)
+	notification = TelegramNotification () #args.apiToken, args.chatIds)
 	system = System()
 	chain = None 
 	print (system.getUsage())
