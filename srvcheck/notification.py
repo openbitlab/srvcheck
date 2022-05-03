@@ -1,7 +1,6 @@
 import requests
 import json
 
-
 class NotificationProvider:
 	notifies = []
 
@@ -37,9 +36,33 @@ class TelegramNotification(NotificationProvider):
 	def sendPhoto(self, photo):
 		# os.system('curl -F photo=@"./%s" https://api.telegram.org/bot%s/sendPhoto?chat_id=%s' % (file, apiToken, chat_id))
 		pass 
-	
+
 	def send(self, st):
 		print(st.encode('utf-8'))
 		for x in self.chatIds:
 			d = requests.get('https://api.telegram.org/bot%s/sendMessage?text=%s&chat_id=%s' %
 							(self.apiToken, st, x)).json()
+
+
+class Notification:
+	def __init__(self):
+		self.providers = []
+
+	def addProvider(self, p):
+		self.providers.append(p)
+
+	def append(self, s):
+		for x in self.providers:
+			x.append(s)
+
+	def flush(self):
+		for x in self.providers:
+			x.flush()
+
+	def send(self, st):
+		for x in self.providers:
+			x.send(st)
+
+	def sendPhoto(self, photo):
+		for x in self.providers:
+			x.sendPhoto(photo)
