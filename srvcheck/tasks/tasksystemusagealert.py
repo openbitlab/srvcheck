@@ -7,7 +7,10 @@ class TaskSystemUsageAlert(Task):
 	def run(self):
 		usage = self.system.getUsage()
 
-		if usage['cpu'] > 90:
+		if usage.cpu > 90:
 			self.notify('CPU usage is above %d%%' % usage['cpu'])
 
+		if usage.diskPercentageUsed > 90:
+			self.notify('Disk usage is above %d%%' % usage['diskPercentageUsed'])
+			
 		self.markChecked()
