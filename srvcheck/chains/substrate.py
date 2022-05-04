@@ -1,5 +1,4 @@
 from .chain import Chain, rpcCall
-import requests
 
 class Substrate (Chain):
     NAME = "substrate"

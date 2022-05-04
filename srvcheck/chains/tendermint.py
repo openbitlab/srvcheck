@@ -1,12 +1,11 @@
 from .chain import Chain, rpcCall
 from ..tasks import Task
-import requests
 
 THRESHOLD_NOTSIGNED = 5 
 
-class TendermintBlockMissedTask(Task):
+class TaskTendermintBlockMissed(Task):
 	def __init__(self, notification, chain, checkEvery = 60, notifyEvery = 60*10):
-		super().__init__('TendermintBlockMissed', notification, chain, checkEvery, notifyEvery)
+		super().__init__('TaskTendermintBlockMissed', notification, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
 	def run(self):
@@ -20,10 +19,9 @@ class TendermintBlockMissedTask(Task):
 		
 		self.markChecked()
 
-
-class TendermintPositionChangedTask(Task):
+class TaskTendermintPositionChanged(Task):
 	def __init__(self, notification, chain, checkEvery = 60, notifyEvery = 60*10):
-		super().__init__('TendermintPositionChanged', notification, chain, checkEvery, notifyEvery)
+		super().__init__('TaskTendermintPositionChanged', notification, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
 	def run(self):
@@ -41,6 +39,19 @@ class TendermintPositionChangedTask(Task):
 		
 		self.markChecked()
 
+class TaskTendermintHealthError(Task):
+	def __init__(self, notification, chain, checkEvery = 60, notifyEvery = 60*10):
+		super().__init__('TaskTendermintHealthError', notification, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def run(self):
+		errors = self.chain.getHealth()['errors']
+
+		if errors != None:
+			self.notify('Health error: %s' % str(errors))
+		
+		self.markChecked()
+
 
 class Tendermint (Chain):
 	NAME = "tendermint"
@@ -48,8 +59,9 @@ class Tendermint (Chain):
 
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.TASKS += TendermintBlockMissedTask 
-		self.TASKS += TendermintPositionChangedTask 
+		self.TASKS += TaskTendermintBlockMissed 
+		self.TASKS += TaskTendermintHealthError 
+		self.TASKS += TaskTendermintPositionChanged 
 
 	def detect(conf):
 		try:
@@ -57,6 +69,9 @@ class Tendermint (Chain):
 			return True
 		except:
 			return False
+
+	def getHealth(self):
+		return rpcCall(self.EP, 'health')
 
 	def getLatestVersion(self):
 		raise Exception('Abstract getLatestVersion()')
