@@ -1,4 +1,3 @@
-from typing_extensions import Self
 from .chain import Chain, rpcCall
 from ..tasks import Task
 
