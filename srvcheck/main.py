@@ -1,20 +1,22 @@
 #!/usr/bin/python3
 import sys 
 import time
+import configparser
 
-from .notification import Notification, DummyNotification, TelegramNotification
+from .notification import Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
 from .tasks import *
 from .utils import System
 from .chains import CHAINS
 
 
 EXAMPLE_CONF = """
-[notification]
-enabled = telegram, dummy 
-
 [notification.telegram]
-apiToken =
-chatIds =
+enabled = true
+apiToken = 
+chatIds = 
+
+[notification.dummy]
+enabled = true
 
 [chain]
 name = emoney
@@ -34,19 +36,28 @@ except:
 
 def main():
 	# Parse configuration
+	config = configparser.ConfigParser()
+	config.read_string(EXAMPLE_CONF)
+
 
 	# Initialization
 	notification = Notification ()
-	notification.addProvider(DummyNotification ())
-	notification.addProvider(TelegramNotification('', [])) #args.apiToken, args.chatIds)
+
+	for x in NOTIFICATION_SERVICES:
+		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
+			notification.addProvider (NOTIFICATION_SERVICES[x](config))
 
 	system = System()
-	chain = None 
 	print (system.getUsage())
 
-	# If we can't get the chain type from conf, we try to detect it
+	# Get the chain by name or by detect
 	for x in CHAINS:
-		if x.detect():
+		if 'chain' in config:
+			if config['chain']['name'] == x.NAME:
+				chain = x(config)
+				break
+
+		elif x.detect():
 			chain = x()
 			print ("Detected chain %s", chain.NAME)
 			break
