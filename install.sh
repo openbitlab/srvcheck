@@ -10,8 +10,7 @@ install() {
         install_monitor
         echo "[+] Installed monitor!"
         echo "[*] Installing monitor service..."
-        install_service "/usr/bin/python3 /root/setup.py"
-        ## TODO
+        install_service "/usr/bin/python3 /root/srvcheck/srvcheck/main.py"
         echo "[+] Installed monitor service!"
     fi
 }
@@ -29,10 +28,41 @@ print_help () {
 
 install_monitor () {
     ## TODO
+    config_file="/etc/srvcheck.conf"
+    apt install git
+    git clone https://github.com/openbitlab/srvcheck.git /root/srvcheck -q
+    python3 /root/setup.py -q install
+    cp /root/srvcheck/conf/srvcheck.conf $config_file
+
+    sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
+    sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
+    sed -i -e "s/^name =.*/name = $name/" $config_file
+    if [ ! -z "$block_time" ]
+    then
+        sed -i -e "s/^blockTime =.*/blockTime = $block_time/" $config_file
+    fi
+
+    if [[ ! -z "$active_set" ]]
+    then
+        sed -i -e "s/^activeSet =.*/activeSet = $active_set/" $config_file
+    fi
+    if [[ ! -z "$git_api" ]]
+    then
+        sed -i -e "s,^gitApi =.*,gitApi = $git_api,g" $config_file
+    fi
+    if [[ ! -z "$local_version" ]]
+    then
+        sed -i -e "s/^localVersion =.*/localVersion = $local_version/" $config_file
+    fi
+    if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
+    then
+        sed -i -e "s/^thresholdNotsigned =.*/thresholdNotsigned = $threshold_notsigned/" $config_file
+        sed -i -e "s/^blockWindow =.*/blockWindow = $block_window/" $config_file
+    fi
 }
 
 install_service () {
-    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/main/old/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
+    cp /root/srvcheck/conf/node-monitor.service /etc/systemd/system/node-monitor.service ## TODO add args to change service name
     sed -i -e "s,^ExecStart=.*,ExecStart=$1,g" /etc/systemd/system/node-monitor.service
     systemctl daemon-reload 
     systemctl start node-monitor

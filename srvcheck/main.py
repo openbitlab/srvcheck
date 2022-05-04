@@ -42,7 +42,7 @@ except:
 def main():
 	# Parse configuration
 	config = configparser.ConfigParser()
-	config.read_string(EXAMPLE_CONF)
+	config.read('/etc/srvcheck.conf')
 
 	# Initialization
 	notification = Notification (config['name'])

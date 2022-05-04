@@ -21,5 +21,6 @@ setup(name='srvcheck',
 			'srvcheck=srvcheck.main:main',
 		],
 	},
+    zip_safe=False,
 	install_requires=open ('requirements.txt', 'r').read ().split ('\n'),
 )
