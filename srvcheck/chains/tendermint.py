@@ -10,7 +10,7 @@ class TendermintBlockMissedTask(Task):
         pass 
 
 class Tendermint (Chain):
-    NAME = "Tendermint"
+    NAME = "tendermint"
     BLOCKTIME = 15 
 
     def __init__(self, conf):

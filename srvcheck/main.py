@@ -7,6 +7,20 @@ from .tasks import *
 from .utils import System
 from .chains import CHAINS
 
+
+EXAMPLE_CONF = """
+[notification]
+enabled = telegram, dummy 
+
+[notification.telegram]
+apiToken =
+chatIds =
+
+[chain]
+name = emoney
+endpoint = localhost:9933
+"""
+
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')
 	sys.exit (0)

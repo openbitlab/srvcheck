@@ -2,7 +2,7 @@ from .chain import Chain, rpcCall
 import requests
 
 class Substrate (Chain):
-    NAME = "Substrate"
+    NAME = "substrate"
     BLOCKTIME = 15 
     EP = 'http://localhost:9933/'
 

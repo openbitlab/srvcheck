@@ -2,7 +2,7 @@ from .chain import Chain, rpcCall
 import requests
 
 class Lisk (Chain):
-    NAME = "Lisk"
+    NAME = "lisk"
     BLOCKTIME = 15 
     EP = 'http://localhost:9933/'
 
