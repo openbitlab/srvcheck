@@ -1,7 +1,13 @@
 # SRVCHECK
 
 
+Supported ecosystems:
+- Substrate
+- Tendermint
+- Lisk
+
 ## Install & Update
+
 ```bash 
 curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> <optional_flags>
 ```
@@ -10,7 +16,8 @@ curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | 
 ## Configuration
 Edit /root/srvcheck.json:
 
-```{
+```json
+{
 
 }
 ```
