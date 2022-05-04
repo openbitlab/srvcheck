@@ -1,7 +1,9 @@
+from typing_extensions import Self
 from .chain import Chain, rpcCall
 from ..tasks import Task
 
 THRESHOLD_NOTSIGNED = 5
+BLOCK_WINDOW = 100
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, notification, chain, checkEvery=60, notifyEvery=60*10):
@@ -15,8 +17,14 @@ class TaskTendermintBlockMissed(Task):
 		if not self.prev:
 			self.prev = nblockh
 			self.markChecked()
-
-		# TODO: checks
+		elif nblockh - self.prev >= BLOCK_WINDOW:
+			block = self.prev
+			missed=0
+			while block < self.prev+BLOCK_WINDOW:
+				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
+				block += 1
+			if missed >= THRESHOLD_NOTSIGNED:
+				self.notify('%d not signed blocks in the latest %d' % (missed, BLOCK_WINDOW))
 
 		self.markChecked()
 
@@ -121,3 +129,6 @@ class Tendermint (Chain):
 
 	def getValidatorAddress(self):
 		return rpcCall(self.EP, 'status')['validator_info']['address']
+
+	def getSignatures(self, height):
+		return rpcCall(self.EP, 'block')['height']['block']['last_commit']['signatures']
