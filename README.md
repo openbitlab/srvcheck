@@ -14,7 +14,7 @@ curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | 
 
 
 ## Configuration
-Edit /root/srvcheck.json:
+Edit /etc/srvcheck.conf:
 
 ```ini
 name = srvcheck-1
