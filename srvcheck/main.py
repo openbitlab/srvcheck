@@ -36,7 +36,7 @@ def main():
 	# Get the chain by name or by detect
 	for x in CHAINS:
 		if 'chain' in config:
-			if config['chain']['name'] == x.NAME:
+			if config['chain']['type'] == x.NAME:
 				chain = x(config)
 				break
 

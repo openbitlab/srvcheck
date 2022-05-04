@@ -25,7 +25,7 @@ class TaskTendermintPositionChanged(Task):
 	def __init__(self, notification, chain, checkEvery=60, notifyEvery=60*10):
 		super().__init__('TaskTendermintPositionChanged',
 		      notification, chain, checkEvery, notifyEvery)
-		self.active_set = self.chain.conf.active_set
+		self.active_set = self.chain.conf["activeSet"]
 		self.prev = None
 
 	def run(self):
@@ -60,7 +60,7 @@ class TaskTendermintPositionChanged(Task):
 				active_vals += rpcCall(self.chain.EP, 'validators', [bh, str(i + 2), "100"])['validators']
 		else:
 			active_vals += rpcCall(self.chain.EP, 'validators', [bh, "1", str(active_s)])['validators']
-		p = [i for i, j in enumerate(active_vals) if j['address'] == self.chain.conf.val_address]
+		p = [i for i, j in enumerate(active_vals) if j['address'] == self.chain.getValidatorAddress()]
 		return p[0] + 1 if len(p) > 0 else -1 
 
 class TaskTendermintHealthError(Task):
@@ -85,7 +85,7 @@ class Tendermint (Chain):
 		super().__init__(conf)
 		self.TASKS += TaskTendermintBlockMissed 
 		self.TASKS += TaskTendermintHealthError
-		if self.isStaking() and self.conf.val_address != '':
+		if self.isStaking():
 			self.TASKS += TaskTendermintPositionChanged
 
 	def detect(conf):
