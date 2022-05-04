@@ -61,8 +61,8 @@ def main():
 				chain = x(config)
 				break
 
-		elif x.detect():
-			chain = x()
+		elif x.detect(config):
+			chain = x(config)
 			print ("Detected chain %s", chain.NAME)
 			break
 

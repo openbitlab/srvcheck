@@ -51,9 +51,9 @@ class Tendermint (Chain):
 		self.TASKS += TendermintBlockMissedTask 
 		self.TASKS += TendermintPositionChangedTask 
 
-	def detect():
+	def detect(conf):
 		try:
-			Tendermint().getVersion()
+			Tendermint(conf).getVersion()
 			return True
 		except:
 			return False
