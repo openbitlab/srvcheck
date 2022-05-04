@@ -16,10 +16,23 @@ curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | 
 ## Configuration
 Edit /root/srvcheck.json:
 
-```json
-{
+```ini
+name = srvcheck-1
 
-}
+[notification.telegram]
+enabled = true
+apiToken = 
+chatIds = 
+
+[notification.dummy]
+enabled = true
+
+[chain]
+name = tendermint
+endpoint = localhost:9933
+
+[tasks]
+disabled = name_of_a_task_to_disable
 ```
 
 ## Usage
