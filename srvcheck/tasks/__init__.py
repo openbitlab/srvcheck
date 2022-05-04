@@ -3,3 +3,5 @@ from .taskchainstuck import TaskChainStuck
 from .tasksystemusage import TaskSystemUsage
 from .tasksystemdiskalert import TaskSystemDiskAlert
 from .tasksystemcpualert import TaskSystemCpuAlert
+
+TASKS = [ TaskChainStuck, TaskSystemUsage, TaskSystemDiskAlert, TaskSystemCpuAlert ]

@@ -23,6 +23,9 @@ enabled = true
 [chain]
 name = tendermint
 endpoint = localhost:9933
+
+[tasks]
+disabled = name_of_a_task_to_disable
 """
 
 if sys.version_info[0] < 3:
@@ -65,14 +68,13 @@ def main():
 
 	# Create the list of tasks
 	tasks = []
-	tasks.append(TaskChainStuck(notification, system, chain))
-	tasks.append(TaskSystemUsage(notification, system, chain))
-	tasks.append(TaskSystemDiskAlert(notification, system, chain))
-	tasks.append(TaskSystemCpuAlert(notification, system, chain))
 
-	# Add blockchain specific tasks
-	for x in chain.TASKS:
-		tasks.append(x(notification, system, chain))
+	for x in TASKS + chain.TASKS:
+		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.NAME) != -1:
+			continue
+
+		tasks.append (x(notification, system, chain))
+
 
 	# Mainloop
 	TTS = 60
