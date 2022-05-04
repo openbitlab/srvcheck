@@ -33,7 +33,6 @@ install_monitor () {
     git clone https://github.com/openbitlab/srvcheck.git /root/srvcheck -q
     python3 /root/setup.py -q install
     cp /root/srvcheck/conf/srvcheck.conf $config_file
-
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
     sed -i -e "s/^name =.*/name = $name/" $config_file
@@ -41,7 +40,6 @@ install_monitor () {
     then
         sed -i -e "s/^blockTime =.*/blockTime = $block_time/" $config_file
     fi
-
     if [[ ! -z "$active_set" ]]
     then
         sed -i -e "s/^activeSet =.*/activeSet = $active_set/" $config_file
