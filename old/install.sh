@@ -26,7 +26,7 @@ print_help () {
 }
 
 install_monitor () {
-    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/main/$1.sh -O /root/$1.sh ## TODO add args to change file path
+    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/main/old/$1.sh -O /root/$1.sh ## TODO add args to change file path
     chmod +x /root/$1.sh
     sed -i -e "s/^name=.*/name=$name/" /root/$1.sh
     sed -i -e "s/^chat_id=.*/chat_id=\"$chat_id\"/" /root/$1.sh
@@ -66,7 +66,7 @@ install_monitor () {
 }
 
 install_service () {
-    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/main/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
+    wget -q http://raw.githubusercontent.com/openbitlab/srvcheck/main/old/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
     sed -i -e "s,^ExecStart=.*,ExecStart=$1,g" /etc/systemd/system/node-monitor.service
     systemctl daemon-reload 
     systemctl start node-monitor
