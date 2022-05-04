@@ -1,4 +1,4 @@
-from .chain import Chain
+from .chain import Chain, rpcCall
 from ..tasks import Task
 import requests
 
@@ -11,7 +11,8 @@ class TendermintBlockMissedTask(Task):
 
 class Tendermint (Chain):
     NAME = "Tendermint"
-    BLOCKTIME = 15 
+    BLOCKTIME = 15
+    EP = 'http://localhost:26657/'
 
     def __init__(self, conf):
         super().__init__(conf)
@@ -28,19 +29,19 @@ class Tendermint (Chain):
         raise Exception('Abstract getLatestVersion()')
 
     def getVersion(self):
-        raise Exception('Abstract getVersion()')
+        return rpcCall(self.EP, 'abci_info')
 
     def getHeight(self):
-        raise Exception('Abstract getHeight()')
+        return rpcCall(self.EP, 'abci_info')['response']['last_block_height']
 
     def getBlockHash(self):
-        raise Exception('Abstract getHeight()')
+        return rpcCall(self.EP, 'status')['sync_info']['latest_block_hash']
 
     def getPeerNumber(self):
-        raise Exception('Abstract getPeerNumber()')
+        return rpcCall(self.EP, 'net_info')['n_peers']
 
     def getNetwork(self):
         raise Exception('Abstract getNetwork()')
 
     def isStaking(self):
-        raise Exception('Abstract isStaking()')
+        return True if int(rpcCall(self.EP, 'status')['validator_info']['voting_power']) > 0 else False
