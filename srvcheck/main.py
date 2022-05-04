@@ -8,26 +8,6 @@ from .tasks import *
 from .utils import System
 from .chains import CHAINS
 
-
-EXAMPLE_CONF = """
-name = srvcheck-emoney-1
-
-[notification.telegram]
-enabled = true
-apiToken = 
-chatIds = 
-
-[notification.dummy]
-enabled = true
-
-[chain]
-name = tendermint
-endpoint = localhost:9933
-
-[tasks]
-disabled = name_of_a_task_to_disable
-"""
-
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')
 	sys.exit (0)
@@ -37,7 +17,6 @@ try:
 except:
 	print ('please install requests library (pip3 install requests)')
 	sys.exit (0)
-
 
 def main():
 	# Parse configuration

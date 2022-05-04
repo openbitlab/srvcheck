@@ -23,11 +23,10 @@ print_help () {
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -n  --name <name> monitor name [default is the server hostname]
-     --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window" [default is 5 blocks missed out of the latest 100 blocks]
+     --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]"
 }
 
 install_monitor () {
-    ## TODO
     config_file="/etc/srvcheck.conf"
     apt install git
     git clone https://github.com/openbitlab/srvcheck.git /root/srvcheck -q
@@ -40,15 +39,15 @@ install_monitor () {
     then
         sed -i -e "s/^blockTime =.*/blockTime = $block_time/" $config_file
     fi
-    if [[ ! -z "$active_set" ]]
+    if [ ! -z "$active_set" ]
     then
         sed -i -e "s/^activeSet =.*/activeSet = $active_set/" $config_file
     fi
-    if [[ ! -z "$git_api" ]]
+    if [ ! -z "$git_api" ]
     then
         sed -i -e "s,^gitApi =.*,gitApi = $git_api,g" $config_file
     fi
-    if [[ ! -z "$local_version" ]]
+    if [ ! -z "$local_version" ]
     then
         sed -i -e "s/^localVersion =.*/localVersion = $local_version/" $config_file
     fi
@@ -70,92 +69,92 @@ install_service () {
 POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do
-  case $1 in
+case $1 in
     -n|--name)
-      if [[ -z $2 ]]
-      then
-          print_help
-          exit 1
-      else
-          name="$2"
-      fi
-      shift # past argument
-      shift # past value
-      ;;
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            name="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     -b|--block-time)
-      if [[ -z $2 ]]
-      then
-          print_help
-          exit 1
-      else
-          block_time="$2"
-      fi
-      shift # past argument
-      shift # past value
-      ;;
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            block_time="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     -t|--telegram)
-      if [[ -z $2 || -z $3 ]]
-      then
-          print_help
-          exit 1
-      else
-	  chat_id="$2"
-          api_token="$3"
-      fi
-      shift # past argument
-      shift # past value
-      shift # past value
-      ;;
+        if [[ -z $2 || -z $3 ]]
+        then
+            print_help
+            exit 1
+        else
+	        chat_id="$2"
+            api_token="$3"
+        fi
+        shift # past argument
+        shift # past value
+        shift # past value
+    ;;
     --git)
-      if [[ -z $2 ]]
-      then
-          print_help
-          exit 1
-      else
-	  git_api="$2"
-      fi
-      shift # past argument
-      shift # past value
-      ;;
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        git_api="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     --rel)
-      if [[ -z $2 ]]
-      then
-          print_help
-          exit 1
-      else
-	  local_version="$2"
-      fi
-      shift # past argument
-      shift # past value
-      ;;
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        local_version="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     --signed-blocks)
-      threshold_notsigned="$2"
-      block_window="$3"
-      shift # past argument
-      shift # past value
-      shift # past value
-      ;;
+        threshold_notsigned="$2"
+        block_window="$3"
+        shift # past argument
+        shift # past value
+        shift # past value
+    ;;
     --active-set)
-      if [[ -z $2 ]]
-      then
-          print_help
-          exit 1
-      else
-          active_set="$2"
-      fi
-      shift # past argument
-      shift # past value
-      ;;
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            active_set="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     -*|--*)
-      echo "Unknown option $1"
-      print_help
-      exit 1
-      ;;
+        echo "Unknown option $1"
+        print_help
+        exit 1
+    ;;
     *)
-      POSITIONAL_ARGS+=("$1") # save positional arg
-      shift # past argument
-      ;;
-  esac
+        POSITIONAL_ARGS+=("$1") # save positional arg
+        shift # past argument
+    ;;
+esac
 done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
