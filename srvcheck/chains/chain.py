@@ -12,6 +12,9 @@ class Chain:
     def __init__(self, conf):
         self.conf = conf
 
+        if 'endpoint' in self.conf['chain']:
+            self.EP = self.conf['chain']['endpoint']
+
     ### Abstract methods
     def detect():
         """ Checks if the current server is running this chain """

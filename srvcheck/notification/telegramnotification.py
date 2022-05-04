@@ -3,9 +3,9 @@ import json
 from .notificationprovider import NotificationProvider
 
 class TelegramNotification(NotificationProvider):
-	def __init__(self, apiToken, chatIds):
-		self.apiToken = apiToken
-		self.chatIds = chatIds
+	def __init__(self, conf):
+		self.apiToken = conf['notification.telegram']['apiToken']
+		self.chatIds = conf['notification.telegram']['chatIds']
 
 	def sendPhoto(self, photo):
 		# os.system('curl -F photo=@"./%s" https://api.telegram.org/bot%s/sendPhoto?chat_id=%s' % (file, apiToken, chat_id))

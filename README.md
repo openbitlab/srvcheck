@@ -1,18 +1,38 @@
 # SRVCHECK
 
 
+Supported ecosystems:
+- Substrate
+- Tendermint
+- Lisk
+
 ## Install & Update
+
 ```bash 
 curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> <optional_flags>
 ```
 
 
 ## Configuration
-Edit /root/srvcheck.json:
+Edit /etc/srvcheck.conf:
 
-```{
+```ini
+name = srvcheck-1
 
-}
+[notification.telegram]
+enabled = true
+apiToken = 
+chatIds = 
+
+[notification.dummy]
+enabled = true
+
+[chain]
+name = tendermint
+endpoint = localhost:9933
+
+[tasks]
+disabled = name_of_a_task_to_disable
 ```
 
 ## Usage

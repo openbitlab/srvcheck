@@ -2,7 +2,7 @@ from .chain import Chain, rpcCall
 import requests
 
 class Lisk (Chain):
-    NAME = "Lisk"
+    NAME = "lisk"
     BLOCKTIME = 15 
     EP = 'http://localhost:9933/'
 
@@ -10,9 +10,9 @@ class Lisk (Chain):
         super().__init__(conf)
         self.TASKS = []
 
-    # def detect():
+    # def detect(conf):
     #     try:
-    #         Lisk().getVersion()
+    #         Lisk(conf).getVersion()
     #         return True
     #     except:
     #         return False

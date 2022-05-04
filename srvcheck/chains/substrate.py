@@ -1,8 +1,7 @@
 from .chain import Chain, rpcCall
-import requests
 
 class Substrate (Chain):
-    NAME = "Substrate"
+    NAME = "substrate"
     BLOCKTIME = 15 
     EP = 'http://localhost:9933/'
 
@@ -10,9 +9,9 @@ class Substrate (Chain):
         super().__init__(conf)
         self.TASKS = []
 
-    def detect():
+    def detect(conf):
         try:
-            Substrate().getVersion()
+            Substrate(conf).getVersion()
             return True
         except:
             return False

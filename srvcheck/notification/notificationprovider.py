@@ -1,6 +1,12 @@
 class NotificationProvider:
 	notifies = []
 
+	def __init__(self, conf):
+		pass 			
+
+	def __del__(self):
+		self.flush()
+
 	def send(self, st):
 		raise Exception('Abstract send()')
 

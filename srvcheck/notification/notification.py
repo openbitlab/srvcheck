@@ -1,5 +1,6 @@
 class Notification:
-	def __init__(self):
+	def __init__(self, name):
+		self.name = name
 		self.providers = []
 
 	def addProvider(self, p):
@@ -7,7 +8,7 @@ class Notification:
 
 	def append(self, s):
 		for x in self.providers:
-			x.append(s)
+			x.append(self.name + ' - ' + s)
 
 	def flush(self):
 		for x in self.providers:
@@ -15,7 +16,7 @@ class Notification:
 
 	def send(self, st):
 		for x in self.providers:
-			x.send(st)
+			x.send(self.name + ' - ' + st)
 
 	def sendPhoto(self, photo):
 		for x in self.providers:

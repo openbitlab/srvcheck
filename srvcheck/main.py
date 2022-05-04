@@ -1,11 +1,32 @@
 #!/usr/bin/python3
 import sys 
 import time
+import configparser
 
-from .notification import Notification, DummyNotification, TelegramNotification
+from .notification import Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
 from .tasks import *
 from .utils import System
 from .chains import CHAINS
+
+
+EXAMPLE_CONF = """
+name = srvcheck-emoney-1
+
+[notification.telegram]
+enabled = true
+apiToken = 
+chatIds = 
+
+[notification.dummy]
+enabled = true
+
+[chain]
+name = tendermint
+endpoint = localhost:9933
+
+[tasks]
+disabled = name_of_a_task_to_disable
+"""
 
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')
@@ -20,33 +41,40 @@ except:
 
 def main():
 	# Parse configuration
+	config = configparser.ConfigParser()
+	config.read_string(EXAMPLE_CONF)
 
 	# Initialization
-	notification = Notification ()
-	notification.addProvider(DummyNotification ())
-	notification.addProvider(TelegramNotification('', [])) #args.apiToken, args.chatIds)
+	notification = Notification (config['name'])
+
+	for x in NOTIFICATION_SERVICES:
+		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
+			notification.addProvider (NOTIFICATION_SERVICES[x](config))
 
 	system = System()
-	chain = None 
 	print (system.getUsage())
 
-	# If we can't get the chain type from conf, we try to detect it
+	# Get the chain by name or by detect
 	for x in CHAINS:
-		if x.detect():
-			chain = x()
+		if 'chain' in config:
+			if config['chain']['name'] == x.NAME:
+				chain = x(config)
+				break
+
+		elif x.detect(config):
+			chain = x(config)
 			print ("Detected chain %s", chain.NAME)
 			break
 
 	# Create the list of tasks
 	tasks = []
-	tasks.append(TaskChainStuck(notification, system, chain))
-	tasks.append(TaskSystemUsage(notification, system, chain))
-	tasks.append(TaskSystemDiskAlert(notification, system, chain))
-	tasks.append(TaskSystemCpuAlert(notification, system, chain))
 
-	# Add blockchain specific tasks
-	for x in chain.TASKS:
-		tasks.append(x(notification, system, chain))
+	for x in TASKS + chain.TASKS:
+		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.NAME) != -1:
+			continue
+
+		tasks.append (x(notification, system, chain))
+
 
 	# Mainloop
 	TTS = 60
