@@ -118,3 +118,6 @@ class Tendermint (Chain):
 
 	def isStaking(self):
 		return True if int(rpcCall(self.EP, 'status')['validator_info']['voting_power']) > 0 else False
+
+	def getValidatorAddress(self):
+		return rpcCall(self.EP, 'status')['validator_info']['address']
