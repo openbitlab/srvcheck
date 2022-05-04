@@ -1,4 +1,3 @@
-from fileinput import isstdin
 from .chain import Chain, rpcCall
 from ..tasks import Task
 import requests
@@ -10,12 +9,37 @@ class TendermintBlockMissedTask(Task):
     def run(self):
         pass 
 
-class TendermintPositionChange(Task):
+class TendermintPositionChange(Task):    
     def __init__(self, notification, chain, checkEvery = 15, notifyEvery = 15):
         super().__init__('TendermintPositionChange', notification, chain, checkEvery, notifyEvery)
+        self.active_set = self.chain.conf.active_set
+        self.prev = self.getValidatorPosition()
 
     def run(self):
-        pass 
+        pos = self.getValidatorPosition()
+        if pos != self.prev:
+            self.notify('$chain_name position changed to %s $up/down_emoji' % pos)
+        self.markChecked() 
+
+    def getValidatorPosition(self):
+        bh = self.chain.getHeight()
+        active_vals = []
+        if (self.active_set == ''):
+            active_s = int(rpcCall(self.chain.EP, 'validators', [bh, "1", "1"])['total'])
+        else:
+            active_s = int(self.active_set)
+        if (active_s > 100):
+            it = active_s // 100
+            diff = 0
+            for i in range(it):
+                active_vals += rpcCall(self.chain.EP, 'validators', [bh, str(i + 1), "100"])['validators']
+                diff = active_s - 100
+            if (diff > 0):
+                active_vals += rpcCall(self.chain.EP, 'validators', [bh, str(i + 2), "100"])['validators']
+        else:
+            active_vals += rpcCall(self.chain.EP, 'validators', [bh, "1", str(active_s)])['validators']
+        p = [i for i, j in enumerate(active_vals) if j['address'] == self.chain.conf.val_address]
+        return p[0] + 1 if len(p) > 0 else -1 
 
 class Tendermint (Chain):
     NAME = "Tendermint"
@@ -25,7 +49,7 @@ class Tendermint (Chain):
     def __init__(self, conf):
         super().__init__(conf)
         self.TASKS += TendermintBlockMissedTask
-        if self.isStaking():
+        if self.isStaking() and conf.val_address != '':
             self.TASKS += TendermintPositionChange
 
     def detect():
