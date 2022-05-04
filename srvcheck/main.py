@@ -10,6 +10,8 @@ from .chains import CHAINS
 
 
 EXAMPLE_CONF = """
+name = srvcheck-emoney-1
+
 [notification.telegram]
 enabled = true
 apiToken = 
@@ -19,7 +21,7 @@ chatIds =
 enabled = true
 
 [chain]
-name = emoney
+name = tendermint
 endpoint = localhost:9933
 """
 
@@ -39,9 +41,8 @@ def main():
 	config = configparser.ConfigParser()
 	config.read_string(EXAMPLE_CONF)
 
-
 	# Initialization
-	notification = Notification ()
+	notification = Notification (config['name'])
 
 	for x in NOTIFICATION_SERVICES:
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
