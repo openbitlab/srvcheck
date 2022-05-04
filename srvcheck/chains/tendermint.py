@@ -1,3 +1,4 @@
+from fileinput import isstdin
 from .chain import Chain, rpcCall
 from ..tasks import Task
 import requests
@@ -9,6 +10,13 @@ class TendermintBlockMissedTask(Task):
     def run(self):
         pass 
 
+class TendermintPositionChange(Task):
+    def __init__(self, notification, chain, checkEvery = 15, notifyEvery = 15):
+        super().__init__('TendermintPositionChange', notification, chain, checkEvery, notifyEvery)
+
+    def run(self):
+        pass 
+
 class Tendermint (Chain):
     NAME = "Tendermint"
     BLOCKTIME = 15
@@ -16,7 +24,9 @@ class Tendermint (Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
-        self.TASKS += TendermintBlockMissedTask 
+        self.TASKS += TendermintBlockMissedTask
+        if self.isStaking():
+            self.TASKS += TendermintPositionChange
 
     def detect():
         try:
