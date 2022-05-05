@@ -36,20 +36,20 @@ def main():
 	# Get the chain by name or by detect
 	for x in CHAINS:
 		if 'chain' in config:
-			if config['chain']['type'] == x.NAME:
+			if config['chain']['type'] == x.TYPE:
 				chain = x(config)
 				break
 
 		elif x.detect(config):
 			chain = x(config)
-			print ("Detected chain %s", chain.NAME)
+			print ("Detected chain %s", chain.TYPE)
 			break
 
 	# Create the list of tasks
 	tasks = []
 
 	for x in TASKS + chain.TASKS:
-		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.NAME) != -1:
+		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.TYPE) != -1:
 			continue
 
 		tasks.append (x(notification, system, chain))
