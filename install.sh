@@ -1,3 +1,5 @@
+rpc_substrate_port=9933
+rpc_cosmos_port=26657
 name=$(hostname)
 
 install() {
