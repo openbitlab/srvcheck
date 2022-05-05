@@ -12,7 +12,7 @@ install() {
         install_monitor
         echo "[+] Installed monitor!"
         echo "[*] Installing monitor service..."
-        install_service "/usr/bin/python3 /root/srvcheck/srvcheck/main.py"
+        install_service "/usr/local/bin/srvcheck"
         echo "[+] Installed monitor service!"
     fi
 }
@@ -172,7 +172,7 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ -z $chat_id || -z $api_token ]]
+if [[ -z $chat_id || -z $api_token || -z $branch ]]
 then
     print_help
     exit 1
