@@ -21,6 +21,7 @@ print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
  -b  --block-time <time> expected block time [default is 60 seconds]
+     --branch <name> name of the branch to use for the installation
      --git <git_api> git api to query the latest realease version installed
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
@@ -30,10 +31,9 @@ print_help () {
 
 install_monitor () {
     config_file="/etc/srvcheck.conf"
-    apt -qq install git python3-pip -y
-    git clone -b dev https://github.com/openbitlab/srvcheck.git /root/srvcheck -q
-    python3 /root/srvcheck/setup.py -q install
-    cp /root/srvcheck/conf/srvcheck.conf $config_file
+    apt -qq install python3-pip -y
+    pip3 -q install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck
+    wget -q https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
     sed -i -e "s/^name =.*/name = $name/" $config_file
@@ -90,6 +90,17 @@ case $1 in
             exit 1
         else
             block_time="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --branch)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            branch="$2"
         fi
         shift # past argument
         shift # past value

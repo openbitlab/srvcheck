@@ -17,7 +17,6 @@ setup(name='srvcheck',
 		'srvcheck.tasks',
 		'srvcheck.notification'
 	],
-	package_dir={"":"srvcheck"},
 	entry_points={
 		'console_scripts': [
 			'srvcheck=srvcheck.main:main',
