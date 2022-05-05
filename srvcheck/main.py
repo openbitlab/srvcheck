@@ -24,7 +24,7 @@ def main():
 	config.read('/etc/srvcheck.conf')
 
 	# Initialization
-	notification = Notification (config['name'])
+	notification = Notification (config['chain']['name'])
 
 	for x in NOTIFICATION_SERVICES:
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
