@@ -1,6 +1,7 @@
 from .bash import Bash 
 
 class SystemUsage:
+    uptime = ''
     diskSize = 0
     diskUsed = 0
     diskPercentageUsed = 0
@@ -12,7 +13,8 @@ class SystemUsage:
     cpuUsage = 0
 
     def __str__(self):
-        return 'Disk: %s %s %s; Ram: %s %s %s; CPU: %s' % (
+        return 'Uptime: %s; Disk: %s %s %s; Ram: %s %s %s; CPU: %s' % (
+            self.uptime,
             self.diskSize, self.diskUsed, self.diskPercentageUsed,
             self.ramSize, self.ramUsed, self.ramFree,
             self.cpuUsage)
@@ -28,6 +30,7 @@ class System:
     def getUsage(self):
         """ Returns an usage object """
         u = SystemUsage()
+        u.uptime = Bash('uptime').value().split('up ')[1].split(',')[0]
         u.diskSize = Bash('df -h /').value().split('\n')[1].split()[1]
         u.diskUsed = Bash('df -h /').value().split('\n')[1].split()[2]
         u.diskPercentageUsed = Bash('df -h /').value().split('\n')[1].split()[4]
