@@ -2,12 +2,12 @@ from .chain import Chain, rpcCall
 from ..tasks import Task
 
 class TaskTendermintBlockMissed(Task):
-	def __init__(self, notification, chain, checkEvery=60, notifyEvery=60*10):
+	def __init__(self, notification, system, chain, checkEvery=60, notifyEvery=60*10):
 		self.BLOCK_WINDOW = chain.conf["blockWindow"]
 		self.THRESHOLD_NOTSIGNED = chain.conf["thresholdNotsigned"]
 
 		super().__init__('TaskTendermintBlockMissed',
-		      notification, chain, checkEvery, notifyEvery)
+		      notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
 
 	def run(self):
@@ -29,9 +29,9 @@ class TaskTendermintBlockMissed(Task):
 
 
 class TaskTendermintPositionChanged(Task):
-	def __init__(self, notification, chain, checkEvery=60, notifyEvery=60*10):
+	def __init__(self, notification, system, chain, checkEvery=60, notifyEvery=60*10):
 		super().__init__('TaskTendermintPositionChanged',
-		      notification, chain, checkEvery, notifyEvery)
+		      notification, system, chain, checkEvery, notifyEvery)
 		self.active_set = self.chain.conf["activeSet"]
 		self.prev = None
 
@@ -71,8 +71,8 @@ class TaskTendermintPositionChanged(Task):
 		return p[0] + 1 if len(p) > 0 else -1 
 
 class TaskTendermintHealthError(Task):
-	def __init__(self, notification, chain, checkEvery = 60, notifyEvery = 60*10):
-		super().__init__('TaskTendermintHealthError', notification, chain, checkEvery, notifyEvery)
+	def __init__(self, notification, system, chain, checkEvery = 60, notifyEvery = 60*10):
+		super().__init__('TaskTendermintHealthError', notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
 	def run(self):
