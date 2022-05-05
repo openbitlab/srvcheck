@@ -90,10 +90,10 @@ class Tendermint (Chain):
 	
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.TASKS += TaskTendermintBlockMissed 
 		self.TASKS += TaskTendermintHealthError
 		if self.isStaking():
 			self.TASKS += TaskTendermintPositionChanged
+			self.TASKS += TaskTendermintBlockMissed 
 
 	def detect(conf):
 		try:
