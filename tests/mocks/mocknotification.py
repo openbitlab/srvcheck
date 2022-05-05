@@ -18,7 +18,5 @@ class MockNotification(NotificationProvider):
 		self.onNotify('Sending photo: %s' % photo)
 
 	def append(self, s):
-		# self.events.append(s)
-		# self.onNotify(s)
 		super().append(s)
 

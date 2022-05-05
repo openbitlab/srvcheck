@@ -13,10 +13,10 @@ class Task:
 		self.lastNotify = 0
 
 	def shouldBeChecked(self):
-		return self.lastCheck + self.checkEvery < time.time()
+		return (self.lastCheck + self.checkEvery) < time.time()
 
 	def shouldBeNotified(self):
-		return self.lastNotify + self.notifyEvery < time.time()
+		return (self.lastNotify + self.notifyEvery) < time.time()
 
 	def markChecked(self):
 		self.lastCheck = time.time()
