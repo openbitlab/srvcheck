@@ -30,16 +30,3 @@ class Task:
 	def run(self):
 		raise Exception('Abstract run()')
 
-
-class TaskSystemUsage:
-	def __init__(self, notification, system):
-		super().__init__('TaskSystemUsage', notification, 15, 120)
-		self.system = system
-
-	def run(self):
-		usage = self.system.getUsage()
-
-		if usage['cpu'] > 90:
-			self.notify('CPU usage is above %d%%' % usage['cpu'])
-
-		self.markChecked()
