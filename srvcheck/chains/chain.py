@@ -15,6 +15,11 @@ class Chain:
         if 'endpoint' in self.conf['chain']:
             self.EP = self.conf['chain']['endpoint']
 
+    
+    def rpcCall(self, method, params=[]):
+        """ Calls the RPC method with the given parameters """
+        rpcCall(self.EP, method, params)
+
     ### Abstract methods
     def detect():
         """ Checks if the current server is running this chain """

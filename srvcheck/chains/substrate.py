@@ -20,16 +20,16 @@ class Substrate (Chain):
         raise Exception('Abstract getLatestVersion()')
 
     def getVersion(self):
-        return rpcCall(self.EP, 'system_version')
+        return self.rpcCall('system_version')
 
     def getHeight(self):
         raise Exception('Abstract getHeight()')
 
     def getBlockHash(self):
-        return rpcCall(self.EP, 'chain_getBlockHash')
+        return self.rpcCall('chain_getBlockHash')
 
     def getPeerCount(self):
-        return rpcCall(self.EP, 'system_health')['peers']
+        return self.rpcCall('system_health')['peers']
 
     def getNetwork(self):
         raise Exception('Abstract getNetwork()')
