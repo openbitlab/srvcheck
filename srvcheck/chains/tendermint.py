@@ -1,11 +1,11 @@
 from .chain import Chain, rpcCall
 from ..tasks import Task
 
-THRESHOLD_NOTSIGNED = 5
-BLOCK_WINDOW = 100
-
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, notification, chain, checkEvery=60, notifyEvery=60*10):
+		self.BLOCK_WINDOW = chain.conf["blockWindow"]
+		self.THRESHOLD_NOTSIGNED = chain.conf["thresholdNotsigned"]
+
 		super().__init__('TaskTendermintBlockMissed',
 		      notification, chain, checkEvery, notifyEvery)
 		self.prev = None
@@ -16,14 +16,14 @@ class TaskTendermintBlockMissed(Task):
 		if not self.prev:
 			self.prev = nblockh
 			self.markChecked()
-		elif nblockh - self.prev >= BLOCK_WINDOW:
+		elif nblockh - self.prev >= self.BLOCK_WINDOW:
 			block = self.prev
 			missed=0
-			while block < self.prev+BLOCK_WINDOW:
+			while block < self.prev+self.BLOCK_WINDOW:
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
-			if missed >= THRESHOLD_NOTSIGNED:
-				self.notify('%d not signed blocks in the latest %d' % (missed, BLOCK_WINDOW))
+			if missed >= self.THRESHOLD_NOTSIGNED:
+				self.notify('%d not signed blocks in the latest %d' % (missed, self.BLOCK_WINDOW))
 
 		self.markChecked()
 
