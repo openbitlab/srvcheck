@@ -18,7 +18,7 @@ class TaskTendermintBlockMissed(Task):
 			self.markChecked()
 		elif nblockh - self.prev >= self.BLOCK_WINDOW:
 			block = self.prev
-			missed=0
+			missed = 0
 			while block < self.prev+self.BLOCK_WINDOW:
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
@@ -84,7 +84,8 @@ class TaskTendermintHealthError(Task):
 		self.markChecked()
 
 class Tendermint (Chain):
-	NAME = "tendermint"
+	TYPE = "tendermint"
+	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
 	

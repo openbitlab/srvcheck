@@ -30,7 +30,7 @@ print_help () {
 
 install_monitor () {
     config_file="/etc/srvcheck.conf"
-    apt install git
+    apt -qq install git python3-pip -y
     git clone -b dev https://github.com/openbitlab/srvcheck.git /root/srvcheck -q
     python3 /root/srvcheck/setup.py -q install
     cp /root/srvcheck/conf/srvcheck.conf $config_file

@@ -12,13 +12,13 @@ class Chain:
     def __init__(self, conf):
         self.conf = conf
 
-        if 'endpoint' in self.conf['chain']:
+        if 'endpoint' in self.conf['chain'] and self.conf['chain']['endpoint'] != '':
             self.EP = self.conf['chain']['endpoint']
         
-        if 'blockTime' in self.conf['chain']:
+        if 'blockTime' in self.conf['chain'] and self.conf['chain']['blockTime'] != '':
             self.BLOCKTIME = self.conf['chain']['blockTime']
         
-        if 'name' in self.conf['chain']:
+        if 'name' in self.conf['chain'] and self.conf['chain']['name'] != '':
             self.NAME = self.conf['chain']['name']
         
 
