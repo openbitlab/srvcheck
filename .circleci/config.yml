@@ -17,7 +17,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          pip-dependency-file: test-requirements.txt
+          pip-dependency-file: tests/test-requirements.txt
       - run:
           name: Run tests
           command: tox
