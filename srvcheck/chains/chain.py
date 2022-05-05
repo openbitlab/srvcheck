@@ -14,8 +14,14 @@ class Chain:
 
         if 'endpoint' in self.conf['chain']:
             self.EP = self.conf['chain']['endpoint']
+        
+        if 'blockTime' in self.conf['chain']:
+            self.BLOCKTIME = self.conf['chain']['blockTime']
+        
+        if 'name' in self.conf['chain']:
+            self.NAME = self.conf['chain']['name']
+        
 
-    
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """
         rpcCall(self.EP, method, params)

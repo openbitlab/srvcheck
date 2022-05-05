@@ -1,4 +1,4 @@
-from .chain import Chain, rpcCall
+from .chain import Chain
 from ..tasks import Task
 
 class TaskTendermintBlockMissed(Task):
@@ -32,7 +32,7 @@ class TaskTendermintPositionChanged(Task):
 	def __init__(self, notification, system, chain, checkEvery=60, notifyEvery=60*10):
 		super().__init__('TaskTendermintPositionChanged',
 		      notification, system, chain, checkEvery, notifyEvery)
-		self.active_set = self.chain.conf["activeSet"]
+		self.ACTIVE_SET = chain.conf["activeSet"]
 		self.prev = None
 
 	def run(self):
@@ -53,10 +53,10 @@ class TaskTendermintPositionChanged(Task):
 	def getValidatorPosition(self):
 		bh = self.chain.getHeight()
 		active_vals = []
-		if (self.active_set == ''):
+		if (self.ACTIVE_SET == ''):
 			active_s = int(self.chain.rpcCall('validators', [bh, "1", "1"])['total'])
 		else:
-			active_s = int(self.active_set)
+			active_s = int(self.ACTIVE_SET)
 		if (active_s > 100):
 			it = active_s // 100
 			diff = 0
@@ -130,4 +130,4 @@ class Tendermint (Chain):
 		return self.rpcCall('status')['validator_info']['address']
 
 	def getSignatures(self, height):
-		return self.rpcCall('block')['height']['block']['last_commit']['signatures']
+		return self.rpcCall('block', [str(height)])['block']['last_commit']['signatures']
