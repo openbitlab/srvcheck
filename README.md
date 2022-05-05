@@ -1,5 +1,6 @@
 # SRVCHECK
 
+![Status](https://circleci.com/gh/openbitlab/srvcheck.svg?style=svg)
 
 Supported ecosystems:
 - Substrate

@@ -25,7 +25,7 @@ class SystemUsage:
 class System:
     def getIP(self):
         """ Return IP address """
-        return Bash('ip addr').value().split('inet ')[1].split('/')[-1]
+        return Bash('ip addr').value().split('inet ')[-1].split('/')[0]
 
     def getUsage(self):
         """ Returns an usage object """

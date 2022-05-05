@@ -2,7 +2,8 @@ from . import Task
 
 class TaskChainStuck(Task):
 	def __init__(self, notification, system, chain):
-		super().__init__('TaskChainStuck', notification, system, chain, self.chain.BLOCK_TIME * 2, 5)
+		super().__init__('TaskChainStuck', notification, system, chain, chain.BLOCKTIME * 2, 5)
+		self.prev = None
 
 	def run(self):
 		bh = self.chain.getBlockHash()

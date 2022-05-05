@@ -14,6 +14,7 @@ setup(name='srvcheck',
 		'srvcheck',
 		'srvcheck.chains',
 		'srvcheck.utils',
+		'srvcheck.tasks',
 		'srvcheck.notification'
 	],
 	entry_points={
@@ -22,5 +23,5 @@ setup(name='srvcheck',
 		],
 	},
     zip_safe=False,
-	install_requires=open ('requirements.txt', 'r').read ().split ('\n'),
+	install_requires=['requests'],
 )
