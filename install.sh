@@ -31,8 +31,8 @@ print_help () {
 install_monitor () {
     config_file="/etc/srvcheck.conf"
     apt install git
-    git clone https://github.com/openbitlab/srvcheck.git /root/srvcheck -q
-    python3 /root/setup.py -q install
+    git clone -b dev https://github.com/openbitlab/srvcheck.git /root/srvcheck -q
+    python3 /root/srvcheck/setup.py -q install
     cp /root/srvcheck/conf/srvcheck.conf $config_file
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
