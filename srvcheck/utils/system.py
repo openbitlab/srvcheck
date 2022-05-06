@@ -28,9 +28,17 @@ class SystemUsage:
         return self.__str__()
         
 class System:
+    def __init__(self, conf):
+        self.conf = conf
+
     def getIP(self):
         """ Return IP address """
         return Bash('ip addr').value().split('inet ')[-1].split('/')[0]
+
+    def getServiceUptime(self):
+        if 'service' in self.conf['chain']:
+            return Bash('systemctl status ' + self.conf['chain']['service']).value().split('\n')[1].split()[-1]
+        return 'na'
 
     def getUsage(self):
         """ Returns an usage object """

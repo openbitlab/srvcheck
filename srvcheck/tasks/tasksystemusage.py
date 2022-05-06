@@ -9,5 +9,6 @@ class TaskSystemUsage(Task):
 
 	def run(self):
 		usage = self.system.getUsage()
-		self.notify(str(usage))
+		serviceUptime = self.system.getServiceUptime()
+		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
 		return False

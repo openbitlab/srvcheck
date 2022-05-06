@@ -29,6 +29,7 @@ enabled = true
 [chain]
 name = test-chain
 type = tendermint
+service = validator-node.service
 endpoint = localhost:26657
 blockTime = 60
 activeSet = 

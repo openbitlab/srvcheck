@@ -45,7 +45,7 @@ def main():
 	
 	notification.send("monitor started", notification.START_EMOJI)
 
-	system = System()
+	system = System(config)
 	print (system.getUsage())
 
 	# Get the chain by name or by detect
