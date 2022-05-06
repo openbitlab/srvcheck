@@ -18,7 +18,6 @@ class TaskTendermintBlockMissed(Task):
 
 		if not self.prev:
 			self.prev = nblockh
-			self.markChecked()
 		elif nblockh - self.prev >= self.BLOCK_WINDOW:
 			block = self.prev
 			missed = 0
@@ -26,10 +25,9 @@ class TaskTendermintBlockMissed(Task):
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
-				self.notify('%d not signed blocks in the latest %d' % (missed, self.BLOCK_WINDOW))
+				return self.notify('%d not signed blocks in the latest %d' % (missed, self.BLOCK_WINDOW))
 
-		self.markChecked()
-
+		return False
 
 class TaskTendermintPositionChanged(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=60, notifyEvery=60*10):
@@ -46,15 +44,15 @@ class TaskTendermintPositionChanged(Task):
 
 		if not self.prev:
 			self.prev = npos
-			self.markChecked()
 
 		if npos != self.prev:
 			if npos > self.prev:
-				self.notify('Position increased from %d to %d' % (self.prev, npos))
+				return self.notify('Position increased from %d to %d' % (self.prev, npos))
 			else:
-				self.notify('Position decreased from %d to %d' % (self.prev, npos))
+				return self.notify('Position decreased from %d to %d' % (self.prev, npos))
+				
+		return False
 
-		self.markChecked()
 
 	def getValidatorPosition(self):
 		bh = self.chain.getHeight()
@@ -88,9 +86,10 @@ class TaskTendermintHealthError(Task):
 		errors = self.chain.getHealth()['errors']
 
 		if errors != None:
-			self.notify('Health error: %s' % str(errors))
+			return self.notify('Health error: %s' % str(errors))
+
+		return False
 		
-		self.markChecked()
 
 class Tendermint (Chain):
 	TYPE = "tendermint"

@@ -11,6 +11,6 @@ class TaskSystemCpuAlert(Task):
 		usage = self.system.getUsage()
 
 		if usage.cpu > 90:
-			self.notify('CPU usage is above %d%%' % usage['cpu'])
+			return self.notify('CPU usage is above %d%%' % usage['cpu'])
 
-		self.markChecked()
+		return False

@@ -17,6 +17,7 @@ class TestUtilsSystem(unittest.TestCase):
         self.assertNotEqual(us.uptime, '')
         self.assertNotEqual(us.diskSize, 0)
         self.assertNotEqual(us.diskUsed, 0)
+        self.assertNotEqual(us.diskUsedByLog, 0)
         self.assertNotEqual(us.diskPercentageUsed, 0)
         self.assertNotEqual(us.ramSize, 0)
         self.assertNotEqual(us.ramUsed, 0)
