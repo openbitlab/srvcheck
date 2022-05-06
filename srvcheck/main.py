@@ -42,7 +42,7 @@ def main():
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
 			notification.addProvider (NOTIFICATION_SERVICES[x](config))
 	
-	notification.send("Monitor started!")
+	#notification.send("Monitor started!")
 
 	system = System()
 	print (system.getUsage())
@@ -50,12 +50,11 @@ def main():
 	# Get the chain by name or by detect
 	tasks = []
 	for x in CHAINS:
-		if 'chain' in config:
-			if config['chain']['type'] == x.TYPE:
-				chain = x(config)
-				tasks = addTasks(chain, notification, system, config)
-				break
-
+		print(config['chain']['type'], x.TYPE, 'chain' in config, x.detect(config))
+		if 'chain' in config and config['chain']['type'] == x.TYPE:
+			chain = x(config)
+			tasks = addTasks(chain, notification, system, config)
+			break
 		elif x.detect(config):
 			chain = x(config)
 			print ("Detected chain %s", chain.TYPE)

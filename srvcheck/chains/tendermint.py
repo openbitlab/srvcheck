@@ -96,13 +96,14 @@ class Tendermint (Chain):
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
+	TASKS = []
 	
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.TASKS += TaskTendermintHealthError
+		self.TASKS.append(TaskTendermintHealthError)
 		if self.isStaking():
-			self.TASKS += TaskTendermintPositionChanged
-			self.TASKS += TaskTendermintBlockMissed 
+			self.TASKS.append(TaskTendermintPositionChanged)
+			self.TASKS.append(TaskTendermintBlockMissed)
 
 	def detect(conf):
 		try:

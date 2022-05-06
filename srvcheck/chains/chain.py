@@ -24,7 +24,7 @@ class Chain:
 
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """
-        rpcCall(self.EP, method, params)
+        return rpcCall(self.EP, method, params)
 
     ### Abstract methods
     def detect():
