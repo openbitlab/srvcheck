@@ -52,7 +52,8 @@ def main():
 		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.TYPE) != -1:
 			continue
 
-		tasks.append (x(notification, system, chain))
+		if x.isPluggable():
+			tasks.append (x(config, notification, system, chain))
 
 
 	# Mainloop

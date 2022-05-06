@@ -1,8 +1,9 @@
 import time 
 
 class Task:
-	def __init__(self, name, notification, system, chain, checkEvery = 15, notifyEvery = 15):
+	def __init__(self, name, conf, notification, system, chain, checkEvery = 15, notifyEvery = 15):
 		self.name = name
+		self.conf = conf
 		self.system = system
 		self.chain = chain
 		self.checkEvery = checkEvery
@@ -11,6 +12,10 @@ class Task:
 
 		self.lastCheck = 0
 		self.lastNotify = 0
+
+	def isPluggable(conf):
+		""" Returns true if the task can be plugged in """
+		raise Exception('Abstract isPluggable()')
 
 	def shouldBeChecked(self):
 		return (self.lastCheck + self.checkEvery) < time.time()
