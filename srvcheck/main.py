@@ -62,6 +62,7 @@ def main():
 
 	# Mainloop
 	TTS = 60
+	autoRecover = 'autoRecover' in config['tasks'] and config['tasks']['autoRecover'] == 'true'
 
 	while True:
 		for t in tasks:
@@ -70,7 +71,7 @@ def main():
 					r = t.run()
 					t.markChecked()
 
-					if r and t.shouldBeRecovered() and t.canRecover():
+					if autoRecover and r and t.shouldBeRecovered() and t.canRecover():
 						t.recover()
 						t.markRecovered()
 
