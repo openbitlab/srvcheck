@@ -17,7 +17,7 @@ class SystemUsage:
     cpuUsage = 0
 
     def __str__(self):
-        return 'Uptime: %s; Disk: %.1fG %.1fG %d%% (/var/log: %.1fG); Ram: %.1fG %.1fG %.1fG; CPU: %d%%' % (
+        return '\n\tUptime: %s\n\tDisk (size, used, %): %.1fG %.1fG %d%% (/var/log: %.1fG)\n\tRam (size, used, free): %.1fG %.1fG %.1fG\n\tCPU: %d%%' % (
             self.uptime,
             toGB(self.diskSize), toGB(self.diskUsed), self.diskPercentageUsed,
             toGB(self.diskUsedByLog),
