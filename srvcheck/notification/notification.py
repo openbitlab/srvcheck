@@ -10,15 +10,15 @@ class Notification:
 
 	def append(self, s):
 		for x in self.providers:
-			x.append(self.name + ' - ' + s)
+			x.append(self.name + ' ' + s)
 
 	def flush(self):
 		for x in self.providers:
 			x.flush()
 
-	def send(self, st, emoji = ""):
+	def send(self, st, emoji = ''):
 		for x in self.providers:
-			x.send(self.name + ' ' + st + ' ' + emoji)
+			x.send(self.name + ' ' + st + '' if emoji == '' else ' ' + emoji)
 
 	def sendPhoto(self, photo):
 		for x in self.providers:
