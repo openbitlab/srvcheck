@@ -43,7 +43,7 @@ def main():
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
 			notification.addProvider (NOTIFICATION_SERVICES[x](config))
 	
-	#notification.send("Monitor started!")
+	notification.send("monitor started", notification.START_EMOJI)
 
 	system = System()
 	print (system.getUsage())

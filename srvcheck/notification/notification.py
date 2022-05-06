@@ -1,4 +1,6 @@
 class Notification:
+	START_EMOJI = "\U0001F514"
+
 	def __init__(self, name):
 		self.name = name
 		self.providers = []
@@ -14,9 +16,9 @@ class Notification:
 		for x in self.providers:
 			x.flush()
 
-	def send(self, st):
+	def send(self, st, emoji = ""):
 		for x in self.providers:
-			x.send(self.name + ' - ' + st)
+			x.send(self.name + ' - ' + st + emoji)
 
 	def sendPhoto(self, photo):
 		for x in self.providers:
