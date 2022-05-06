@@ -18,6 +18,16 @@ except:
 	print ('please install requests library (pip3 install requests)')
 	sys.exit (0)
 
+def addTasks(chain, notification, system, config):
+	# Create the list of tasks
+	tasks = []
+	for x in TASKS + chain.TASKS:
+		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.TYPE) != -1:
+			continue
+
+		tasks.append (x(notification, system, chain))
+	return tasks
+
 def main():
 	# Parse configuration
 	config = configparser.ConfigParser()
@@ -34,26 +44,19 @@ def main():
 	print (system.getUsage())
 
 	# Get the chain by name or by detect
+	tasks = []
 	for x in CHAINS:
 		if 'chain' in config:
 			if config['chain']['type'] == x.TYPE:
 				chain = x(config)
+				tasks = addTasks(chain, notification, system, config)
 				break
 
 		elif x.detect(config):
 			chain = x(config)
 			print ("Detected chain %s", chain.TYPE)
+			tasks = addTasks(chain, notification, system, config)
 			break
-
-	# Create the list of tasks
-	tasks = []
-
-	for x in TASKS + chain.TASKS:
-		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.TYPE) != -1:
-			continue
-
-		tasks.append (x(notification, system, chain))
-
 
 	# Mainloop
 	TTS = 60
