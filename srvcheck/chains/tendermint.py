@@ -2,13 +2,16 @@ from .chain import Chain
 from ..tasks import Task
 
 class TaskTendermintBlockMissed(Task):
-	def __init__(self, notification, system, chain, checkEvery=60, notifyEvery=60*10):
-		self.BLOCK_WINDOW = chain.conf["blockWindow"]
-		self.THRESHOLD_NOTSIGNED = chain.conf["thresholdNotsigned"]
+	def __init__(self, conf, notification, system, chain, checkEvery=60, notifyEvery=60*10):
+		self.BLOCK_WINDOW = conf["blockWindow"]
+		self.THRESHOLD_NOTSIGNED = conf["thresholdNotsigned"]
 
 		super().__init__('TaskTendermintBlockMissed',
-		      notification, system, chain, checkEvery, notifyEvery)
+		      conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
+
+	def isPluggable(conf):
+		return True
 
 	def run(self):
 		nblockh = self.getHeight()
@@ -29,11 +32,14 @@ class TaskTendermintBlockMissed(Task):
 
 
 class TaskTendermintPositionChanged(Task):
-	def __init__(self, notification, system, chain, checkEvery=60, notifyEvery=60*10):
+	def __init__(self, conf, notification, system, chain, checkEvery=60, notifyEvery=60*10):
 		super().__init__('TaskTendermintPositionChanged',
-		      notification, system, chain, checkEvery, notifyEvery)
-		self.ACTIVE_SET = chain.conf["activeSet"]
+		      conf, notification, system, chain, checkEvery, notifyEvery)
+		self.ACTIVE_SET = conf["activeSet"]
 		self.prev = None
+
+	def isPluggable(conf):
+		return True
 
 	def run(self):
 		npos = self.getValidatorPosition()
@@ -71,9 +77,12 @@ class TaskTendermintPositionChanged(Task):
 		return p[0] + 1 if len(p) > 0 else -1 
 
 class TaskTendermintHealthError(Task):
-	def __init__(self, notification, system, chain, checkEvery = 60, notifyEvery = 60*10):
-		super().__init__('TaskTendermintHealthError', notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, conf, notification, system, chain, checkEvery = 60, notifyEvery = 60*10):
+		super().__init__('TaskTendermintHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
+
+	def isPluggable(conf):
+		return True
 
 	def run(self):
 		errors = self.chain.getHealth()['errors']

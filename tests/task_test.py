@@ -12,7 +12,7 @@ CONF = {
 def buildTaskEnv(tt):
     c = MockChain(CONF)
     n = MockNotification({})
-    t = tt(n, None, c)
+    t = tt(CONF, n, None, c)
     return (c, n, t)
 
 
