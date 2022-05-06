@@ -8,7 +8,7 @@ class TestNotification(unittest.TestCase):
         mn = MockNotification({})
         n.addProvider(mn)
         n.send('Hello WorldS!')
-        self.assertEqual(mn.events[0], 'Test - Hello WorldS!')
+        self.assertEqual(mn.events[0], 'Test Hello WorldS!')
 
     def test_sendPhoto(self):
         n = Notification('Test')
@@ -24,7 +24,7 @@ class TestNotification(unittest.TestCase):
         n.append('Hello WorldA!')
         n.append('Hello WorldB!')
         n.flush()
-        self.assertEqual(mn.events[0], 'Test - Hello WorldA!\nTest - Hello WorldB!')
+        self.assertEqual(mn.events[0], 'Test Hello WorldA!\nTest Hello WorldB!')
 
 
     
