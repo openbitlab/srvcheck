@@ -12,7 +12,7 @@ class TaskChainLowPeer(Task):
 	def run(self):
 		p = self.chain.getPeerNumber()
 
-		if p < MIN_PEERS:
+		if int(p) < MIN_PEERS:
 			return self.notify('Chain has only %d peers' % p)
 		
 		return False

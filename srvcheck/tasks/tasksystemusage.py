@@ -9,5 +9,15 @@ class TaskSystemUsage(Task):
 
 	def run(self):
 		usage = self.system.getUsage()
+		print(usage)
+		print(usage.uptime)
+		print(usage.diskSize)
+		print(usage.diskUsed)
+		print(usage.diskPercentageUsed)
+		print(usage.diskUsedByLog)
+		print(usage.ramSize)
+		print(usage.ramUsed)
+		print(usage.ramFree)
+		print(usage.cpuUsage)
 		self.notify(usage)
 		return False

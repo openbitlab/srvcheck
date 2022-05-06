@@ -83,12 +83,11 @@ class TaskTendermintHealthError(Task):
 		return True
 
 	def run(self):
-		errors = self.chain.getHealth()['errors']
-
-		if errors != None:
-			return self.notify('Health error: %s' % str(errors))
-
-		return False
+		try:
+			self.chain.getHealth()
+			return False
+		except Exception as e:
+			return self.notify('Health error!')
 		
 
 class Tendermint (Chain):
