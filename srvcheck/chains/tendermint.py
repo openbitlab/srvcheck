@@ -1,8 +1,8 @@
 from .chain import Chain
-from ..tasks import Task
+from ..tasks import Task,  hours
 
 class TaskTendermintBlockMissed(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=60, notifyEvery=60*10):
+	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
 		self.BLOCK_WINDOW = conf["blockWindow"]
 		self.THRESHOLD_NOTSIGNED = conf["thresholdNotsigned"]
 
@@ -30,7 +30,7 @@ class TaskTendermintBlockMissed(Task):
 		return False
 
 class TaskTendermintPositionChanged(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=60, notifyEvery=60*10):
+	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintPositionChanged',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
 		self.ACTIVE_SET = conf["activeSet"]
@@ -75,7 +75,7 @@ class TaskTendermintPositionChanged(Task):
 		return p[0] + 1 if len(p) > 0 else -1 
 
 class TaskTendermintHealthError(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = 60, notifyEvery = 60*10):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 

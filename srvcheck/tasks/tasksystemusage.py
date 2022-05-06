@@ -1,8 +1,8 @@
-from . import Task 
+from . import Task, hours
 
 class TaskSystemUsage(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskSystemUsage', conf, notification, system, chain, 60*24, 60*24)
+		super().__init__('TaskSystemUsage', conf, notification, system, chain, hours(24), hours(24))
 
 	def isPluggable(conf):
 		return True

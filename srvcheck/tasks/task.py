@@ -1,7 +1,13 @@
 import time 
 
+def minutes(m):
+	return m * 60
+
+def hours(h):
+	return h * 60 * 60
+
 class Task:
-	def __init__(self, name, conf, notification, system, chain, checkEvery = 15, notifyEvery = 15, recoverEvery = 120):
+	def __init__(self, name, conf, notification, system, chain, checkEvery = minutes(15), notifyEvery = minutes(15), recoverEvery = hours(2)):
 		self.name = name
 		self.conf = conf
 		self.system = system

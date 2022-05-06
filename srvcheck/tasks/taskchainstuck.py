@@ -1,8 +1,8 @@
-from . import Task 
+from . import Task, minutes
 
 class TaskChainStuck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, 5)
+		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
 		self.prev = None
 
 	def isPluggable(conf):
