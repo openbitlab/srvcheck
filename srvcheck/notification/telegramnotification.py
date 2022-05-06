@@ -4,8 +4,13 @@ from .notificationprovider import NotificationProvider
 
 class TelegramNotification(NotificationProvider):
 	def __init__(self, conf):
-		self.apiToken = conf['notification.telegram']['apiToken']
-		self.chatIds = conf['notification.telegram']['chatIds']
+		try:
+			self.apiToken = conf['notification.telegram']['apiToken'].strip('\"')
+			self.chatIds = json.loads(conf['notification.telegram']['chatIds'])
+
+		except Exception as e:
+			self.apiToken = ""
+			self.chatIds = ""
 
 		super().__init__(conf)
 

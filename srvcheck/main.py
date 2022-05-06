@@ -41,6 +41,8 @@ def main():
 	for x in NOTIFICATION_SERVICES:
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
 			notification.addProvider (NOTIFICATION_SERVICES[x](config))
+	
+	notification.send("Monitor started!")
 
 	system = System()
 	print (system.getUsage())
