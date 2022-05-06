@@ -23,11 +23,12 @@ def addTasks(chain, notification, system, config):
 	tasks = []
 
 	for x in TASKS + chain.TASKS:
-		if 'disabled' in config['tasks'] and config['tasks']['disabled'].index(x.TYPE) != -1:
+		task = x(config, notification, system, chain)
+		if 'disabled' in config['tasks'] and config['tasks']['disabled'].find(task.name) != -1:
 			continue
 
-		if x.isPluggable():
-			tasks.append (x(config, notification, system, chain))
+		if task.isPluggable():
+			tasks.append(task)
 	return tasks
 
 def main():
@@ -50,7 +51,6 @@ def main():
 	# Get the chain by name or by detect
 	tasks = []
 	for x in CHAINS:
-		print(config['chain']['type'], x.TYPE, 'chain' in config, x.detect(config))
 		if 'chain' in config and config['chain']['type'] == x.TYPE:
 			chain = x(config)
 			tasks = addTasks(chain, notification, system, config)
