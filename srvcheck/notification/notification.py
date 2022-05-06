@@ -18,7 +18,7 @@ class Notification:
 
 	def send(self, st, emoji = ""):
 		for x in self.providers:
-			x.send(self.name + ' - ' + st + emoji)
+			x.send(self.name + ' ' + st + ' ' + emoji)
 
 	def sendPhoto(self, photo):
 		for x in self.providers:
