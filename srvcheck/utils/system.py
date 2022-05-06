@@ -1,9 +1,13 @@
 from .bash import Bash 
 
+def toGB(size):
+    return size / 1024 / 1024
+
 class SystemUsage:
     uptime = ''
     diskSize = 0
     diskUsed = 0
+    diskUsedByLog = 0
     diskPercentageUsed = 0
 
     ramSize = 0
@@ -13,10 +17,11 @@ class SystemUsage:
     cpuUsage = 0
 
     def __str__(self):
-        return 'Uptime: %s; Disk: %s %s %s; Ram: %s %s %s; CPU: %s' % (
+        return 'Uptime: %s; Disk: %.1fG %.1fG %d%% (/var/log: %.1fG); Ram: %.1fG %.1fG %.1fG; CPU: %d%%' % (
             self.uptime,
-            self.diskSize, self.diskUsed, self.diskPercentageUsed,
-            self.ramSize, self.ramUsed, self.ramFree,
+            toGB(self.diskSize), toGB(self.diskUsed), self.diskPercentageUsed,
+            toGB(self.diskUsedByLog),
+            toGB(self.ramSize), toGB(self.ramUsed), toGB(self.ramFree),
             self.cpuUsage)
 
     def __repr__(self):
@@ -31,13 +36,14 @@ class System:
         """ Returns an usage object """
         u = SystemUsage()
         u.uptime = Bash('uptime').value().split('up ')[1].split(',')[0]
-        u.diskSize = Bash('df -h /').value().split('\n')[1].split()[1]
-        u.diskUsed = Bash('df -h /').value().split('\n')[1].split()[2]
-        u.diskPercentageUsed = Bash('df -h /').value().split('\n')[1].split()[4]
+        u.diskSize = int(Bash('df /').value().split('\n')[1].split()[1])
+        u.diskUsed = int(Bash('df /').value().split('\n')[1].split()[2])
+        u.diskPercentageUsed = float(Bash('df /').value().split('\n')[1].split()[4].replace('%', ''))
+        u.diskUsedByLog = int(Bash('du /var/log').value().split('\n')[-1].split()[0])
 
-        u.ramSize = Bash('free -h').value().split('\n')[1].split()[1]
-        u.ramUsed = Bash('free -h').value().split('\n')[1].split()[2]
-        u.ramFree = Bash('free -h').value().split('\n')[1].split()[4]
+        u.ramSize = int(Bash('free').value().split('\n')[1].split()[1])
+        u.ramUsed = int(Bash('free').value().split('\n')[1].split()[2])
+        u.ramFree = int(Bash('free').value().split('\n')[1].split()[4])
 
-        u.cpuUsage = Bash('top -b -n 1 | grep Cpu').value().split()[1] + '%'
+        u.cpuUsage = float(Bash('top -b -n 1 | grep Cpu').value().split()[1])
         return u 

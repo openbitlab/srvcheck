@@ -13,10 +13,9 @@ class TaskChainStuck(Task):
 
 		if self.prev == None:
 			self.prev = bh
-			self.markChecked()
-			return 
+			return False 
 
 		if bh == self.prev:
-			self.notify('Chain is stuck at block %s' % bh)
+			return self.notify('Chain is stuck at block %s' % bh)
 		
-		self.markChecked()
+		return False

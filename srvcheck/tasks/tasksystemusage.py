@@ -10,4 +10,4 @@ class TaskSystemUsage(Task):
 	def run(self):
 		usage = self.system.getUsage()
 		self.notify(usage)
-		self.markChecked()
+		return False

@@ -63,7 +63,13 @@ def main():
 		for t in tasks:
 			if t.shouldBeChecked():
 				try:
-					t.run()
+					r = t.run()
+					t.markChecked()
+
+					if r and t.shouldBeRecovered() and t.canRecover():
+						t.recover()
+						t.markRecovered()
+
 				except Exception as e:
 					print ('Error in task %s: %s' % (t.name, e))
 
