@@ -13,7 +13,7 @@ class TestUtilsSystem(unittest.TestCase):
         # self.assertEqual(System().getIP().count('.'), 3)
 
     def test_getUsage(self):
-        us = System().getUsage()
+        us = System({}).getUsage()
         self.assertNotEqual(us.uptime, '')
         self.assertNotEqual(us.diskSize, 0)
         self.assertNotEqual(us.diskUsed, 0)
