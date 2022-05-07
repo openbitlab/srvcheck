@@ -1,6 +1,7 @@
 import unittest
 from .mocks import MockNotification, MockChain
 from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck
+from srvcheck.notification.notification import Notification
 
 CONF = {
     'name': 'Test',
@@ -12,31 +13,32 @@ CONF = {
 def buildTaskEnv(tt):
     c = MockChain(CONF)
     n = MockNotification({})
+    nn = Notification('test')
     t = tt(CONF, n, None, c)
-    return (c, n, t)
+    return (c, n, nn, t)
 
 
 
 class TestTaskChainLowPeer(unittest.TestCase):
     def test_noalert(self):
-        c, n, t = buildTaskEnv(TaskChainLowPeer)
+        c, n, nn, t = buildTaskEnv(TaskChainLowPeer)
         c.peers = 12
         t.run()
         n.flush()
         self.assertEqual(n.events, [])
 
     def test_alert(self):
-        c, n, t = buildTaskEnv(TaskChainLowPeer)
+        c, n, nn, t = buildTaskEnv(TaskChainLowPeer)
         c.peers = 0
         t.run()
         n.flush()
-        self.assertEqual(n.events[0], 'Chain has only 0 peers')
+        self.assertEqual(n.events[0], 'Chain has only 0 peers' + ' ' + nn.PEERS_EMOJI)
 
 
 
 class TestTaskChainStuck(unittest.TestCase):
     def test_noalert(self):
-        c, n, t = buildTaskEnv(TaskChainStuck)
+        c, n, nn, t = buildTaskEnv(TaskChainStuck)
         c.hash = '0x1234567890'
         t.run()
         c.hash = '0x1234567891'
@@ -45,10 +47,10 @@ class TestTaskChainStuck(unittest.TestCase):
         self.assertEqual(n.events, [])
 
     def test_alert(self):
-        c, n, t = buildTaskEnv(TaskChainStuck)
+        c, n, nn, t = buildTaskEnv(TaskChainStuck)
         c.hash = '0x1234567890'
         t.run()
         t.run()
         n.flush()
-        self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890')
+        self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890' + ' ' + nn.STUCK_EMOJI)
 
