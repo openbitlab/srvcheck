@@ -25,7 +25,7 @@ class TaskTendermintBlockMissed(Task):
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
-				return self.notify('%d not signed blocks in the latest %d' % (missed, self.BLOCK_WINDOW), self.notification.BLOCK_MISS_EMOJI)
+				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, self.notification.BLOCK_MISS_EMOJI))
 
 		return False
 
@@ -47,9 +47,9 @@ class TaskTendermintPositionChanged(Task):
 
 		if npos != self.prev:
 			if npos > self.prev:
-				return self.notify('Position increased from %d to %d' % (self.prev, npos), self.notification.POS_UP_EMOJI)
+				return self.notify('Position increased from %d to %d %s' % (self.prev, npos, self.notification.POS_UP_EMOJI))
 			else:
-				return self.notify('Position decreased from %d to %d' % (self.prev, npos), self.notification.POS_DOWN_EMOJI)
+				return self.notify('Position decreased from %d to %d %s' % (self.prev, npos, self.notification.POS_DOWN_EMOJI))
 				
 		return False
 
@@ -87,7 +87,7 @@ class TaskTendermintHealthError(Task):
 			self.chain.getHealth()
 			return False
 		except Exception as e:
-			return self.notify('Health error!', self.notification.HEALTH_EMOJI)
+			return self.notify('Health error! %s' % self.notification.HEALTH_EMOJI)
 		
 
 class Tendermint (Chain):
