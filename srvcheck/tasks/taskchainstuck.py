@@ -16,6 +16,6 @@ class TaskChainStuck(Task):
 			return False 
 
 		if bh == self.prev:
-			return self.notify('Chain is stuck at block %s' % bh)
+			return self.notify('Chain is stuck at block %s' % bh, self.notification.STUCK_EMOJI)
 		
 		return False
