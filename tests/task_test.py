@@ -13,32 +13,31 @@ CONF = {
 def buildTaskEnv(tt):
     c = MockChain(CONF)
     n = MockNotification({})
-    nn = Notification('test')
     t = tt(CONF, n, None, c)
-    return (c, n, nn, t)
+    return (c, n, t)
 
 
 
 class TestTaskChainLowPeer(unittest.TestCase):
     def test_noalert(self):
-        c, n, nn, t = buildTaskEnv(TaskChainLowPeer)
+        c, n, t = buildTaskEnv(TaskChainLowPeer)
         c.peers = 12
         t.run()
         n.flush()
         self.assertEqual(n.events, [])
 
     def test_alert(self):
-        c, n, nn, t = buildTaskEnv(TaskChainLowPeer)
+        c, n, t = buildTaskEnv(TaskChainLowPeer)
         c.peers = 0
         t.run()
         n.flush()
-        self.assertEqual(n.events[0], 'Chain has only 0 peers' + ' ' + nn.PEERS_EMOJI)
+        self.assertEqual(n.events[0], 'Chain has only 0 peers' + ' ' + n.PEERS_EMOJI)
 
 
 
 class TestTaskChainStuck(unittest.TestCase):
     def test_noalert(self):
-        c, n, nn, t = buildTaskEnv(TaskChainStuck)
+        c, n, t = buildTaskEnv(TaskChainStuck)
         c.hash = '0x1234567890'
         t.run()
         c.hash = '0x1234567891'
@@ -47,10 +46,10 @@ class TestTaskChainStuck(unittest.TestCase):
         self.assertEqual(n.events, [])
 
     def test_alert(self):
-        c, n, nn, t = buildTaskEnv(TaskChainStuck)
+        c, n, t = buildTaskEnv(TaskChainStuck)
         c.hash = '0x1234567890'
         t.run()
         t.run()
         n.flush()
-        self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890' + ' ' + nn.STUCK_EMOJI)
+        self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890' + ' ' + n.STUCK_EMOJI)
 
