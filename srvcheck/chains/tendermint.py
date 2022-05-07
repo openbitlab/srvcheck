@@ -3,8 +3,8 @@ from ..tasks import Task,  hours
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
-		self.BLOCK_WINDOW = conf["blockWindow"]
-		self.THRESHOLD_NOTSIGNED = conf["thresholdNotsigned"]
+		self.BLOCK_WINDOW = conf["chain"]["blockWindow"]
+		self.THRESHOLD_NOTSIGNED = conf["chain"]["thresholdNotsigned"]
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
@@ -14,7 +14,7 @@ class TaskTendermintBlockMissed(Task):
 		return True
 
 	def run(self):
-		nblockh = self.getHeight()
+		nblockh = self.chain.getHeight()
 
 		if not self.prev:
 			self.prev = nblockh
@@ -33,7 +33,7 @@ class TaskTendermintPositionChanged(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintPositionChanged',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
-		self.ACTIVE_SET = conf["activeSet"]
+		self.ACTIVE_SET = conf["chain"]["activeSet"]
 		self.prev = None
 
 	def isPluggable(conf):
