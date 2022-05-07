@@ -37,7 +37,7 @@ class System:
 
     def getServiceUptime(self):
         if 'service' in self.conf['chain']:
-            return Bash('systemctl status ' + self.conf['chain']['service']).value().split('\n')[1].split()[-1]
+            return " ".join(Bash('systemctl status ' + self.conf['chain']['service']).value().split('\n')[1].split()[-3:-1])
         return 'na'
 
     def getUsage(self):
