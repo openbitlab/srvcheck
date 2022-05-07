@@ -31,6 +31,7 @@ print_help () {
 
 install_monitor () {
     config_file="/etc/srvcheck.conf"
+    apt -qq update
     apt -qq install python3-pip -y
     pip3 -q install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck
     wget -q https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
