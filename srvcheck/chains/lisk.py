@@ -1,5 +1,6 @@
-from .chain import Chain, rpcCall
-import requests
+from .chain import Chain
+from ..utils import Bash 
+import json
 
 class Lisk (Chain):
     NAME = "lisk"
@@ -10,34 +11,39 @@ class Lisk (Chain):
         super().__init__(conf)
         self.TASKS = []
 
-    # def detect(conf):
-    #     try:
-    #         Lisk(conf).getVersion()
-    #         return True
-    #     except:
-    #         return False
+    def detect(conf):
+        try:
+            Lisk(conf).getVersion()
+            return True
+        except:
+            return False
 
-    # def getLatestVersion(self):
-    #     raise Exception('Abstract getLatestVersion()')
+    def _nodeInfo(self):
+        return json.loads(Bash('lisk-core node:info').value())
+        
+    def _forgingStatus(self):
+        return json.loads(Bash('lisk-core node:info').value())
 
-    # def getVersion(self):
-    #     return rpcCall(self.EP, 'system_version')
+    def getLatestVersion(self):
+        raise Exception('Abstract getLatestVersion()')
 
-    # def getHeight(self):
-    #     raise Exception('Abstract getHeight()')
+    def getVersion(self):
+        return self._nodeInfo()['version']
 
-    # def getBlockHash(self):
-    #     return rpcCall(self.EP, 'chain_getBlockHash')
+    def getHeight(self):
+        return self._nodeInfo()['height']
 
-    # def getPeerCount(self):
-    #     return rpcCall(self.EP, 'system_health')['peers']
+    def getBlockHash(self):
+        return self._nodeInfo()['lastBlockID']
 
-    # def getNetwork(self):
-    #     raise Exception('Abstract getNetwork()')
+    def getPeerCount(self):
+        return len(self._nodeInfo()['network']['seedPeers'])
 
-    # def isStaking(self):
-    #     raise Exception('Abstract isStaking()')
+    def getNetwork(self):
+        return self._nodeInfo()['genesisConfig']['communityIdentifier']
 
-    # def isSynching(self):
-    #     """ Returns true if the node is synching """
-    #     raise Exception('Abstract isSynching()')
+    def isStaking(self):
+        return len(self._forgingStatus()) > 0
+
+    def isSynching(self):
+        return self._nodeInfo()['syncing']
