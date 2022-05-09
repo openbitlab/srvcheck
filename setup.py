@@ -1,19 +1,17 @@
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 Davide Gessa
-
 from setuptools import find_packages
 from setuptools import setup
 
 setup(name='srvcheck',
 	version='0.1',
 	description='',
-	author=['Davide Gessa'],
+	author='Davide Gessa',
 	setup_requires='setuptools',
-	author_email=['gessadavide@gmail.com'],
+	author_email='gessadavide@gmail.com',
 	packages=[
 		'srvcheck',
 		'srvcheck.chains',
 		'srvcheck.utils',
+		'srvcheck.tasks',
 		'srvcheck.notification'
 	],
 	entry_points={
@@ -21,5 +19,6 @@ setup(name='srvcheck',
 			'srvcheck=srvcheck.main:main',
 		],
 	},
-	install_requires=open ('requirements.txt', 'r').read ().split ('\n'),
+    zip_safe=False,
+	install_requires=['requests', 'substrate-interface'],
 )

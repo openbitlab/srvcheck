@@ -1,4 +1,4 @@
-from .chain import Chain, rpcCall
+from .chain import Chain
 from .tendermint import Tendermint
 from .substrate import Substrate
 

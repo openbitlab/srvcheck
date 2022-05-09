@@ -1,22 +1,35 @@
 import time 
 
+def minutes(m):
+	return m * 60
+
+def hours(h):
+	return h * 60 * 60
+
 class Task:
-	def __init__(self, name, notification, system, chain, checkEvery = 15, notifyEvery = 15):
+	def __init__(self, name, conf, notification, system, chain, checkEvery = minutes(15), notifyEvery = minutes(15), recoverEvery = hours(2)):
 		self.name = name
+		self.conf = conf
 		self.system = system
 		self.chain = chain
 		self.checkEvery = checkEvery
 		self.notifyEvery = notifyEvery
+		self.recoverEvery = recoverEvery
 		self.notification = notification
 
 		self.lastCheck = 0
 		self.lastNotify = 0
+		self.lastRecover = 0
+
+	def isPluggable(conf):
+		""" Returns true if the task can be plugged in """
+		raise Exception('Abstract isPluggable()')
 
 	def shouldBeChecked(self):
-		return self.lastCheck + self.checkEvery < time.time()
+		return (self.lastCheck + self.checkEvery) < time.time()
 
 	def shouldBeNotified(self):
-		return self.lastNotify + self.notifyEvery < time.time()
+		return (self.lastNotify + self.notifyEvery) < time.time()
 
 	def markChecked(self):
 		self.lastCheck = time.time()
@@ -26,20 +39,19 @@ class Task:
 			self.lastNotify = time.time()
 			self.notification.append(nstr)
 			return True
+		return False
 
 	def run(self):
 		raise Exception('Abstract run()')
 
+	def shouldBeRecovered(self):
+		return (self.lastRecover + self.recoverEvery) < time.time()
 
-class TaskSystemUsage:
-	def __init__(self, notification, system):
-		super().__init__('TaskSystemUsage', notification, 15, 120)
-		self.system = system
+	def canRecover(self):
+		return False 
 
-	def run(self):
-		usage = self.system.getUsage()
+	def recover(self):
+		return None
 
-		if usage['cpu'] > 90:
-			self.notify('CPU usage is above %d%%' % usage['cpu'])
-
-		self.markChecked()
+	def markRecovered(self):
+		self.lastRecover = time.time()

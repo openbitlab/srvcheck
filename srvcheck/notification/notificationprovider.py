@@ -1,8 +1,8 @@
 class NotificationProvider:
-	notifies = []
-
+	LOG_LEVEL = 0
+	
 	def __init__(self, conf):
-		pass 			
+		self.notifies = []			
 
 	def __del__(self):
 		self.flush()

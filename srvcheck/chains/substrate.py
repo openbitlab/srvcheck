@@ -1,38 +1,97 @@
-from .chain import Chain, rpcCall
+import json
+import requests
+from .chain import Chain
+from ..tasks import Task
+from substrateinterface import SubstrateInterface
+
+class TaskSubstrateNewReferenda(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=60*60, notifyEvery=60*10*60):
+		super().__init__('TaskSubstrateNewReferenda',
+			  conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+		
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		n = self.chain.getNetwork()
+		if not (n in ['Kusama', 'Polkadot']):
+			return False
+
+		si = self.chain.getSubstrateInterface()
+		result = si.query(
+			module='Referenda',
+			storage_function='referendumCount',
+			params=[]
+		)
+
+		count = result.value
+
+		if self.prev == None:
+			self.prev = count
+			return False
+
+		if count > self.prev:
+			self.prev = count
+			return self.notify('New referendum found on %s: %d' % (n, count - 1))
+		 
+		
 
 class Substrate (Chain):
-    NAME = "substrate"
-    BLOCKTIME = 15 
-    EP = 'http://localhost:9933/'
+	TYPE = "substrate"
+	NAME = ""
+	BLOCKTIME = 15 
+	EP = 'http://localhost:9933/'
 
-    def __init__(self, conf):
-        super().__init__(conf)
-        self.TASKS = []
+	def __init__(self, conf):
+		super().__init__(conf)
+		self.TASKS = []
+		# self.TASKS.append(TaskSubstrateNewReferenda)
+		self.rpcMethods = super().rpcCall('rpc_methods', [])['methods']
 
-    def detect(conf):
-        try:
-            Substrate(conf).getVersion()
-            return True
-        except:
-            return False
+	def rpcCall(self, method, params=[]):
+		if method not in self.rpcMethods:
+			return super().rpcCall(method, params)
+		return None 
 
-    def getLatestVersion(self):
-        raise Exception('Abstract getLatestVersion()')
+	def getSubstrateInterface(self):
+		return SubstrateInterface(url=self.EP)
 
-    def getVersion(self):
-        return rpcCall(self.EP, 'system_version')
+	def detect(conf):
+		try:
+			Substrate(conf).getVersion()
+			return True
+		except:
+			return False
 
-    def getHeight(self):
-        raise Exception('Abstract getHeight()')
 
-    def getBlockHash(self):
-        return rpcCall(self.EP, 'chain_getBlockHash')
+	def getLatestVersion(self):
+		c = requests.get('https://api.github.com/repos/' + self.conf['chain']['ghRepository']+ '/releases/latest').json()
+		return c['tag_name']
 
-    def getPeerCount(self):
-        return rpcCall(self.EP, 'system_health')['peers']
+	def getVersion(self):
+		return self.rpcCall('system_version')
 
-    def getNetwork(self):
-        raise Exception('Abstract getNetwork()')
+	def getHeight(self):
+		return int(self.rpcCall('chain_getHeader', [self.getBlockHash()])['number'], 16)
 
-    def isStaking(self):
-        raise Exception('Abstract isStaking()')
+	def getBlockHash(self):
+		return self.rpcCall('chain_getBlockHash')
+
+	def getPeerCount(self):
+		return self.rpcCall('system_health')['peers']
+
+	def getNetwork(self):
+		return self.rpcCall('system_chain')
+
+	def isStaking(self):
+		c = self.rpcCall('babe_epochAuthorship').json()
+		if len(c.keys()) == 0:
+			return False 
+
+		cc = c[c.keys()[0]]
+		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0
+
+	def isSynching(self):
+		c = self.rpcCall('system_chain')
+		return c['highestBlock'] < c['currentBlock']

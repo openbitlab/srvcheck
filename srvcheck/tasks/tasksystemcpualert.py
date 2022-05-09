@@ -1,13 +1,17 @@
-from . import Task 
+from ..notification import Emoji
+from . import Task, minutes, hours
 
 class TaskSystemCpuAlert(Task):
-	def __init__(self, notification, system, chain):
-		super().__init__('TaskSystemCpuAlert', notification, system, chain, 15, 120)
+	def __init__(self, conf, notification, system, chain):
+		super().__init__('TaskSystemCpuAlert', conf, notification, system, chain, minutes(15), hours(2))
+
+	def isPluggable(conf):
+		return True
 
 	def run(self):
 		usage = self.system.getUsage()
 
-		if usage.cpu > 90:
-			self.notify('CPU usage is above %d%%' % usage['cpu'])
+		if usage.cpuUsage > 90:
+			return self.notify('CPU usage is above %d%% %s' % (usage.cpu, Emoji.Cpu))
 
-		self.markChecked()
+		return False

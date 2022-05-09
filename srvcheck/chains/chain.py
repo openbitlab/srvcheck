@@ -12,8 +12,19 @@ class Chain:
     def __init__(self, conf):
         self.conf = conf
 
-        if 'endpoint' in self.conf['chain']:
+        if 'endpoint' in self.conf['chain'] and self.conf['chain']['endpoint'] != '':
             self.EP = self.conf['chain']['endpoint']
+        
+        if 'blockTime' in self.conf['chain'] and self.conf['chain']['blockTime'] != '':
+            self.BLOCKTIME = self.conf['chain']['blockTime']
+        
+        if 'name' in self.conf['chain'] and self.conf['chain']['name'] != '':
+            self.NAME = self.conf['chain']['name']
+        
+
+    def rpcCall(self, method, params=[]):
+        """ Calls the RPC method with the given parameters """
+        return rpcCall(self.EP, method, params)
 
     ### Abstract methods
     def detect():
@@ -47,3 +58,7 @@ class Chain:
     def isStaking(self):
         """ Returns true if the node is staking """
         raise Exception('Abstract isStaking()')
+
+    def isSynching(self):
+        """ Returns true if the node is synching """
+        raise Exception('Abstract isSynching()')
