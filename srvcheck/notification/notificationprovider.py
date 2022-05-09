@@ -1,4 +1,6 @@
 class NotificationProvider:
+	LOG_LEVEL = 0
+	
 	def __init__(self, conf):
 		self.notifies = []			
 

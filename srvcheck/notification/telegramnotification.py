@@ -3,6 +3,8 @@ import json
 from .notificationprovider import NotificationProvider
 
 class TelegramNotification(NotificationProvider):
+	LOG_LEVEL = 0
+	
 	def __init__(self, conf):
 		try:
 			self.apiToken = conf['notification.telegram']['apiToken'].strip('\"')

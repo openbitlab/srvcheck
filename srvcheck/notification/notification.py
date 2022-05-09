@@ -1,3 +1,10 @@
+class NotificationLevel:
+	NotDeclared = 0
+	Debug = 1
+	Info = 2
+	Warning = 3
+	Error = 4
+	Critical = 5
 
 class Emoji:
 	Start 		= "\U0001F514"
@@ -22,16 +29,20 @@ class Notification:
 	def addProvider(self, p):
 		self.providers.append(p)
 
-	def append(self, s, emoji = ''):
+	def append(self, s, emoji = '', level = NotificationLevel.NotDeclared):
 		for x in self.providers:
+			if level < x.LOG_LEVEL and level != NotificationLevel.NotDeclared:
+				continue
 			x.append(self.name + ' ' + s + ('' if emoji == '' else ' ' + emoji))
 
 	def flush(self):
 		for x in self.providers:
 			x.flush()
 
-	def send(self, st, emoji = ''):
+	def send(self, st, emoji = '', level = NotificationLevel.NotDeclared):
 		for x in self.providers:
+			if level < x.LOG_LEVEL and level != NotificationLevel.NotDeclared:
+				continue
 			x.send(self.name + ' ' + st + ('' if emoji == '' else ' ' + emoji))
 
 	def sendPhoto(self, photo):
