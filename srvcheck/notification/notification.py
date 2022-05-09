@@ -1,17 +1,20 @@
-class Notification:
-	START_EMOJI = "\U0001F514"
-	DISK_EMOJI = "\U0001F4BE"
-	STUCK_EMOJI = "\U000026D4"
-	REL_EMOJI = "\U0000E126"
-	PEERS_EMOJI = "\U0001F198"
-	SYNC_EMOJI = "\U00002757"
-	SYNC_OK_EMOJI = "\U000FEB4A"
-	POS_UP_EMOJI = "\U0001F53C"
-	POS_DOWN_EMOJI = "\U0001F53D"
-	BLOCK_MISS_EMOJI = "\U0000E333"
-	HEALTH_EMOJI = "\U0001F6A8"
-	CPU_EMOJI = "\U000026A0"
 
+class Emoji:
+	Start 		= "\U0001F514"
+	Disk 		= "\U0001F4BE"
+	Stuck 		= "\U000026D4"
+	Rel 		= "\U0000E126"
+	Peers 		= "\U0001F198"
+	Sync 		= "\U00002757"
+	SyncOk 		= "\U000FEB4A"
+	PosUp 		= "\U0001F53C"
+	PosDown 	= "\U0001F53D"
+	BlockMiss 	= "\U0000E333"
+	Health 		= "\U0001F6A8"
+	Cpu 		= "\U000026A0"
+
+
+class Notification:
 	def __init__(self, name):
 		self.name = name
 		self.providers = []

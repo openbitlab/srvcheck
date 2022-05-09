@@ -1,3 +1,4 @@
+from ..notification import Emoji
 from . import Task, minutes
 
 MIN_PEERS = 2
@@ -13,7 +14,7 @@ class TaskChainLowPeer(Task):
 		p = self.chain.getPeerNumber()
 
 		if int(p) < MIN_PEERS:
-			return self.notify('Chain has only %s peers %s' % (p, self.notification.PEERS_EMOJI))
+			return self.notify('Chain has only %s peers %s' % (p, Emoji.Peers))
 		
 		return False
 		

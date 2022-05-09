@@ -1,7 +1,7 @@
 import unittest
 from .mocks import MockNotification, MockChain
 from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck, minutes, hours
-from srvcheck.notification.notification import Notification
+from srvcheck.notification.notification import Emoji, Notification
 
 CONF = {
     'name': 'Test',
@@ -36,7 +36,7 @@ class TestTaskChainLowPeer(unittest.TestCase):
         c.peers = 0
         t.run()
         n.flush()
-        self.assertEqual(n.events[0], 'Chain has only 0 peers' + ' ' + n.PEERS_EMOJI)
+        self.assertEqual(n.events[0], 'Chain has only 0 peers' + ' ' + Emoji.Peers)
 
 
 
@@ -56,5 +56,5 @@ class TestTaskChainStuck(unittest.TestCase):
         t.run()
         t.run()
         n.flush()
-        self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890' + ' ' + n.STUCK_EMOJI)
+        self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890' + ' ' + Emoji.Stuck)
 

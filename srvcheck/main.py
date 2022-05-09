@@ -3,7 +3,7 @@ import sys
 import time
 import configparser
 
-from .notification import Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
+from .notification import Emoji, Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
 from .tasks import *
 from .utils import System
 from .chains import CHAINS
@@ -43,7 +43,7 @@ def main():
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
 			notification.addProvider (NOTIFICATION_SERVICES[x](config))
 	
-	notification.send("monitor started", notification.START_EMOJI)
+	notification.send("monitor started", Emoji.Start)
 
 	system = System(config)
 	print (system.getUsage())

@@ -1,3 +1,4 @@
+from ..notification import Emoji
 from ..utils import toGB, Bash
 from . import Task, minutes, hours
 
@@ -14,7 +15,7 @@ class TaskSystemDiskAlert(Task):
 		usage = self.system.getUsage()
 
 		if usage.diskPercentageUsed > 90:
-			return self.notify('Disk usage is above %d%% (/var/log: %.1fG) %s' % (usage.diskPercentageUsed, toGB(usage.diskUsedByLog), self.notification.DISK_EMOJI))
+			return self.notify('Disk usage is above %d%% (/var/log: %.1fG) %s' % (usage.diskPercentageUsed, toGB(usage.diskUsedByLog), Emoji.Disk))
 			
 		return False
 

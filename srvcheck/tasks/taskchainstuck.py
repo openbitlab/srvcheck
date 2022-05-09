@@ -1,3 +1,4 @@
+from ..notification import Emoji
 from . import Task, minutes
 
 class TaskChainStuck(Task):
@@ -16,6 +17,6 @@ class TaskChainStuck(Task):
 			return False 
 
 		if bh == self.prev:
-			return self.notify('Chain is stuck at block %s %s' % (bh, self.notification.STUCK_EMOJI))
+			return self.notify('Chain is stuck at block %s %s' % (bh, Emoji.Stuck))
 		
 		return False
