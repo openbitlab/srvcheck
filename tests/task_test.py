@@ -1,6 +1,6 @@
 import unittest
 from .mocks import MockNotification, MockChain
-from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck
+from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck, minutes, hours
 from srvcheck.notification.notification import Notification
 
 CONF = {
@@ -16,7 +16,12 @@ def buildTaskEnv(tt):
     t = tt(CONF, n, None, c)
     return (c, n, t)
 
+class TestTimingUtilities(unittest.TestCase):
+    def test_minutes(self):
+        self.assertEqual(minutes(13), 13*60)
 
+    def test_hours(self):
+        self.assertEqual(hours(13), 13*60*60)
 
 class TestTaskChainLowPeer(unittest.TestCase):
     def test_noalert(self):

@@ -8,6 +8,7 @@ class MockChain (Chain):
 
 	peers = 0
 	hash = '0x1234567890'
+	network = 'mocknet'
 	
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -20,3 +21,6 @@ class MockChain (Chain):
 
 	def getBlockHash(self):
 		return self.hash
+
+	def getNetwork(self):
+		return self.network

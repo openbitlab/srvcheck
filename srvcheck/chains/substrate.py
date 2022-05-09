@@ -1,3 +1,4 @@
+import json
 import requests
 from .chain import Chain
 from ..tasks import Task
@@ -12,11 +13,11 @@ class TaskSubstrateNewReferenda(Task):
 		return True
 
 	def run(self):
-		n = self.getNetwork()
+		n = self.chain.getNetwork()
 		if not (n in ['Kusama', 'Polkadot']):
 			return False
 
-		d = requests.post('https://' + n.lower() + '.webapi.subscan.io/api/scan/democracy/referendums', json={"page":0, "row": 25}).json()
+		d = requests.post('https://' + n.lower() + '.webapi.subscan.io/api/scan/democracy/referendums', json.dumps({"page":0, "row": 25})).json()
 		count = d['count']
 
 		if self.prev == None:
@@ -25,7 +26,7 @@ class TaskSubstrateNewReferenda(Task):
 
 		if count > self.prev:
 			self.prev = count
-			return self.notify('New referendum(s) found: %d' % (count - 1))
+			return self.notify('New referendum found on %s: %d' % (n, count - 1))
 		 
 		
 
@@ -38,7 +39,7 @@ class Substrate (Chain):
 	def __init__(self, conf):
 		super().__init__(conf)
 		self.TASKS = []
-		self.TASKS.append(TaskSubstrateNewReferenda)
+		# self.TASKS.append(TaskSubstrateNewReferenda)
 		self.rpcMethods = super().rpcCall('rpc_methods', [])['methods']
 
 	def rpcCall(self, method, params=[]):
