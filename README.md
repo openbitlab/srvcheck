@@ -32,7 +32,9 @@ type = tendermint
 service = validator-node.service
 endpoint = localhost:26657
 blockTime = 60
-activeSet = 
+activeSet =
+ghRepository = chain-org/reponame
+
 
 [tendermint]
 thresholdNotsigned = 

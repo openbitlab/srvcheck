@@ -37,3 +37,7 @@ class Lisk (Chain):
 
     # def isStaking(self):
     #     raise Exception('Abstract isStaking()')
+
+    # def isSynching(self):
+    #     """ Returns true if the node is synching """
+    #     raise Exception('Abstract isSynching()')

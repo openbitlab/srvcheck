@@ -140,3 +140,6 @@ class Tendermint (Chain):
 
 	def getSignatures(self, height):
 		return self.rpcCall('block', [str(height)])['block']['last_commit']['signatures']
+
+	def isSynching(self):
+		raise Exception('Abstract isSynching()')

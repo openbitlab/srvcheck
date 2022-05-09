@@ -58,3 +58,7 @@ class Chain:
     def isStaking(self):
         """ Returns true if the node is staking """
         raise Exception('Abstract isStaking()')
+
+    def isSynching(self):
+        """ Returns true if the node is synching """
+        raise Exception('Abstract isSynching()')
