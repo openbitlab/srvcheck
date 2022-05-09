@@ -2,6 +2,7 @@ import json
 import requests
 from .chain import Chain
 from ..tasks import Task
+from substrateinterface import SubstrateInterface
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=60*60, notifyEvery=60*10*60):
@@ -17,8 +18,14 @@ class TaskSubstrateNewReferenda(Task):
 		if not (n in ['Kusama', 'Polkadot']):
 			return False
 
-		d = requests.post('https://' + n.lower() + '.webapi.subscan.io/api/scan/democracy/referendums', json.dumps({"page":0, "row": 25})).json()
-		count = d['count']
+		si = self.chain.getSubstrateInterface()
+		result = si.query(
+			module='Referenda',
+			storage_function='referendumCount',
+			params=[]
+		)
+
+		count = result.value
 
 		if self.prev == None:
 			self.prev = count
@@ -46,6 +53,9 @@ class Substrate (Chain):
 		if method not in self.rpcMethods:
 			return super().rpcCall(method, params)
 		return None 
+
+	def getSubstrateInterface(self):
+		return SubstrateInterface(url=self.EP)
 
 	def detect(conf):
 		try:
