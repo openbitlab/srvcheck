@@ -7,13 +7,25 @@ class TaskSubstrateNewReferenda(Task):
 		super().__init__('TaskSubstrateNewReferenda',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
-
+		
 	def isPluggable(conf):
 		return True
 
 	def run(self):
-		if not (self.getNetwork() in ['Kusama', 'Polkadot']):
+		n = self.getNetwork()
+		if not (n in ['Kusama', 'Polkadot']):
 			return False
+
+		d = requests.post('https://' + n.lower() + '.webapi.subscan.io/api/scan/democracy/referendums', json={"page":0, "row": 25}).json()
+		count = d['count']
+
+		if self.prev == None:
+			self.prev = count
+			return False
+
+		if count > self.prev:
+			self.prev = count
+			return self.notify('New referendum(s) found: %d' % (count - 1))
 		 
 		
 
