@@ -11,6 +11,7 @@ class MockChain (Chain):
 	network = 'mocknet'
 	version = 'v0.0.0'
 	latestVersion = 'v0.0.0'
+	healthOk = True
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -32,3 +33,11 @@ class MockChain (Chain):
 	
 	def getVersion(self):
 		return self.version
+
+	## Tendermint
+	
+	def getHealth(self):
+		if self.healthOk:
+			return []
+		else:
+			raise Exception('Mockchain is not healthy')
