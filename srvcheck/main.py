@@ -49,6 +49,7 @@ def main():
 	print (system.getUsage())
 
 	# Get the chain by name or by detect
+	chain = None
 	tasks = []
 	for x in CHAINS:
 		if 'chain' in config and config['chain']['type'] == x.TYPE:
