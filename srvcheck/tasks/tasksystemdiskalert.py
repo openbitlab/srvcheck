@@ -3,6 +3,7 @@ from ..utils import toGB, Bash
 from . import Task, minutes, hours
 
 LOG_SIZE_THRESHOLD = 4 #GB
+DISK_LIMIT = 90
 
 class TaskSystemDiskAlert(Task):
 	def __init__(self, conf, notification, system, chain):
@@ -14,8 +15,8 @@ class TaskSystemDiskAlert(Task):
 	def run(self):
 		usage = self.system.getUsage()
 
-		if usage.diskPercentageUsed > 90:
-			return self.notify('Disk usage is above %d%% (/var/log: %.1fG) %s' % (usage.diskPercentageUsed, toGB(usage.diskUsedByLog), Emoji.Disk))
+		if usage.diskPercentageUsed > DISK_LIMIT:
+			return self.notify('Disk usage is above %d%% (%d%%) (/var/log: %.1fG) %s' % (DISK_LIMIT, usage.diskPercentageUsed, toGB(usage.diskUsedByLog), Emoji.Disk))
 			
 		return False
 

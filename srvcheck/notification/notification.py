@@ -29,21 +29,21 @@ class Notification:
 	def addProvider(self, p):
 		self.providers.append(p)
 
-	def append(self, s, emoji = '', level = NotificationLevel.NotDeclared):
+	def append(self, s, level = NotificationLevel.NotDeclared):
 		for x in self.providers:
 			if level < x.LOG_LEVEL and level != NotificationLevel.NotDeclared:
 				continue
-			x.append(self.name + ' ' + s + ('' if emoji == '' else ' ' + emoji))
+			x.append(self.name + ' ' + s)
 
 	def flush(self):
 		for x in self.providers:
 			x.flush()
 
-	def send(self, st, emoji = '', level = NotificationLevel.NotDeclared):
+	def send(self, st, level = NotificationLevel.NotDeclared):
 		for x in self.providers:
 			if level < x.LOG_LEVEL and level != NotificationLevel.NotDeclared:
 				continue
-			x.send(self.name + ' ' + st + ('' if emoji == '' else ' ' + emoji))
+			x.send(self.name + ' ' + st)
 
 	def sendPhoto(self, photo):
 		for x in self.providers:
