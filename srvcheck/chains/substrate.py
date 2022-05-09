@@ -27,6 +27,12 @@ class Substrate (Chain):
 		super().__init__(conf)
 		self.TASKS = []
 		self.TASKS.append(TaskSubstrateNewReferenda)
+		self.rpcMethods = super().rpcCall('rpc_methods', [])['methods']
+
+	def rpcCall(self, method, params=[]):
+		if method not in self.rpcMethods:
+			return super().rpcCall(method, params)
+		return None 
 
 	def detect(conf):
 		try:
