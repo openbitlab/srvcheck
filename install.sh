@@ -1,6 +1,7 @@
 rpc_substrate_port=9933
 rpc_cosmos_port=26657
 name=$(hostname)
+branch="main"
 
 install() {
     check_docker=$(echo $1 | grep docker)
@@ -21,7 +22,7 @@ print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
  -b  --block-time <time> expected block time [default is 60 seconds]
-     --branch <name> name of the branch to use for the installation
+     --branch <name> name of the branch to use for the installation [default is main]
      --git <git_api> git api to query the latest realease version installed
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
@@ -186,7 +187,7 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ -z $chat_id || -z $api_token || -z $branch || -z $service ]]
+if [[ -z $chat_id || -z $api_token || -z $service ]]
 then
     print_help
     exit 1

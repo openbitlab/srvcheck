@@ -1,6 +1,7 @@
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours
+import requests
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
@@ -116,10 +117,14 @@ class Tendermint (Chain):
 		return self.rpcCall('health')
 
 	def getLatestVersion(self):
-		raise Exception('Abstract getLatestVersion()')
+		c = requests.get('https://api.github.com/repos/' + self.conf['chain']['ghRepository']+ '/releases/latest').json()
+		return c['tag_name']
 
 	def getVersion(self):
-		return self.rpcCall('abci_info')
+		try:
+			return self.rpcCall('abci_info')["response"]["version"]
+		except:
+			return self.conf['chain']['localVersion']
 
 	def getHeight(self):
 		return self.rpcCall('abci_info')['response']['last_block_height']

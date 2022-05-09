@@ -9,8 +9,10 @@ class MockChain (Chain):
 	peers = 0
 	hash = '0x1234567890'
 	network = 'mocknet'
+	version = 'v0.0.0'
+	latestVersion = 'v0.0.0'
 	healthOk = True
-	
+
 	def __init__(self, conf):
 		super().__init__(conf)
 
@@ -25,10 +27,15 @@ class MockChain (Chain):
 
 	def getNetwork(self):
 		return self.network
-
+		
+	def getLatestVersion(self):
+		return self.latestVersion
+	
+	def getVersion(self):
+		return self.version
 
 	## Tendermint
-
+	
 	def getHealth(self):
 		if self.healthOk:
 			return []
