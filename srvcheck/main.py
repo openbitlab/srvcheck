@@ -55,11 +55,14 @@ def main():
 			chain = x(config)
 			tasks = addTasks(chain, notification, system, config)
 			break
-		elif x.detect(config):
-			chain = x(config)
-			print ("Detected chain %s", chain.TYPE)
-			tasks = addTasks(chain, notification, system, config)
-			break
+
+	if not chain:
+		for x in CHAINS:
+			if x.detect(config):
+				chain = x(config)
+				print ("Detected chain %s", chain.TYPE)
+				tasks = addTasks(chain, notification, system, config)
+				break
 
 	# Mainloop
 	TTS = 60
