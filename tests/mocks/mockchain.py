@@ -19,7 +19,7 @@ class MockChain (Chain):
 	def detect(conf):
 		return True
 
-	def getPeerNumber(self):
+	def getPeerCount(self):
 		return self.peers
 
 	def getBlockHash(self):
