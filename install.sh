@@ -53,7 +53,7 @@ install_monitor () {
     fi
     if [ ! -z "$git_api" ]
     then
-        sed -i -e "s,^gitApi =.*,gitApi = $git_api,g" $config_file
+        sed -i -e "s,^ghRepository =.*,ghRepository = $git_api,g" $config_file
     fi
     if [ ! -z "$local_version" ]
     then
