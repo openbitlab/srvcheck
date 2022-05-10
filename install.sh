@@ -39,6 +39,8 @@ install_monitor () {
     wget -q https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
+    sed -i -e "s/^tagVersion =.*/tagVersion = $(curl https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags -s | jq .[-1] | jq .ref | grep -oP '(?<=v).*?(?=\")')/" $config_file
+    sed -i -e "s/^commit =.*/commit = $(curl https://api.github.com/repos/openbitlab/srvcheck/git/refs/heads/main -s | jq .object.sha -r | head -c 7)/" $config_file
     sed -i -e "s/^name =.*/name = $name/" $config_file
     sed -i -e "s/^service =.*/service = $service/" $config_file
     if [ ! -z "$block_time" ]
