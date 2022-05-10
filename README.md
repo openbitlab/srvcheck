@@ -10,7 +10,7 @@ Supported ecosystems:
 ## Install & Update
 
 ```bash 
-curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> --branch <branch_name> -s <service_name>  <optional_flags>
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> <optional_flags>
 ```
 
 
@@ -33,19 +33,14 @@ service = validator-node.service
 endpoint = localhost:26657
 blockTime = 60
 activeSet =
+localVersion = v1.0.0 
 ghRepository = chain-org/reponame
-
-
-[tendermint]
 thresholdNotsigned = 
 blockWindow = 
 
-[version]
-localVersion = 
-gitApi = 
-
 [tasks]
 disabled = name_of_a_task_to_disable
+autoRecover = true 
 ```
 
 ## Usage
@@ -53,7 +48,7 @@ disabled = name_of_a_task_to_disable
 install --help
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
  -b  --block-time <time> expected block time [default is 60 seconds]
-     --branch <name> name of the branch to use for the installation
+     --branch <name> name of the branch to use for the installation [default is main]
      --git <git_api> git api to query the latest realease version installed
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
