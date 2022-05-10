@@ -4,12 +4,13 @@ from .tasksystemusage import TaskSystemUsage
 from .tasksystemdiskalert import TaskSystemDiskAlert
 from .tasksystemcpualert import TaskSystemCpuAlert
 from .taskchainlowpeer import TaskChainLowPeer
+from .tasknewrelease import TaskNewRelease
 
 TASKS = [ 
     TaskChainStuck, 
     TaskChainLowPeer,
-    
     TaskSystemUsage, 
     TaskSystemDiskAlert, 
-    TaskSystemCpuAlert 
+    TaskSystemCpuAlert,
+    TaskNewRelease
 ]
