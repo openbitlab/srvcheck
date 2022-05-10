@@ -7,6 +7,7 @@ from .notification import Emoji, Notification, DummyNotification, TelegramNotifi
 from .tasks import *
 from .utils import System
 from .chains import CHAINS
+from srvcheck import notification
 
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')
@@ -37,7 +38,7 @@ def main():
 	config.read('/etc/srvcheck.conf')
 
 	# Initialization
-	notification = Notification (config['chain']['name'])
+	notification.send("monitor v%s-%s started %s" %(Emoji.Start,config['version']['tagVersion'],config['version']['commit']))
 
 	for x in NOTIFICATION_SERVICES:
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
