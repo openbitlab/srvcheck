@@ -5,6 +5,7 @@ from .tasksystemdiskalert import TaskSystemDiskAlert
 from .tasksystemcpualert import TaskSystemCpuAlert
 from .taskchainlowpeer import TaskChainLowPeer
 from .tasknewrelease import TaskNewRelease
+from .taskautoupdater import TaskAutoUpdater
 
 TASKS = [ 
     TaskChainStuck, 
@@ -12,5 +13,6 @@ TASKS = [
     TaskSystemUsage, 
     TaskSystemDiskAlert, 
     TaskSystemCpuAlert,
-    TaskNewRelease
+    TaskNewRelease,
+    TaskAutoUpdater
 ]
