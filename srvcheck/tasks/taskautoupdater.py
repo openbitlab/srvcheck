@@ -12,7 +12,7 @@ class TaskAutoUpdater(Task):
         nTag = requests.get('https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags').json()[-1]['ref'].split('/')[-1]
         if self.conf["version"]["tagVersion"] != nTag:
             self.notify('Installing new monitor version: %s' % (nTag))
-            Bash('pip install git+https://github.com/openbitlab/srvcheck')
+            Bash('pip install --upgrade git+https://github.com/openbitlab/srvcheck')
             Bash('systemctl restart node-monitor.service')
 
       
