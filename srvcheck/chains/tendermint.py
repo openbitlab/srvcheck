@@ -43,12 +43,12 @@ class TaskTendermintNewProposal(Task):
 		return True
 	
 	def run(self):
-		nProposal=json.loads(Bash(self.chain.conf["chain"]["cmd"]+" q gov proposal --reverse --limit 1 --output json").stdout)["proposals"][0]
+		nProposal=self.getLatestProposal()
 		if not self.prev:
-			self.prev = Bash(self.chain.conf["chain"]["cmd"]+" q gov proposal --reverse --limit 1 --output json").stdout
-			self.prev = json.loads(self.prev)["proposals"][0]
+			self.prev = self.getLatestProposal()
 		elif self.prev["proposal_id"] != nProposal["proposal_id"]:
-			return self.notify(" got new proposal: "+ nProposal["title"])
+			self.prev = nProposal
+			return self.notify(" got new proposal: "+ nProposal["content"]["title"])
 
 		return False
 
@@ -173,3 +173,6 @@ class Tendermint (Chain):
 
 	def isSynching(self):
 		raise Exception('Abstract isSynching()')
+	
+	def getLatestProposal(self):
+		return json.loads(Bash(self.chain.conf["chain"]["cmd"]+" q gov proposal --reverse --limit 1 --output json").stdout)["proposals"][0]
