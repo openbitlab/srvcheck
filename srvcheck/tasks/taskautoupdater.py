@@ -2,8 +2,7 @@ from distutils.core import setup
 from . import Task, minutes, hours
 from ..utils import Bash
 import requests
-import subprocess
-from ....srvcheck import srvcheck
+from .... import srvcheck
 
 class TaskAutoUpdater(Task):
     def __init__(self, conf, notification, system, chain):
