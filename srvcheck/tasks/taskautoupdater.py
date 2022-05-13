@@ -12,8 +12,7 @@ class TaskAutoUpdater(Task):
         return True
     
     def run(self):
-        nTag = requests.get('https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags').json()
-        nTag = nTag[-1]['ref'].split('/')[-1].split('v')[1]
+        nTag = requests.get('https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags').json()[-1]['ref'].split('/')[-1].split('v')[1]
 
         if srvcheck.__version__ != nTag:
             self.notify('Installing new monitor version: %s' % (nTag))
