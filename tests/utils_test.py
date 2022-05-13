@@ -1,5 +1,5 @@
 import unittest
-from srvcheck.utils import Bash, System
+from ..srvcheck.utils import Bash, System
 
 class TestUtilsBash(unittest.TestCase):
     def test_echo(self):

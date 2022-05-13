@@ -1,6 +1,6 @@
 import unittest
 from .task_test import buildTaskEnv
-from srvcheck.chains.tendermint import TaskTendermintHealthError
+from ..srvcheck.chains.tendermint import TaskTendermintHealthError
 
 
 class TestTaskTendermintHealthError(unittest.TestCase):
