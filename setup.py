@@ -1,8 +1,10 @@
 from setuptools import find_packages
 from setuptools import setup
 
+import srvcheck
+
 setup(name='srvcheck',
-	version='0.1',
+	version=srvcheck.__version__,
 	description='',
 	author='Davide Gessa',
 	setup_requires='setuptools',

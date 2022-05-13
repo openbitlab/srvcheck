@@ -3,6 +3,8 @@ import sys
 import time
 import configparser
 
+import srvcheck
+
 from .notification import Emoji, Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
 from .tasks import *
 from .utils import System
@@ -36,6 +38,9 @@ def main():
 	config = configparser.ConfigParser()
 	config.read('/etc/srvcheck.conf')
 
+	# Get version
+	version = srvcheck.__version__
+
 	# Initialization
 	notification = Notification (config['chain']['name'])
 
@@ -43,7 +48,7 @@ def main():
 		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
 			notification.addProvider (NOTIFICATION_SERVICES[x](config))
 	
-	notification.send("monitor started %s" % Emoji.Start)
+	notification.send("monitor v%s started %s" %(version, Emoji.Start))
 
 	system = System(config)
 	print (system.getUsage())

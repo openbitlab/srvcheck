@@ -50,7 +50,7 @@ class Substrate (Chain):
 		self.rpcMethods = super().rpcCall('rpc_methods', [])['methods']
 
 	def rpcCall(self, method, params=[]):
-		if method not in self.rpcMethods:
+		if method in self.rpcMethods:
 			return super().rpcCall(method, params)
 		return None 
 
