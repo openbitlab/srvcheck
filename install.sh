@@ -28,7 +28,8 @@ print_help () {
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -n  --name <name> monitor name [default is the server hostname]
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
- -s  --service <name> service name of the node to monitor [required]"
+ -s  --service <name> service name of the node to monitor [required]
+ -c  --cmd <ledger application> command or absolute path to tendermint ledger application, used to query governance proposal"
 }
 
 install_monitor () {
@@ -171,6 +172,17 @@ case $1 in
             exit 1
         else
             service="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    -c|--cmd)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            cmd="$2"
         fi
         shift # past argument
         shift # past value
