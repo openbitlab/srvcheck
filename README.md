@@ -41,6 +41,10 @@ blockWindow =
 [tasks]
 disabled = name_of_a_task_to_disable
 autoRecover = true 
+
+[version]
+tagVersion = 
+commit = 
 ```
 
 ## Usage
