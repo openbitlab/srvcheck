@@ -1,6 +1,6 @@
 import unittest
 
-from ..srvcheck.tasks.tasknewrelease import TaskNewRelease
+from srvcheck.tasks.tasknewrelease import TaskNewRelease
 from .mocks import MockNotification, MockChain, MockSystem
 from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck, TaskSystemCpuAlert, TaskSystemDiskAlert, minutes, hours
 from srvcheck.notification.notification import Emoji, Notification
