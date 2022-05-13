@@ -43,9 +43,9 @@ class TaskTendermintNewProposal(Task):
 		return True
 	
 	def run(self):
-		nProposal=self.getLatestProposal()
+		nProposal=self.chain.getLatestProposal()
 		if not self.prev:
-			self.prev = self.getLatestProposal()
+			self.prev = self.chain.getLatestProposal()
 		elif self.prev["proposal_id"] != nProposal["proposal_id"]:
 			self.prev = nProposal
 			return self.notify(" got new proposal: "+ nProposal["content"]["title"])
