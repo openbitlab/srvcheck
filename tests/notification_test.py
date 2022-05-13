@@ -1,6 +1,6 @@
 import unittest
 from .mocks import MockNotification
-from ..srvcheck.notification import Notification
+from srvcheck.notification import Notification
 
 class TestNotification(unittest.TestCase):
     def test_send(self):
