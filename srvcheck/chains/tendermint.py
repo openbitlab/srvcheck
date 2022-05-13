@@ -20,10 +20,10 @@ class TaskTendermintBlockMissed(Task):
 
 		if not self.prev:
 			self.prev = nblockh
-		elif nblockh - self.prev >= self.BLOCK_WINDOW:
-			block = self.prev
+		elif int(nblockh) - (self.prev) >= self.BLOCK_WINDOW:
+			block = int(self.prev)
 			missed = 0
-			while block < self.prev+self.BLOCK_WINDOW:
+			while block < int(self.prev) + int(self.BLOCK_WINDOW):
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
@@ -49,9 +49,9 @@ class TaskTendermintPositionChanged(Task):
 
 		if npos != self.prev:
 			if npos > self.prev:
-				return self.notify('Position increased from %d to %d %s' % (self.prev, npos, Emoji.PosUp))
+				return self.notify('position decreased from %d to %d %s' % (self.prev, npos, Emoji.PosUp))
 			else:
-				return self.notify('Position decreased from %d to %d %s' % (self.prev, npos, Emoji.PosDown))
+				return self.notify('position increased from %d to %d %s' % (self.prev, npos, Emoji.PosDown))
 				
 		return False
 
@@ -63,14 +63,18 @@ class TaskTendermintPositionChanged(Task):
 			active_s = int(self.chain.rpcCall('validators', [bh, "1", "1"])['total'])
 		else:
 			active_s = int(self.ACTIVE_SET)
+		print(active_s)
 		if (active_s > 100):
 			it = active_s // 100
-			diff = 0
+			diff = active_s
 			for i in range(it):
 				active_vals += self.chain.rpcCall('validators', [bh, str(i + 1), "100"])['validators']
-				diff = active_s - 100
+				diff -= 100
+				print(diff)
 			if (diff > 0):
+				print("diff")
 				active_vals += self.chain.rpcCall('validators', [bh, str(i + 2), "100"])['validators']
+				print("diff1")
 		else:
 			active_vals += self.chain.rpcCall('validators', [bh, "1", str(active_s)])['validators']
 		p = [i for i, j in enumerate(active_vals) if j['address'] == self.chain.getValidatorAddress()]
