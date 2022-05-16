@@ -43,5 +43,5 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], '  got new proposal: Upgrade IBC client')
+        self.assertEqual(n.events[0], ' got new proposal: Upgrade IBC client')
 
