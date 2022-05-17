@@ -3,12 +3,14 @@ import sys
 import time
 import configparser
 
+from numpy import isin
+
 import srvcheck
 
 from .notification import Emoji, Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
 from .tasks import *
 from .utils import System
-from .chains import CHAINS
+from .chains import *
 
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')
@@ -35,27 +37,16 @@ def addTasks(chain, notification, system, config):
 
 
 def default_conf():
-	# Gather all classes
-	e = []
-	for x in CHAINS:
-		e += x
-		e += x({}).TASKS
-	
-	for x in NOTIFICATION_SERVICES:
-		e += x
-	
-	for x in TASKS:
-		e += x
+	import inspect
+	from .utils import RequireValue
+	cls = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+	cls = list(filter(lambda x: issubclass(x[1], RequireValue), cls))
 
 
 	# Create config object
 	conf = {}
 
-	for x in e:
-		pass
-
 	# Dump config object
-	
 
 
 def main():

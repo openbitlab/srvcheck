@@ -1,0 +1,2 @@
+class RequireValue:
+    pass 
