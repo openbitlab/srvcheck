@@ -3,13 +3,14 @@ from ..utils import Bash
 import json
 
 class Lisk (Chain):
+    TYPE = "lisk"
     NAME = "lisk"
     BLOCKTIME = 15 
     EP = 'http://localhost:9933/'
+    CUSTOM_TASKS = []
 
     def __init__(self, conf):
         super().__init__(conf)
-        self.TASKS = []
 
     def detect(conf):
         try:

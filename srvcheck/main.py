@@ -24,7 +24,7 @@ def addTasks(chain, notification, system, config):
 	# Create the list of tasks
 	tasks = []
 
-	for x in TASKS + chain.TASKS:
+	for x in TASKS + chain.CUSTOM_TASKS:
 		task = x(config, notification, system, chain)
 		if 'disabled' in config['tasks'] and config['tasks']['disabled'].find(task.name) != -1:
 			continue
