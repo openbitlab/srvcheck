@@ -4,6 +4,11 @@ def rpcCall(url, method, params=[]):
     d = requests.post(url, json={'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}).json()
     return d['result']
 
+
+def getCall(url, data):
+    return requests.get(url, json=data).json()
+
+
 class Chain:
     NAME = ""
     BLOCKTIME = 10
@@ -24,6 +29,10 @@ class Chain:
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """
         return rpcCall(self.EP, method, params)
+
+    def getCall(self, r, data):
+        """ Calls the GET method with the given parameters """
+        return getCall(self.EP + r, data)
 
     ### Abstract methods
     def detect():

@@ -3,6 +3,7 @@ from ..utils import Bash
 import json
 
 class Lisk (Chain):
+    TYPE = "lisk"
     NAME = "lisk"
     BLOCKTIME = 15 
     EP = 'http://localhost:9933/'
