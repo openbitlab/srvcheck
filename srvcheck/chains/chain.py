@@ -38,6 +38,10 @@ class Chain:
         """ Returns software version """
         raise Exception('Abstract getVersion()')
 
+    def getLocalVersion(self):
+        """ Returns software local version """
+        raise Exception('Abstract getLocalVersion()')
+
     def getHeight(self):
         """ Returns the block height """
         raise Exception('Abstract getHeight()')

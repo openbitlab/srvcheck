@@ -75,6 +75,9 @@ class Solana (Chain):
 	def getVersion(self):
 		return self.rpcCall('getVersion')["solana-core"]
 
+	def getLocalVersion(self):
+		return self.getVersion()
+
 	def getHeight(self):
 		return self.rpcCall('getBlockHeight')
 
