@@ -93,21 +93,16 @@ class TaskTendermintHealthError(Task):
 		except Exception as e:
 			return self.notify('Health error! %s' % Emoji.Health)
 		
+TENDERMINT_CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError]
 
 class Tendermint (Chain):
 	TYPE = "tendermint"
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
-	TASKS = []
 	
-	def __init__(self, conf, addTasks=False):
+	def __init__(self, conf):
 		super().__init__(conf)
-		if addTasks:
-			self.TASKS.append(TaskTendermintHealthError)
-			if self.isStaking():
-				self.TASKS.append(TaskTendermintPositionChanged)
-				self.TASKS.append(TaskTendermintBlockMissed)
 
 	def detect(conf):
 		try:

@@ -43,7 +43,7 @@ class Substrate (Chain):
 	BLOCKTIME = 15 
 	EP = 'http://localhost:9933/'
 
-	def __init__(self, conf, addTasks=False):
+	def __init__(self, conf):
 		super().__init__(conf)
 		self.TASKS = []
 		# self.TASKS.append(TaskSubstrateNewReferenda)
