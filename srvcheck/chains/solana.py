@@ -29,7 +29,22 @@ class TaskSolanaDelinquentCheck(Task):
 
 	def run(self):
 		if self.chain.isDelinquent():
-			return self.notify('validator is delinquent! %s' % Emoji.Delinq)
+			return self.notify('validator is delinquent %s' % Emoji.Delinq)
+		else:
+			return False
+
+class TaskSolanaBalanceCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaBalanceCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		balance = self.chain.getValidatorBalance()
+		if balance < 1:
+			return self.notify('validator balance is too low,  %s SOL left %s' % (balance, Emoji.LowBal))
 		else:
 			return False
 
@@ -90,3 +105,6 @@ class Solana (Chain):
 		if len(val_info) > 0:
 			return val_info[0]["delinquent"]
 		raise Exception('Identity not found in the validators list')
+
+	def getValidatorBalance(self):
+		return int(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'"))

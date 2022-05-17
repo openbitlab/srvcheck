@@ -20,6 +20,7 @@ class Emoji:
 	Health 		= "\U0001F6A8"
 	Cpu 		= "\U000026A0"
 	Delinq      = "\U0001F46E"
+	LowBal      = "\U0001F4B8"
 
 class Notification:
 	def __init__(self, name):
