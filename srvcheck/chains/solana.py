@@ -2,7 +2,7 @@ from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours
 from ..utils import Bash
-import 
+import requests
 
 class TaskSolanaHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
@@ -24,7 +24,7 @@ class Solana (Chain):
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:8899/"
-	TASKS = []
+	CUSTOM_TASKS = [TaskSolanaHealthError]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
