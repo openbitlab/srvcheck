@@ -29,7 +29,7 @@ print_help () {
  -n  --name <name> monitor name [default is the server hostname]
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
- -c  --cmd <ledger application> command or absolute path to tendermint ledger application, used to query governance proposal"
+ -g  --gov enable checks on new governance proposals (tendermint)"
 }
 
 install_monitor () {
@@ -176,13 +176,13 @@ case $1 in
         shift # past argument
         shift # past value
     ;;
-    -c|--cmd)
+    -g|--gov)
         if [[ -z $2 ]]
         then
+            sed -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
+        else
             print_help
             exit 1
-        else
-            cmd="$2"
         fi
         shift # past argument
         shift # past value

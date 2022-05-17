@@ -4,6 +4,8 @@ from ..tasks import Task,  hours
 import requests
 from ..utils import Bash
 import json
+import configparser
+import re
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
@@ -127,8 +129,6 @@ class Tendermint (Chain):
 		if self.isStaking():
 			self.TASKS.append(TaskTendermintPositionChanged)
 			self.TASKS.append(TaskTendermintBlockMissed)
-		if self.conf["cmd"] != None:
-			self.TASKS.append(TaskTendermintNewProposal)
 
 	def detect(conf):
 		try:
@@ -175,4 +175,6 @@ class Tendermint (Chain):
 		raise Exception('Abstract isSynching()')
 	
 	def getLatestProposal(self):
-		return json.loads(Bash(self.chain.conf["chain"]["cmd"]+" q gov proposal --reverse --limit 1 --output json").stdout)["proposals"][0]
+		cmd = configparser.ConfigParser().read('/etc/systemd/system/'+self.chain.conf["chain"]["service"])
+		cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]
+		return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").stdout)["proposals"][0]
