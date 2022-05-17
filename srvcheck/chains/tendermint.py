@@ -20,13 +20,13 @@ class TaskTendermintBlockMissed(Task):
 
 		if not self.prev:
 			self.prev = nblockh
-		elif int(nblockh) - (self.prev) >= self.BLOCK_WINDOW:
+		elif int(nblockh) - (self.prev) >= int(self.BLOCK_WINDOW):
 			block = int(self.prev)
 			missed = 0
 			while block < int(self.prev) + int(self.BLOCK_WINDOW):
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
-			if missed >= self.THRESHOLD_NOTSIGNED:
+			if missed >= int(self.THRESHOLD_NOTSIGNED):
 				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
 
 		return False
@@ -101,12 +101,13 @@ class Tendermint (Chain):
 	EP = "http://localhost:26657/"
 	TASKS = []
 	
-	def __init__(self, conf):
+	def __init__(self, conf, addTasks=False):
 		super().__init__(conf)
-		self.TASKS.append(TaskTendermintHealthError)
-		if self.isStaking():
-			self.TASKS.append(TaskTendermintPositionChanged)
-			self.TASKS.append(TaskTendermintBlockMissed)
+		if addTasks:
+			self.TASKS.append(TaskTendermintHealthError)
+			if self.isStaking():
+				self.TASKS.append(TaskTendermintPositionChanged)
+				self.TASKS.append(TaskTendermintBlockMissed)
 
 	def detect(conf):
 		try:
