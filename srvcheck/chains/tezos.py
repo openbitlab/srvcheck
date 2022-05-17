@@ -1,6 +1,7 @@
 from .chain import Chain
 
 class Tezos (Chain):
+    TYPE = "tezos"
     NAME = "tezos"
     BLOCKTIME = 60
     EP = 'http://127.0.0.1:8732/'
