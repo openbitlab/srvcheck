@@ -213,9 +213,9 @@ then
 fi
 
 rpc_solana=$(lsof -i:$rpc_solana_port)
-#check if we're dealing with a cosmos based blockchain
+#check if we're dealing with solana blockchain
 if [ ! -z "$rpc_solana" ]
 then 
-    echo "It's solana"
+    echo "It's solana blockchain"
     install "$rpc_solana"
 fi
