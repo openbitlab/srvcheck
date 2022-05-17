@@ -1,7 +1,23 @@
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours
-import requests
+from ..utils import Bash
+import 
+
+class TaskSolanaHealthError(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		try:
+			self.chain.getHealth()
+			return False
+		except Exception as e:
+			return self.notify('Health error! %s' % Emoji.Health)
 
 class Solana (Chain):
 	TYPE = "solana"
