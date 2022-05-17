@@ -33,6 +33,31 @@ def addTasks(chain, notification, system, config):
 			tasks.append(task)
 	return tasks
 
+
+def default_conf():
+	# Gather all classes
+	e = []
+	for x in CHAINS:
+		e += x
+		e += x({}).TASKS
+	
+	for x in NOTIFICATION_SERVICES:
+		e += x
+	
+	for x in TASKS:
+		e += x
+
+
+	# Create config object
+	conf = {}
+
+	for x in e:
+		pass
+
+	# Dump config object
+	
+
+
 def main():
 	# Parse configuration
 	config = configparser.ConfigParser()

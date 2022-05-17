@@ -19,6 +19,7 @@ setup(name='srvcheck',
 	entry_points={
 		'console_scripts': [
 			'srvcheck=srvcheck.main:main',
+			'srvcheck.default-conf=srvcheck.main:default_conf',
 		],
 	},
     zip_safe=False,
