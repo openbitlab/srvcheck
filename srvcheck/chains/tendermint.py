@@ -92,14 +92,13 @@ class TaskTendermintHealthError(Task):
 			return False
 		except Exception as e:
 			return self.notify('Health error! %s' % Emoji.Health)
-		
-TENDERMINT_CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError]
 
 class Tendermint (Chain):
 	TYPE = "tendermint"
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
+	CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError]
 	
 	def __init__(self, conf):
 		super().__init__(conf)

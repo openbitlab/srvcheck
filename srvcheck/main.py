@@ -24,10 +24,8 @@ except:
 def addTasks(chain, notification, system, config):
 	# Create the list of tasks
 	tasks = []
-	all_tasks = [TASKS]
-	if (chain.TYPE == "tendermint"): all_tasks += TENDERMINT_CUSTOM_TASKS
 
-	for x in all_tasks:
+	for x in TASKS + chain.CUSTOM_TASKS:
 		task = x(config, notification, system, chain)
 		if 'disabled' in config['tasks'] and config['tasks']['disabled'].find(task.name) != -1:
 			continue
@@ -61,14 +59,14 @@ def main():
 	tasks = []
 	for x in CHAINS:
 		if 'chain' in config and config['chain']['type'] == x.TYPE:
-			chain = x(config)
+			chain = x(config, True)
 			tasks = addTasks(chain, notification, system, config)
 			break
 
 	if not chain:
 		for x in CHAINS:
 			if x.detect(config):
-				chain = x(config)
+				chain = x(config, True)
 				print ("Detected chain %s", chain.TYPE)
 				tasks = addTasks(chain, notification, system, config)
 				break
