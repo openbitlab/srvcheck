@@ -1,6 +1,4 @@
 from .chain import Chain
-from ..utils import Bash 
-import json
 
 class Tezos (Chain):
     NAME = "tezos"
@@ -22,22 +20,23 @@ class Tezos (Chain):
         raise Exception('Abstract getLatestVersion()')
 
     def getVersion(self):
-        return self._nodeInfo()['version']
+        a = self.getCall('version')
+        return 'v%s.%s.%s' % (a['major'], a['minor'])
 
     def getHeight(self):
         return self.getCall('chains/main/blocks/head/helpers/current_level')['level']
 
     def getBlockHash(self):
-        return self._nodeInfo()['lastBlockID']
+        return self.getCall('chains/main/blocks/head')['hash']
 
     def getPeerCount(self):
-        return len(self._nodeInfo()['network']['seedPeers'])
+        return len(self.getCall('network/peers'))
 
     def getNetwork(self):
-        return self._nodeInfo()['genesisConfig']['communityIdentifier']
+        return self.getCall('network/version')['chain_name']
 
     def isStaking(self):
-        return len(self._forgingStatus()) > 0
+        return False
 
     def isSynching(self):
-        return self._nodeInfo()['syncing']
+        return False
