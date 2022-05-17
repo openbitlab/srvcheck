@@ -19,12 +19,26 @@ class TaskSolanaHealthError(Task):
 		except Exception as e:
 			return self.notify('Health error! %s' % Emoji.Health)
 
+class TaskSolanaDelinquentCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaDelinquentCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		if self.chain.isDelinquent():
+			return self.notify('validator is delinquent! %s' % Emoji.Delinq)
+		else:
+			return False
+
 class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:8899/"
-	CUSTOM_TASKS = [TaskSolanaHealthError]
+	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck ]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -40,7 +54,7 @@ class Solana (Chain):
 		return self.rpcCall('getHealth')
 
 	def getLatestVersion(self):
-		c = requests.get('https://api.github.com/repos/' + self.conf['chain']['ghRepository']+ '/releases/latest').json()
+		c = requests.get(f"https://api.github.com/repos/{self.conf['chain']['ghRepository']}/releases/latest").json()
 		return c['tag_name']
 
 	def getVersion(self):
@@ -63,3 +77,16 @@ class Solana (Chain):
 
 	def isSynching(self):
 		raise Exception('Abstract isSynching()')
+
+	def getIdentityAddress(self):
+		return Bash(f"solana address --url {self.EP}")
+
+	def getValidators(self):
+		return Bash(f"solana validators --url {self.EP} --output json-compact")["validators"]
+
+	def isDelinquent(self):
+		validators = self.getValidators()
+		val_info = [i for i in validators if i['identityPubkey'] == self.getIdentityAddress()]
+		if len(val_info) > 0:
+			return val_info[0]["delinquent"]
+		raise Exception('Identity not found in the validators list')
