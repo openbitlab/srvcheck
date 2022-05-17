@@ -5,8 +5,8 @@ import requests
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
-		self.BLOCK_WINDOW = conf["chain"]["blockWindow"]
-		self.THRESHOLD_NOTSIGNED = conf["chain"]["thresholdNotsigned"]
+		self.BLOCK_WINDOW = int(conf["chain"]["blockWindow"])
+		self.THRESHOLD_NOTSIGNED = int(conf["chain"]["thresholdNotsigned"])
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
@@ -21,9 +21,9 @@ class TaskTendermintBlockMissed(Task):
 		if not self.prev:
 			self.prev = nblockh
 		elif nblockh - self.prev >= self.BLOCK_WINDOW:
-			block = self.prev
+			block = int(self.prev)
 			missed = 0
-			while block < self.prev+self.BLOCK_WINDOW:
+			while block < self.prev + self.BLOCK_WINDOW:
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
@@ -48,10 +48,12 @@ class TaskTendermintPositionChanged(Task):
 			self.prev = npos
 
 		if npos != self.prev:
-			if npos > self.prev:
-				return self.notify('Position increased from %d to %d %s' % (self.prev, npos, Emoji.PosUp))
+			prev = self.prev
+			self.prev = npos
+			if npos > prev:
+				return self.notify('position decreased from %d to %d %s' % (self.prev, npos, Emoji.PosUp))
 			else:
-				return self.notify('Position decreased from %d to %d %s' % (self.prev, npos, Emoji.PosDown))
+				return self.notify('position increased from %d to %d %s' % (self.prev, npos, Emoji.PosDown))
 				
 		return False
 
@@ -65,10 +67,10 @@ class TaskTendermintPositionChanged(Task):
 			active_s = int(self.ACTIVE_SET)
 		if (active_s > 100):
 			it = active_s // 100
-			diff = 0
+			diff = active_s
 			for i in range(it):
 				active_vals += self.chain.rpcCall('validators', [bh, str(i + 1), "100"])['validators']
-				diff = active_s - 100
+				diff -= 100
 			if (diff > 0):
 				active_vals += self.chain.rpcCall('validators', [bh, str(i + 2), "100"])['validators']
 		else:
@@ -90,21 +92,16 @@ class TaskTendermintHealthError(Task):
 			return False
 		except Exception as e:
 			return self.notify('Health error! %s' % Emoji.Health)
-		
 
 class Tendermint (Chain):
 	TYPE = "tendermint"
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
-	TASKS = []
+	CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.TASKS.append(TaskTendermintHealthError)
-		if self.isStaking():
-			self.TASKS.append(TaskTendermintPositionChanged)
-			self.TASKS.append(TaskTendermintBlockMissed)
 
 	def detect(conf):
 		try:
@@ -127,7 +124,7 @@ class Tendermint (Chain):
 			return self.conf['chain']['localVersion']
 
 	def getHeight(self):
-		return self.rpcCall('abci_info')['response']['last_block_height']
+		return int(self.rpcCall('abci_info')['response']['last_block_height'])
 
 	def getBlockHash(self):
 		return self.rpcCall('status')['sync_info']['latest_block_hash']

@@ -9,6 +9,7 @@ from .notification import Emoji, Notification, DummyNotification, TelegramNotifi
 from .tasks import *
 from .utils import System
 from .chains import CHAINS
+from .chains.tendermint import TENDERMINT_CUSTOM_TASKS
 
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')
@@ -24,7 +25,7 @@ def addTasks(chain, notification, system, config):
 	# Create the list of tasks
 	tasks = []
 
-	for x in TASKS + chain.TASKS:
+	for x in TASKS + chain.CUSTOM_TASKS:
 		task = x(config, notification, system, chain)
 		if 'disabled' in config['tasks'] and config['tasks']['disabled'].find(task.name) != -1:
 			continue
@@ -58,14 +59,14 @@ def main():
 	tasks = []
 	for x in CHAINS:
 		if 'chain' in config and config['chain']['type'] == x.TYPE:
-			chain = x(config)
+			chain = x(config, True)
 			tasks = addTasks(chain, notification, system, config)
 			break
 
 	if not chain:
 		for x in CHAINS:
 			if x.detect(config):
-				chain = x(config)
+				chain = x(config, True)
 				print ("Detected chain %s", chain.TYPE)
 				tasks = addTasks(chain, notification, system, config)
 				break
