@@ -4,3 +4,6 @@ tests/__pycache__
 *.egg-info
 .tox
 .coverage
+.pytest_cache
+build
+dist
