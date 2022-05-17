@@ -5,8 +5,8 @@ import requests
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
-		self.BLOCK_WINDOW = conf["chain"]["blockWindow"]
-		self.THRESHOLD_NOTSIGNED = conf["chain"]["thresholdNotsigned"]
+		self.BLOCK_WINDOW = int(conf["chain"]["blockWindow"])
+		self.THRESHOLD_NOTSIGNED = int(conf["chain"]["thresholdNotsigned"])
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
@@ -20,13 +20,13 @@ class TaskTendermintBlockMissed(Task):
 
 		if not self.prev:
 			self.prev = nblockh
-		elif int(nblockh) - (self.prev) >= int(self.BLOCK_WINDOW):
+		elif nblockh - self.prev >= self.BLOCK_WINDOW:
 			block = int(self.prev)
 			missed = 0
-			while block < int(self.prev) + int(self.BLOCK_WINDOW):
+			while block < self.prev + self.BLOCK_WINDOW:
 				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
 				block += 1
-			if missed >= int(self.THRESHOLD_NOTSIGNED):
+			if missed >= self.THRESHOLD_NOTSIGNED:
 				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
 
 		return False
@@ -124,7 +124,7 @@ class Tendermint (Chain):
 			return self.conf['chain']['localVersion']
 
 	def getHeight(self):
-		return self.rpcCall('abci_info')['response']['last_block_height']
+		return int(self.rpcCall('abci_info')['response']['last_block_height'])
 
 	def getBlockHash(self):
 		return self.rpcCall('status')['sync_info']['latest_block_hash']
