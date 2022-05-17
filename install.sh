@@ -212,7 +212,7 @@ then
     install "$rpc_cosmos"
 fi
 
-rpc_solana=$(lsof -i:$rpc_cosmos_port)
+rpc_solana=$(lsof -i:$rpc_solana_port)
 #check if we're dealing with a cosmos based blockchain
 if [ ! -z "$rpc_solana" ]
 then 
