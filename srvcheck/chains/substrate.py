@@ -79,7 +79,7 @@ class Substrate (Chain):
 		return self.rpcCall('chain_getBlockHash')
 
 	def getPeerCount(self):
-		return self.rpcCall('system_health')['peers']
+		return int(self.rpcCall('system_health')['peers'])
 
 	def getNetwork(self):
 		return self.rpcCall('system_chain')

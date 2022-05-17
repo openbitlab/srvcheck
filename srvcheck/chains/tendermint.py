@@ -130,7 +130,7 @@ class Tendermint (Chain):
 		return self.rpcCall('status')['sync_info']['latest_block_hash']
 
 	def getPeerCount(self):
-		return self.rpcCall('net_info')['n_peers']
+		return int(self.rpcCall('net_info')['n_peers'])
 
 	def getNetwork(self):
 		raise Exception('Abstract getNetwork()')
