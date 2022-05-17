@@ -25,7 +25,7 @@ def addTasks(chain, notification, system, config):
 	# Create the list of tasks
 	tasks = []
 	all_tasks = [TASKS]
-	if (chain.type == "tendermint"): all_tasks += TENDERMINT_CUSTOM_TASKS
+	if (chain.TYPE == "tendermint"): all_tasks += TENDERMINT_CUSTOM_TASKS
 
 	for x in all_tasks:
 		task = x(config, notification, system, chain)
