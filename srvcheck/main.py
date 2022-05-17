@@ -9,7 +9,6 @@ from .notification import Emoji, Notification, DummyNotification, TelegramNotifi
 from .tasks import *
 from .utils import System
 from .chains import CHAINS
-from .chains.tendermint import TENDERMINT_CUSTOM_TASKS
 
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')

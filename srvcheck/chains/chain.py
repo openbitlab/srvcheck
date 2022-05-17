@@ -7,7 +7,6 @@ def rpcCall(url, method, params=[]):
 class Chain:
     NAME = ""
     BLOCKTIME = 10
-    TASKS = []
 
     def __init__(self, conf):
         self.conf = conf

@@ -42,11 +42,10 @@ class Substrate (Chain):
 	NAME = ""
 	BLOCKTIME = 15 
 	EP = 'http://localhost:9933/'
+	CUSTOM_TASKS = [] #[TaskSubstrateNewReferenda]
 
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.TASKS = []
-		# self.TASKS.append(TaskSubstrateNewReferenda)
 		self.rpcMethods = super().rpcCall('rpc_methods', [])['methods']
 
 	def rpcCall(self, method, params=[]):
