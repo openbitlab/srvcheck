@@ -3,6 +3,7 @@ from .chain import Chain
 from ..tasks import Task,  hours
 from ..utils import Bash
 import requests
+import json
 
 class TaskSolanaHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
@@ -43,7 +44,7 @@ class TaskSolanaBalanceCheck(Task):
 
 	def run(self):
 		balance = self.chain.getValidatorBalance()
-		if balance < 1:
+		if balance < 1.0:
 			return self.notify('validator balance is too low,  %s SOL left %s' % (balance, Emoji.LowBal))
 		else:
 			return False
@@ -53,7 +54,7 @@ class Solana (Chain):
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:8899/"
-	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck ]
+	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck ]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -97,17 +98,17 @@ class Solana (Chain):
 		raise Exception('Abstract isSynching()')
 
 	def getIdentityAddress(self):
-		return Bash(f"solana address --url {self.EP}")
+		return Bash(f"solana address --url {self.EP}").value()
 
 	def getValidators(self):
-		return Bash(f"solana validators --url {self.EP} --output json-compact")["validators"]
+		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
 
 	def isDelinquent(self):
 		validators = self.getValidators()
-		val_info = [i for i in validators if i['identityPubkey'] == self.getIdentityAddress()]
-		if len(val_info) > 0:
-			return val_info[0]["delinquent"]
+		val_info = next((x for x in validators if x['identityPubkey'] == self.getIdentityAddress()), None)
+		if val_info:
+			return val_info["delinquent"]
 		raise Exception('Identity not found in the validators list')
 
 	def getValidatorBalance(self):
-		return int(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'"))
+		return float(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'").value())
