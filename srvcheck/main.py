@@ -58,14 +58,14 @@ def main():
 	tasks = []
 	for x in CHAINS:
 		if 'chain' in config and config['chain']['type'] == x.TYPE:
-			chain = x(config, True)
+			chain = x(config)
 			tasks = addTasks(chain, notification, system, config)
 			break
 
 	if not chain:
 		for x in CHAINS:
 			if x.detect(config):
-				chain = x(config, True)
+				chain = x(config)
 				print ("Detected chain %s", chain.TYPE)
 				tasks = addTasks(chain, notification, system, config)
 				break
