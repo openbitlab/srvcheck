@@ -68,7 +68,7 @@ class Aptos (Chain):
 	EP_FULL = 'http://localhost:8081/'
 	EP_METRICS_VAL = 'http://localhost:9101/metrics/'
 	EP_METRICS_FULL = 'http://localhost:9104/metrics/'
-	CUSTOM_TASKS = [TaskAptosHealthError, TaskChainStuck, ]
+	CUSTOM_TASKS = [TaskAptosHealthError, TaskChainStuck, TaskValidatorProposalCheck]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
