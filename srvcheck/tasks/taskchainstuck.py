@@ -19,4 +19,5 @@ class TaskChainStuck(Task):
 		if bh == self.prev:
 			return self.notify('Chain is stuck at block %s %s' % (bh, Emoji.Stuck))
 		
+		self.prev = bh
 		return False

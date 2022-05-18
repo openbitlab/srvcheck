@@ -38,6 +38,7 @@ class TaskAptosChainStuck(Task):
 		if bh == self.prev or self.chain.isSynching():
 			return self.notify('chain is stuck at version id %s %s' % (bh, Emoji.Stuck))
 		
+		self.prev = bh
 		return False
 
 class TaskAptosValidatorProposalCheck(Task):
@@ -57,6 +58,7 @@ class TaskAptosValidatorProposalCheck(Task):
 		if p_count == self.prev or p_count == -1:
 			return self.notify('is not proposing new consensus %s' % Emoji.BlockMiss)
 		
+		self.prev = p_count
 		return False
 
 class Aptos (Chain):
