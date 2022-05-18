@@ -1,4 +1,6 @@
 import unittest
+
+from srvcheck.notification.notification import Emoji
 from .task_test import buildTaskEnv
 from srvcheck.chains.tendermint import TaskTendermintHealthError, TaskTendermintNewProposal
 import json
@@ -43,5 +45,5 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], ' got new proposal: Upgrade IBC client')
+        self.assertEqual(n.events[0], ' got new proposal: Upgrade IBC client '+ Emoji.Proposal)
 
