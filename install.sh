@@ -65,6 +65,10 @@ install_monitor () {
         sed -i -e "s/^thresholdNotsigned =.*/thresholdNotsigned = $threshold_notsigned/" $config_file
         sed -i -e "s/^blockWindow =.*/blockWindow = $block_window/" $config_file
     fi
+    if [ "$enable_gov" = true ]
+    then
+        sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
+    fi
 }
 
 install_service () {
@@ -76,6 +80,8 @@ install_service () {
 }
 
 POSITIONAL_ARGS=()
+
+enable_gov = false
 
 while [[ $# -gt 0 ]]; do
 case $1 in
@@ -179,7 +185,7 @@ case $1 in
     -g|--gov)
         if [[ -z $2 ]]
         then
-            sed -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
+            enable_gov = true
         else
             print_help
             exit 1
