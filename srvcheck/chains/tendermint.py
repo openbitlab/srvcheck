@@ -118,8 +118,11 @@ class Tendermint (Chain):
 		return c['tag_name']
 
 	def getVersion(self):
+		return self.rpcCall('abci_info')
+
+	def getLocalVersion(self):
 		try:
-			return self.rpcCall('abci_info')["response"]["version"]
+			return self.getVersion()["response"]["version"]
 		except:
 			return self.conf['chain']['localVersion']
 
