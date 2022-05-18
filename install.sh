@@ -82,7 +82,7 @@ install_service () {
 
 POSITIONAL_ARGS=()
 
-enable_gov = false
+enable_gov=false
 
 while [[ $# -gt 0 ]]; do
 case $1 in
@@ -186,7 +186,7 @@ case $1 in
     -g|--gov)
         if [[ -z $2 ]]
         then
-            enable_gov = true
+            enable_gov=true
         else
             print_help
             exit 1
