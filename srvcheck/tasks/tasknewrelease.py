@@ -10,7 +10,7 @@ class TaskNewRelease(Task):
 		return True
 
 	def run(self):
-		current = self.chain.getVersion()
+		current = self.chain.getLocalVersion()
 		latest = self.chain.getLatestVersion()
 		c_ver = re.findall(r'(\d+[.]\d+[.]\d+)', current)[0]
 		l_ver = re.findall(r'(\d+[.]\d+[.]\d+)', latest)[0]
