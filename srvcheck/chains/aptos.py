@@ -20,9 +20,9 @@ class TaskAptosHealthError(Task):
 		except Exception as e:
 			return self.notify('health error! %s' % Emoji.Health)
 
-class TaskChainStuck(Task):
+class TaskAptosChainStuck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
+		super().__init__('TaskAptosChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
 		self.prev = None
 
 	def isPluggable(conf):
@@ -40,9 +40,9 @@ class TaskChainStuck(Task):
 		
 		return False
 
-class TaskValidatorProposalCheck(Task):
+class TaskAptosValidatorProposalCheck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskValidatorProposalCheck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
+		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
 		self.prev = None
 
 	def isPluggable(conf):
@@ -54,7 +54,6 @@ class TaskValidatorProposalCheck(Task):
 		if self.prev == None:
 			self.prev = p_count
 			return False 
-		print(self.prev, p_count)
 		if p_count == self.prev or p_count == -1:
 			return self.notify('is not proposing new consensus %s' % Emoji.BlockMiss)
 		
@@ -66,9 +65,9 @@ class Aptos (Chain):
 	BLOCKTIME = 15 
 	EP_VAL = 'http://localhost:8080/'
 	EP_FULL = 'http://localhost:8081/'
-	EP_METRICS_VAL = 'http://localhost:9101/metrics/'
-	EP_METRICS_FULL = 'http://localhost:9104/metrics/'
-	CUSTOM_TASKS = [TaskAptosHealthError, TaskChainStuck, TaskValidatorProposalCheck]
+	EP_METRICS_VAL = 'http://localhost:9101/metrics'
+	EP_METRICS_FULL = 'http://localhost:9104/metrics'
+	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosChainStuck, TaskAptosValidatorProposalCheck]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
