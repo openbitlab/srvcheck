@@ -12,8 +12,8 @@ CONF = {
     }
 }
 
-def buildTaskEnv(tt):
-    c = MockChain(CONF)
+def buildTaskEnv(tt, chainClass=MockChain):
+    c = chainClass(CONF)
     n = MockNotification({})
     s = MockSystem(CONF)
     t = tt(CONF, n, s, c)

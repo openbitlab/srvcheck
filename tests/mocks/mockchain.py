@@ -13,9 +13,6 @@ class MockChain (Chain):
 	version = 'v0.0.0'
 	latestVersion = 'v0.0.0'
 	healthOk = True
-	latestProposal = """{"proposals":[{"proposal_id":"3","content":{"@type":"/ibc.core.client.v1.ClientUpdateProposal","title":"Upgrade IBC client","description":"Upgrade the expired client to an active client","subject_client_id":"07-tendermint-0","substitute_client_id":"07-tendermint-3"},
-	"status":"PROPOSAL_STATUS_PASSED","final_tally_result":{"yes":"104002179704","abstain":"107000000","no":"47000000","no_with_veto":"0"},"submit_time":"2022-04-27T13:02:49.636982639Z","deposit_end_time":"2022-05-11T13:02:49.636982639Z","total_deposit":[{"denom":"ufis","amount":"1000000000"}],
-	"voting_start_time":"2022-04-27T13:03:09.707806299Z","voting_end_time":"2022-04-28T13:03:09.707806299Z"}],"pagination":{"next_key":"AAAAAAAAAAI=","total":"0"}}"""
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -46,7 +43,11 @@ class MockChain (Chain):
 		else:
 			raise Exception('Mockchain is not healthy')
 
-	def getLatestProposal(self):
-		
-		return json.loads(self.latestProposal)["proposals"][0]
+class MockChainTendermint(MockChain):
+	latestProposal = {"proposal_id":"3","content":{"@type":"/ibc.core.client.v1.ClientUpdateProposal","title":"Upgrade IBC client","description":"Upgrade the expired client to an active client","subject_client_id":"07-tendermint-0","substitute_client_id":"07-tendermint-3"},
+	"status":"PROPOSAL_STATUS_PASSED","final_tally_result":{"yes":"104002179704","abstain":"107000000","no":"47000000","no_with_veto":"0"},"submit_time":"2022-04-27T13:02:49.636982639Z","deposit_end_time":"2022-05-11T13:02:49.636982639Z","total_deposit":[{"denom":"ufis","amount":"1000000000"}],
+	"voting_start_time":"2022-04-27T13:03:09.707806299Z","voting_end_time":"2022-04-28T13:03:09.707806299Z"}
+
+	def getLatestProposal(self):		
+		return self.latestProposal
 	
