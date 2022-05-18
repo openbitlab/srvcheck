@@ -6,6 +6,8 @@ Supported ecosystems:
 - Substrate
 - Tendermint
 - Lisk
+- Tezos
+- Solana
 - Aptos
 
 ## Install & Update
