@@ -33,6 +33,9 @@ class MockChain (Chain):
 	
 	def getVersion(self):
 		return self.version
+	
+	def getLocalVersion(self):
+		return self.getVersion()
 
 	## Tendermint
 	

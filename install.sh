@@ -1,5 +1,6 @@
 rpc_substrate_port=9933
 rpc_cosmos_port=26657
+rpc_solana_port=8899
 name=$(hostname)
 branch="main"
 
@@ -209,4 +210,12 @@ if [ ! -z "$rpc_cosmos" ]
 then 
     echo "It's a cosmos based blockchain"
     install "$rpc_cosmos"
+fi
+
+rpc_solana=$(lsof -i:$rpc_solana_port)
+#check if we're dealing with solana blockchain
+if [ ! -z "$rpc_solana" ]
+then 
+    echo "It's solana blockchain"
+    install "$rpc_solana"
 fi

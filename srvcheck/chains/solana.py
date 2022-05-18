@@ -1,0 +1,114 @@
+from ..notification import Emoji
+from .chain import Chain
+from ..tasks import Task,  hours
+from ..utils import Bash
+import requests
+import json
+
+class TaskSolanaHealthError(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		try:
+			self.chain.getHealth()
+			return False
+		except Exception as e:
+			return self.notify('Health error! %s' % Emoji.Health)
+
+class TaskSolanaDelinquentCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaDelinquentCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		if self.chain.isDelinquent():
+			return self.notify('validator is delinquent %s' % Emoji.Delinq)
+		else:
+			return False
+
+class TaskSolanaBalanceCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaBalanceCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		balance = self.chain.getValidatorBalance()
+		if balance < 1.0:
+			return self.notify('validator balance is too low,  %s SOL left %s' % (balance, Emoji.LowBal))
+		else:
+			return False
+
+class Solana (Chain):
+	TYPE = "solana"
+	NAME = ""
+	BLOCKTIME = 60
+	EP = "http://localhost:8899/"
+	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck ]
+	
+	def __init__(self, conf):
+		super().__init__(conf)
+
+	def detect(conf):
+		try:
+			Solana(conf).getVersion()
+			return True
+		except:
+			return False
+
+	def getHealth(self):
+		return self.rpcCall('getHealth')
+
+	def getLatestVersion(self):
+		c = requests.get(f"https://api.github.com/repos/{self.conf['chain']['ghRepository']}/releases/latest").json()
+		return c['tag_name']
+
+	def getVersion(self):
+		return self.rpcCall('getVersion')["solana-core"]
+
+	def getLocalVersion(self):
+		return self.getVersion()
+
+	def getHeight(self):
+		return self.rpcCall('getBlockHeight')
+
+	def getBlockHash(self):
+		return self.rpcCall('getLatestBlockhash')['value']['blockhash']
+
+	def getPeerCount(self):
+		raise Exception('Abstract getPeerCount()')
+
+	def getNetwork(self):
+		raise Exception('Abstract getNetwork()')
+
+	def isStaking(self):
+		raise Exception('Abstract isStaking()')
+
+	def isSynching(self):
+		raise Exception('Abstract isSynching()')
+
+	def getIdentityAddress(self):
+		return Bash(f"solana address --url {self.EP}").value()
+
+	def getValidators(self):
+		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
+
+	def isDelinquent(self):
+		validators = self.getValidators()
+		val_info = next((x for x in validators if x['identityPubkey'] == self.getIdentityAddress()), None)
+		if val_info:
+			return val_info["delinquent"]
+		raise Exception('Identity not found in the validators list')
+
+	def getValidatorBalance(self):
+		return float(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'").value())
