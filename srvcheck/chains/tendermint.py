@@ -2,6 +2,10 @@ from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours
 import requests
+from ..utils import Bash
+import json
+import configparser
+import re
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
@@ -30,6 +34,26 @@ class TaskTendermintBlockMissed(Task):
 				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
 
 		return False
+
+class TaskTendermintNewProposal(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=hours(2), notifyEvery=hours(10)):
+		super().__init__('TaskTendermintNewProposal',
+		      conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev=None
+
+	def isPluggable(conf):
+		return True
+	
+	def run(self):
+		nProposal=self.chain.getLatestProposal()
+		if not self.prev:
+			self.prev = self.chain.getLatestProposal()
+		elif self.prev["proposal_id"] != nProposal["proposal_id"]:
+			self.prev = nProposal
+			return self.notify(' got new proposal: %s %s' % (nProposal["content"]["title"], Emoji.Proposal))
+
+		return False
+
 
 class TaskTendermintPositionChanged(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
@@ -149,3 +173,8 @@ class Tendermint (Chain):
 
 	def isSynching(self):
 		raise Exception('Abstract isSynching()')
+	
+	def getLatestProposal(self):
+		cmd = configparser.ConfigParser().read('/etc/systemd/system/'+self.chain.conf["chain"]["service"])
+		cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]
+		return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").value())["proposals"][0]

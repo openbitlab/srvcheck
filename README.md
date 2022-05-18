@@ -57,4 +57,5 @@ install --help
  -n  --name <name> monitor name [default is the server hostname]
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
+ -g  --gov enable checks on new governance proposals (tendermint)
 ```

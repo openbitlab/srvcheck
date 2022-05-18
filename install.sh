@@ -29,7 +29,8 @@ print_help () {
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -n  --name <name> monitor name [default is the server hostname]
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
- -s  --service <name> service name of the node to monitor [required]"
+ -s  --service <name> service name of the node to monitor [required]
+ -g  --gov enable checks on new governance proposals (tendermint)"
 }
 
 install_monitor () {
@@ -65,6 +66,10 @@ install_monitor () {
         sed -i -e "s/^thresholdNotsigned =.*/thresholdNotsigned = $threshold_notsigned/" $config_file
         sed -i -e "s/^blockWindow =.*/blockWindow = $block_window/" $config_file
     fi
+    if [ "$enable_gov" = true ]
+    then
+        sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
+    fi
 }
 
 install_service () {
@@ -76,6 +81,8 @@ install_service () {
 }
 
 POSITIONAL_ARGS=()
+
+enable_gov=false
 
 while [[ $# -gt 0 ]]; do
 case $1 in
@@ -172,6 +179,17 @@ case $1 in
             exit 1
         else
             service="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    -g|--gov)
+        if [[ -z $2 ]]
+        then
+            enable_gov=true
+        else
+            print_help
+            exit 1
         fi
         shift # past argument
         shift # past value
