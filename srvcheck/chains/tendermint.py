@@ -174,4 +174,4 @@ class Tendermint (Chain):
 	def getLatestProposal(self):
 		cmd = configparser.ConfigParser().read('/etc/systemd/system/'+self.chain.conf["chain"]["service"])
 		cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]
-		return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").stdout)["proposals"][0]
+		return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").value())["proposals"][0]
