@@ -88,7 +88,8 @@ def main():
 				except Exception as e:
 					print ('Error in task %s: %s' % (t.name, e))
 
-		notification.flush()
+		notification.flush()		
+		sys.stdout.flush()
 		time.sleep(TTS)
 
 if __name__ == "__main__":

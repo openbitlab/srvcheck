@@ -45,7 +45,7 @@ class TaskSolanaBalanceCheck(Task):
 	def run(self):
 		balance = self.chain.getValidatorBalance()
 		if balance < 1.0:
-			return self.notify('validator balance is too low,  %s SOL left %s' % (balance, Emoji.LowBal))
+			return self.notify('validator balance is too low, %s SOL left %s' % (balance, Emoji.LowBal))
 		else:
 			return False
 
