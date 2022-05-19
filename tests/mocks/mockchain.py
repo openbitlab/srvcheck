@@ -44,7 +44,7 @@ class MockChain (Chain):
 	def getLocalVersion(self):
 		return self.getVersion()
 
-	def isSynching():
+	def isSynching(self):
 		return False
 
 	## Tendermint
