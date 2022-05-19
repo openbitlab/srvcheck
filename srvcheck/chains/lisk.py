@@ -47,4 +47,4 @@ class Lisk (Chain):
         return len(self._forgingStatus()) > 0
 
     def isSynching(self):
-        return self._nodeInfo()['syncing']
+        return json.loads(self._nodeInfo()['syncing'].lower())

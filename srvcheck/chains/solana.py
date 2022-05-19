@@ -95,7 +95,7 @@ class Solana (Chain):
 		raise Exception('Abstract isStaking()')
 
 	def isSynching(self):
-		raise Exception('Abstract isSynching()')
+		return False
 
 	def getIdentityAddress(self):
 		return Bash(f"solana address --url {self.EP}").value()
