@@ -20,10 +20,10 @@ class Lisk (Chain):
             return False
 
     def _nodeInfo(self):
-        return False #json.loads(Bash('lisk-core node:info').value())
+        return json.loads(Bash('lisk-core node:info').value())
         
     def _forgingStatus(self):
-        return False #json.loads(Bash('lisk-core node:info').value())
+        return json.loads(Bash('lisk-core node:info').value())
 
     def getLatestVersion(self):
         raise Exception('Abstract getLatestVersion()')
