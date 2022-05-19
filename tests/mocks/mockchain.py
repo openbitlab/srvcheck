@@ -8,7 +8,10 @@ class MockChain (Chain):
 	EP = "http://localhost:26657/"
 
 	peers = 0
+	
 	hash = '0x1234567890'
+	height = 0
+
 	network = 'mocknet'
 	version = 'v0.0.0'
 	latestVersion = 'v0.0.0'
@@ -25,6 +28,9 @@ class MockChain (Chain):
 
 	def getBlockHash(self):
 		return self.hash
+
+	def getHeight(self):
+		return self.height
 
 	def getNetwork(self):
 		return self.network
@@ -54,3 +60,6 @@ class MockChainTendermint(MockChain):
 	def getLatestProposal(self):		
 		return self.latestProposal
 	
+class MockChainNoBlockHash(MockChain):
+	def getBlockHash(self):
+		raise Exception('No block hash')
