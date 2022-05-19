@@ -98,10 +98,10 @@ class Solana (Chain):
 		return False
 
 	def getIdentityAddress(self):
-		return Bash(f"solana address --url {self.EP}").value()
+		return "5WVsDLu54oJY7gwhPkxDGHL19baMX3nLFEyxcKrBiSt9" #Bash(f"solana address --url {self.EP}").value()
 
 	def getValidators(self):
-		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
+		return [] #json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
 
 	def isDelinquent(self):
 		validators = self.getValidators()
@@ -111,4 +111,4 @@ class Solana (Chain):
 		raise Exception('Identity not found in the validators list')
 
 	def getValidatorBalance(self):
-		return float(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'").value())
+		return 2.0 #float(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'").value())
