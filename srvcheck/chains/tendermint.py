@@ -8,7 +8,7 @@ import configparser
 import re
 
 class TaskTendermintBlockMissed(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
+	def __init__(self, conf, notification, system, chain, checkEvery=10, notifyEvery=0):
 		self.BLOCK_WINDOW = int(conf["chain"]["blockWindow"])
 		self.THRESHOLD_NOTSIGNED = int(conf["chain"]["thresholdNotsigned"])
 
@@ -32,6 +32,7 @@ class TaskTendermintBlockMissed(Task):
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
 				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
+			self.prev = nblockh
 
 		return False
 
