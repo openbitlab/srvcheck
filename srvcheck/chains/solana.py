@@ -1,6 +1,6 @@
 from ..notification import Emoji
 from .chain import Chain
-from ..tasks import Task,  hours
+from ..tasks import Task,  hours, minutes
 from ..utils import Bash
 import requests
 import json
@@ -49,6 +49,24 @@ class TaskSolanaBalanceCheck(Task):
 		else:
 			return False
 
+class TaskSolanaLastVoteCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = minutes(10), notifyEvery=hours(1)):
+		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		lastVote = self.chain.getLastVote()
+		if self.prev == None:
+			self.prev = lastVote
+		elif self.prev == lastVote:
+			return self.notify(' last vote stuck at height: %d %s' % (lastVote, Emoji.Stuck))
+		return False
+
+
+		
 class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
@@ -104,11 +122,17 @@ class Solana (Chain):
 		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
 
 	def isDelinquent(self):
-		validators = self.getValidators()
-		val_info = next((x for x in validators if x['identityPubkey'] == self.getIdentityAddress()), None)
-		if val_info:
-			return val_info["delinquent"]
-		raise Exception('Identity not found in the validators list')
+		return self.getValidatorInfo["delinquent"]
 
 	def getValidatorBalance(self):
 		return float(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'").value())
+
+	def getLastVote(self):
+		return self.getValidatorInfo["lastVote"]
+
+	def getValidatorInfo(self):
+		validators = self.getValidators()
+		val_info = next((x for x in validators if x['identityPubkey'] == self.getIdentityAddress()), None)
+		if val_info:
+			return val_info
+		raise Exception('Identity not found in the validators list')
