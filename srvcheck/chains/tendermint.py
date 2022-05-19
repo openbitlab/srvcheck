@@ -28,7 +28,7 @@ class TaskTendermintBlockMissed(Task):
 			block = self.prev
 			missed = 0
 			while block < self.prev + self.BLOCK_WINDOW:
-				if self.chain.getValidatorAddress() not in self.chain.getSignatures(block): missed += 1
+				if not next((x for x in self.chain.getSignatures(block) if x['validator_address'] == self.chain.getValidatorAddress()), None): missed += 1
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
 				self.prev = nblockh
@@ -174,7 +174,7 @@ class Tendermint (Chain):
 		return self.rpcCall('block', [str(height)])['block']['last_commit']['signatures']
 
 	def isSynching(self):
-		return json.loads(self.rpcCall('status')['sync_info']['catching_up'].lower())
+		return self.rpcCall('status')['sync_info']['catching_up']
 	
 	def getLatestProposal(self):
 		cmd = configparser.ConfigParser().read('/etc/systemd/system/'+self.chain.conf["chain"]["service"])
