@@ -20,27 +20,6 @@ class TaskAptosHealthError(Task):
 		except Exception as e:
 			return self.notify('health error! %s' % Emoji.Health)
 
-class TaskAptosChainStuck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
-		self.prev = None
-
-	def isPluggable(conf):
-		return True
-
-	def run(self):
-		bh = self.chain.getHeight()
-
-		if self.prev == None:
-			self.prev = bh
-			return False 
-
-		if bh == self.prev or self.chain.isSynching():
-			return self.notify('chain is stuck at version id %s %s' % (bh, Emoji.Stuck))
-		
-		self.prev = bh
-		return False
-
 class TaskAptosValidatorProposalCheck(Task):
 	def __init__(self, conf, notification, system, chain):
 		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
@@ -69,7 +48,7 @@ class Aptos (Chain):
 	EP_FULL = 'http://localhost:8081/'
 	EP_METRICS_VAL = 'http://localhost:9101/metrics'
 	EP_METRICS_FULL = 'http://localhost:9104/metrics'
-	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosChainStuck, TaskAptosValidatorProposalCheck]
+	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosValidatorProposalCheck]
 	
 	def __init__(self, conf):
 		super().__init__(conf)

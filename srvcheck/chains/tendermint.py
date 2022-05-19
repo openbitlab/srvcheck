@@ -172,7 +172,7 @@ class Tendermint (Chain):
 		return self.rpcCall('block', [str(height)])['block']['last_commit']['signatures']
 
 	def isSynching(self):
-		raise Exception('Abstract isSynching()')
+		return json.loads(self.rpcCall('status')['sync_info']['catching_up'].lower())
 	
 	def getLatestProposal(self):
 		cmd = configparser.ConfigParser().read('/etc/systemd/system/'+self.chain.conf["chain"]["service"])

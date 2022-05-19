@@ -44,6 +44,9 @@ class MockChain (Chain):
 	def getLocalVersion(self):
 		return self.getVersion()
 
+	def isSynching():
+		return False
+
 	## Tendermint
 	
 	def getHealth(self):
