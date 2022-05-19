@@ -31,6 +31,7 @@ class TaskTendermintBlockMissed(Task):
 				if self.chain.getValidatorAddress() not in self.chain.getSignatures(block): missed += 1
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
+				self.prev = nblockh
 				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
 			self.prev = nblockh
 
