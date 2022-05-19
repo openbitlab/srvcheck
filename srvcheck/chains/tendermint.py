@@ -25,10 +25,10 @@ class TaskTendermintBlockMissed(Task):
 		if not self.prev:
 			self.prev = nblockh
 		elif nblockh - self.prev >= self.BLOCK_WINDOW:
-			block = int(self.prev)
+			block = self.prev
 			missed = 0
 			while block < self.prev + self.BLOCK_WINDOW:
-				if self.getValidatorAddress() not in self.getSignatures(block): missed += 1
+				if self.chain.getValidatorAddress() not in self.chain.getSignatures(block): missed += 1
 				block += 1
 			if missed >= self.THRESHOLD_NOTSIGNED:
 				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
@@ -83,7 +83,7 @@ class TaskTendermintPositionChanged(Task):
 
 
 	def getValidatorPosition(self):
-		bh = self.chain.getHeight()
+		bh = str(self.chain.getHeight())
 		active_vals = []
 		if (self.ACTIVE_SET == ''):
 			active_s = int(self.chain.rpcCall('validators', [bh, "1", "1"])['total'])
