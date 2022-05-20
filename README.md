@@ -78,8 +78,8 @@ blockTime =
 activeSet = 
 thresholdNotsigned = 
 blockWindow = 
-; Github repository
-ghRepository = org/repo
+; Github repository (org/repo)
+ghRepository = 
 ; software version
 localVersion = 
 

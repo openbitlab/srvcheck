@@ -36,10 +36,6 @@ class Chain:
         """ Checks if the current server is running this chain """
         raise Exception('Abstract detect()')
 
-    def getLatestVersion(self):
-        """ Returns the latest version """
-        raise Exception('Abstract getLatestVersion()')
-
     def getVersion(self):
         """ Returns software version """
         raise Exception('Abstract getVersion()')
