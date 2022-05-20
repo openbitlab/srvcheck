@@ -51,7 +51,7 @@ class TaskSolanaBalanceCheck(Task):
 			return False
 
 class TaskSolanaLastVoteCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = minutes(10), notifyEvery=minutes(30)):
+	def __init__(self, conf, notification, system, chain, checkEvery = 30, notifyEvery=minutes(5)):
 		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
