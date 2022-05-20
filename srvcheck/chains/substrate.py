@@ -85,7 +85,7 @@ class Substrate (Chain):
 		return self.rpcCall('system_chain')
 
 	def isStaking(self):
-		c = self.rpcCall('babe_epochAuthorship').json()
+		c = self.rpcCall('babe_epochAuthorship')
 		if len(c.keys()) == 0:
 			return False 
 
@@ -93,5 +93,5 @@ class Substrate (Chain):
 		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0
 
 	def isSynching(self):
-		c = self.rpcCall('system_chain')
+		c = self.rpcCall('system_syncState')
 		return c['highestBlock'] < c['currentBlock']
