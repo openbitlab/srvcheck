@@ -1,7 +1,7 @@
 import unittest
 
 from srvcheck.tasks.tasknewrelease import TaskNewRelease
-from .mocks import MockNotification, MockChain, MockSystem
+from .mocks import MockNotification, MockChain, MockSystem, MockChainNoBlockHash
 from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck, TaskSystemCpuAlert, TaskSystemDiskAlert, minutes, hours
 from srvcheck.notification.notification import Emoji, Notification
 
@@ -97,6 +97,26 @@ class TestTaskChainStuck(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890' + ' ' + Emoji.Stuck)
+
+
+    def test_noblockhash(self):
+        c, n, t, s = buildTaskEnv(TaskChainStuck, MockChainNoBlockHash)
+        c.height = 0
+        t.run()
+        c.height = 1
+        t.run()
+        n.flush()
+        self.assertEqual(len(n.events), 0)
+
+    def test_noblockhash_alert(self):
+        c, n, t, s = buildTaskEnv(TaskChainStuck, MockChainNoBlockHash)
+        c.height = 1
+        t.run()
+        t.run()
+        n.flush()
+        self.assertEqual(len(n.events), 1)
+        self.assertEqual(n.events[0], 'Chain is stuck at block 1' + ' ' + Emoji.Stuck)
+
 
 class TestTaskNewRelease(unittest.TestCase):
     def test_noalert(self):

@@ -1,22 +1,13 @@
-rpc_substrate_port=9933
-rpc_cosmos_port=26657
-rpc_solana_port=8899
 name=$(hostname)
 branch="main"
 
 install() {
-    check_docker=$(echo $1 | grep docker)
-    if [ ! -z "$check_docker" ]
-    then
-        echo "It's in a docker container"
-    else
-        echo "[*] Installing monitor..."
-        install_monitor
-        echo "[+] Installed monitor!"
-        echo "[*] Installing monitor service..."
-        install_service "/usr/local/bin/srvcheck"
-        echo "[+] Installed monitor service!"
-    fi
+    echo "[*] Installing monitor..."
+    install_monitor
+    echo "[+] Installed monitor!"
+    echo "[*] Installing monitor service..."
+    install_service "/usr/local/bin/srvcheck"
+    echo "[+] Installed monitor service!"
 }
 
 print_help () {
@@ -186,10 +177,10 @@ case $1 in
     -g|--gov)
         if [[ -z $2 ]]
         then
-            enable_gov=true
-        else
             print_help
             exit 1
+        else
+            enable_gov=true
         fi
         shift # past argument
         shift # past value
@@ -214,26 +205,4 @@ then
     exit 1
 fi
 
-rpc_substrate=$(lsof -i:$rpc_substrate_port)
-#check if we're dealing with a substrate based blockchain
-if [ ! -z "$rpc_substrate" ]
-then 
-    echo "It's a substrate based blockchain"
-    install "$rpc_substrate"
-fi
-
-rpc_cosmos=$(lsof -i:$rpc_cosmos_port)
-#check if we're dealing with a cosmos based blockchain
-if [ ! -z "$rpc_cosmos" ]
-then 
-    echo "It's a cosmos based blockchain"
-    install "$rpc_cosmos"
-fi
-
-rpc_solana=$(lsof -i:$rpc_solana_port)
-#check if we're dealing with solana blockchain
-if [ ! -z "$rpc_solana" ]
-then 
-    echo "It's solana blockchain"
-    install "$rpc_solana"
-fi
+install

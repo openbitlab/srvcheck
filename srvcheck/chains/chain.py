@@ -1,4 +1,5 @@
-import requests 
+from ..utils import confGetOrDefault
+import requests
 
 def rpcCall(url, method, params=[]):
     d = requests.post(url, json={'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}).json()
@@ -15,16 +16,12 @@ class Chain:
 
     def __init__(self, conf):
         self.conf = conf
-
-        if 'endpoint' in self.conf['chain'] and self.conf['chain']['endpoint'] != '':
-            self.EP = self.conf['chain']['endpoint']
-        
-        if 'blockTime' in self.conf['chain'] and self.conf['chain']['blockTime'] != '':
-            self.BLOCKTIME = self.conf['chain']['blockTime']
-        
-        if 'name' in self.conf['chain'] and self.conf['chain']['name'] != '':
-            self.NAME = self.conf['chain']['name']
-        
+        ep = confGetOrDefault(self.conf, 'chain.endpoint', '')
+        if ep != '': self.EP = ep       
+        b = confGetOrDefault(self.conf, 'chain.blockTime', 10)
+        if b != '': self.BLOCKTIME = b
+        n = confGetOrDefault(self.conf, 'chain.name', '')
+        if n != '': self.NAME = n
 
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """
@@ -47,9 +44,13 @@ class Chain:
         """ Returns software version """
         raise Exception('Abstract getVersion()')
 
-    def getLocalVersion(self):
+    def getLatestVersion(self):
         """ Returns software local version """
-        raise Exception('Abstract getLocalVersion()')
+        gh_repo = confGetOrDefault(self.conf, 'chain.ghRepository')
+        if gh_repo:
+            c = requests.get(f"https://api.github.com/repos/{gh_repo}/releases/latest").json()
+            return c['tag_name']
+        raise Exception('No github repo specified!')
 
     def getHeight(self):
         """ Returns the block height """

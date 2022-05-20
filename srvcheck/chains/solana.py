@@ -2,6 +2,7 @@ from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
 from ..utils import Bash
+from ..utils import confGetOrDefault
 import requests
 import json
 
@@ -45,7 +46,7 @@ class TaskSolanaBalanceCheck(Task):
 	def run(self):
 		balance = self.chain.getValidatorBalance()
 		if balance < 1.0:
-			return self.notify('validator balance is too low,  %s SOL left %s' % (balance, Emoji.LowBal))
+			return self.notify('validator balance is too low, %s SOL left %s' % (balance, Emoji.LowBal))
 		else:
 			return False
 
@@ -87,10 +88,6 @@ class Solana (Chain):
 	def getHealth(self):
 		return self.rpcCall('getHealth')
 
-	def getLatestVersion(self):
-		c = requests.get(f"https://api.github.com/repos/{self.conf['chain']['ghRepository']}/releases/latest").json()
-		return c['tag_name']
-
 	def getVersion(self):
 		return self.rpcCall('getVersion')["solana-core"]
 
@@ -113,7 +110,7 @@ class Solana (Chain):
 		raise Exception('Abstract isStaking()')
 
 	def isSynching(self):
-		raise Exception('Abstract isSynching()')
+		return False
 
 	def getIdentityAddress(self):
 		return Bash(f"solana address --url {self.EP}").value()
