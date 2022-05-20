@@ -2,6 +2,7 @@ import json
 import requests
 from .chain import Chain
 from ..tasks import Task
+from ..utils import confGetOrDefault
 from substrateinterface import SubstrateInterface
 
 class TaskSubstrateNewReferenda(Task):
@@ -62,11 +63,6 @@ class Substrate (Chain):
 			return True
 		except:
 			return False
-
-
-	def getLatestVersion(self):
-		c = requests.get('https://api.github.com/repos/' + self.conf['chain']['ghRepository']+ '/releases/latest').json()
-		return c['tag_name']
 
 	def getVersion(self):
 		return self.rpcCall('system_version')

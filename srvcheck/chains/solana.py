@@ -2,6 +2,7 @@ from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours
 from ..utils import Bash
+from ..utils import confGetOrDefault
 import requests
 import json
 
@@ -68,10 +69,6 @@ class Solana (Chain):
 
 	def getHealth(self):
 		return self.rpcCall('getHealth')
-
-	def getLatestVersion(self):
-		c = requests.get(f"https://api.github.com/repos/{self.conf['chain']['ghRepository']}/releases/latest").json()
-		return c['tag_name']
 
 	def getVersion(self):
 		return self.rpcCall('getVersion')["solana-core"]
