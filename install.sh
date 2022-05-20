@@ -30,7 +30,7 @@ install_monitor () {
     config_file="/etc/srvcheck.conf"
     apt -qq update
     apt -qq install git python3-pip -y
-    pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck
+    pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck --exists-action wipe
     wget $verbosity https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
