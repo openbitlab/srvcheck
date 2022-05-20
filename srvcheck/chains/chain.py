@@ -16,9 +16,12 @@ class Chain:
 
     def __init__(self, conf):
         self.conf = conf
-        self.EP = confGetOrDefault(self.conf, 'chain.endpoint', '')
-        self.BLOCKTIME = confGetOrDefault(self.conf, 'chain.blockTime', 10)
-        self.NAME = confGetOrDefault(self.conf, 'chain.name', '')
+        ep = confGetOrDefault(self.conf, 'chain.endpoint', '')
+        if ep != '': self.EP = ep       
+        b = confGetOrDefault(self.conf, 'chain.blockTime', 10)
+        if b != '': self.BLOCKTIME = b
+        n = confGetOrDefault(self.conf, 'chain.name', '')
+        if n != '': self.NAME = n
 
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """
