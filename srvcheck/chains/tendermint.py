@@ -77,9 +77,9 @@ class TaskTendermintPositionChanged(Task):
 			prev = self.prev
 			self.prev = npos
 			if npos > prev:
-				return self.notify('position decreased from %d to %d %s' % (prev, npos, Emoji.PosUp))
+				return self.notify('position decreased from %d to %d %s' % (prev, npos, Emoji.PosDown))
 			else:
-				return self.notify('position increased from %d to %d %s' % (prev, npos, Emoji.PosDown))
+				return self.notify('position increased from %d to %d %s' % (prev, npos, Emoji.PosUp))
 				
 		return False
 
