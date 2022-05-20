@@ -1,5 +1,5 @@
 import unittest
-from srvcheck.utils import Bash, System
+from srvcheck.utils import Bash, System, confGetOrDefault
 
 class TestUtilsBash(unittest.TestCase):
     def test_echo(self):
@@ -24,3 +24,24 @@ class TestUtilsSystem(unittest.TestCase):
         self.assertNotEqual(us.ramFree, 0)
         self.assertNotEqual(us.cpuUsage, 0)
 
+class TestUtilGetConfOrDefault(unittest.TestCase):
+    CONF = {
+        'id': 1,
+        'name': 'Test',
+        'chain': {
+            'endpoint': 'http://localhost:8080',
+        }
+    }
+
+    def test_getFromConfExistingString(self):
+        self.assertEqual(confGetOrDefault(self.CONF, 'chain.endpoint'), 'http://localhost:8080')
+
+    def test_getFromConfExistingInteger(self):
+        self.assertEqual(confGetOrDefault(self.CONF, 'id'), 1)
+
+    def test_getFromConfNotExistingString(self):
+        self.assertEqual(confGetOrDefault(self.CONF, 'chain.id'), None)
+
+    def test_getFromConfNotExistingDefault(self):
+        self.assertNotEqual(confGetOrDefault(self.CONF, 'chain.id', 3), None)
+        self.assertEqual(confGetOrDefault(self.CONF, 'type', 'tendermint'), 'tendermint')
