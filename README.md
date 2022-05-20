@@ -2,7 +2,7 @@
 
 ![Status](https://circleci.com/gh/openbitlab/srvcheck.svg?style=svg)
 
-Srvcheck is a linux service which helps to monitor blockchain nodes. 
+Srvcheck helps you to monitor blockchain nodes.
 
 
 It supports these ecosystems:
