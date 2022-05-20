@@ -1,7 +1,7 @@
 def confGetOrDefault (conf, key, default=None):
     def iteOver(c, k):
         if len(k) == 1:
-            out = c[k] if k in c else default
+            out = c[k[0]] if k[0] in c else default
             return out if out.isdigit() == False else int(out)
         else:
             ke = k[0]
