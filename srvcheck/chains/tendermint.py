@@ -1,6 +1,6 @@
 from ..notification import Emoji
 from .chain import Chain
-from ..tasks import Task,  hours
+from ..tasks import Task,  hours, minutes
 import requests
 from ..utils import Bash
 from ..utils import confGetOrDefault
@@ -9,13 +9,12 @@ import configparser
 import re
 
 class TaskTendermintBlockMissed(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=10, notifyEvery=0):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
 		self.BLOCK_WINDOW = confGetOrDefault(conf, 'chain.blockWindow', 100)
 		self.THRESHOLD_NOTSIGNED = confGetOrDefault(conf, 'chain.thresholdNotsigned', 5)
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
-		self.prev = None
 
 	def isPluggable(conf):
 		return True
@@ -23,18 +22,13 @@ class TaskTendermintBlockMissed(Task):
 	def run(self):
 		nblockh = self.chain.getHeight()
 
-		if not self.prev:
-			self.prev = nblockh
-		elif nblockh - self.prev >= self.BLOCK_WINDOW:
-			block = self.prev
-			missed = 0
-			while block < self.prev + self.BLOCK_WINDOW:
-				if not next((x for x in self.chain.getSignatures(block) if x['validator_address'] == self.chain.getValidatorAddress()), None): missed += 1
-				block += 1
-			if missed >= self.THRESHOLD_NOTSIGNED:
-				self.prev = nblockh
-				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
-			self.prev = nblockh
+		missed = 0
+		start = nblockh - self.BLOCK_WINDOW
+		while start < nblockh:
+				if not next((x for x in self.chain.getSignatures(start) if x['validator_address'] == self.chain.getValidatorAddress()), None): missed += 1
+				start += 1
+				if missed >= self.THRESHOLD_NOTSIGNED:
+					return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
 
 		return False
 
