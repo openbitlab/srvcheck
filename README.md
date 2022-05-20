@@ -2,7 +2,10 @@
 
 ![Status](https://circleci.com/gh/openbitlab/srvcheck.svg?style=svg)
 
-Supported ecosystems:
+Srvcheck is a linux service which helps to monitor blockchain nodes. 
+
+
+It supports these ecosystems:
 - Substrate
 - Tendermint
 - Lisk
@@ -10,44 +13,26 @@ Supported ecosystems:
 - Solana
 - Aptos
 
+And offer tasks for checking:
+- system usage (cpu, disk)
+- chain stuck
+- block miss
+- low peer
+- other ecosystem related tasks
+
+The software supports these notification outputs:
+- stdout
+- telegram chats 
+
+
 ## Install & Update
 
 ```bash 
 curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> <optional_flags>
 ```
 
+The install script can be customized with these flags:
 
-## Configuration
-Edit /etc/srvcheck.conf:
-
-```
-[notification.telegram]
-enabled = true
-apiToken = 
-chatIds = 
-
-[notification.dummy]
-enabled = true
-
-[chain]
-name = test-chain
-type = tendermint
-service = validator-node.service
-endpoint = localhost:26657
-blockTime = 60
-activeSet =
-localVersion = v1.0.0 
-ghRepository = chain-org/reponame
-thresholdNotsigned = 
-blockWindow = 
-
-[tasks]
-disabled = name_of_a_task_to_disable
-autoRecover = true 
-
-```
-
-## Usage
 ```
 install --help
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
@@ -61,3 +46,55 @@ install --help
  -s  --service <name> service name of the node to monitor [required]
  -g  --gov enable checks on new governance proposals (tendermint)
 ```
+
+
+## Configuration
+Edit /etc/srvcheck.conf:
+
+```
+; telegram notifications 
+[notification.telegram]
+enabled = true
+apiToken = 
+chatIds = 
+
+; a dummy notification wich prints to stdout
+[notification.dummy]
+enabled = true
+
+; chain settings
+[chain]
+; name to be displayed on notifications
+name = 
+; chain type (e.g. "tendermint" | "substrate")
+type = 
+; systemd service name
+service = 
+; endpoint uri, if different from default
+endpoint = 
+; block time
+blockTime =
+activeSet = 
+thresholdNotsigned = 
+blockWindow = 
+; Github repository
+ghRepository = org/repo
+; software version
+localVersion = 
+
+; task specific settings
+[tasks]
+; comma separated list of disabled tasks
+disabled = TaskTendermintNewProposal
+; enable auto recovery
+autoRecover = true 
+```
+
+## Credits
+
+Made with love by the [Openbitlab](https://openbitlab.com) team
+
+
+## License
+
+Read the LICENSE file.
