@@ -51,7 +51,7 @@ class TaskSolanaBalanceCheck(Task):
 			return False
 
 class TaskSolanaLastVoteCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = minutes(10), notifyEvery=hours(1)):
+	def __init__(self, conf, notification, system, chain, checkEvery = minutes(10), notifyEvery=minutes(30)):
 		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
@@ -64,6 +64,7 @@ class TaskSolanaLastVoteCheck(Task):
 			self.prev = lastVote
 		elif self.prev == lastVote:
 			return self.notify(' last vote stuck at height: %d %s' % (lastVote, Emoji.Stuck))
+		self.prev = lastVote
 		return False
 
 
