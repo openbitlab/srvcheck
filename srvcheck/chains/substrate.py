@@ -1,12 +1,14 @@
 import json
 import requests
+
+from srvcheck.tasks.task import hours
 from .chain import Chain
 from ..tasks import Task
 from ..utils import confGetOrDefault
 from substrateinterface import SubstrateInterface
 
 class TaskSubstrateNewReferenda(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=60*60, notifyEvery=60*10*60):
+	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
 		super().__init__('TaskSubstrateNewReferenda',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
