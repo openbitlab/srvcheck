@@ -177,10 +177,10 @@ case $1 in
     -g|--gov)
         if [[ -z $2 ]]
         then
-            enable_gov=true
-        else
             print_help
             exit 1
+        else
+            enable_gov=true
         fi
         shift # past argument
         shift # past value

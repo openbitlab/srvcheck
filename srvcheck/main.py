@@ -2,6 +2,7 @@
 import sys 
 import time
 import configparser
+import traceback
 
 import srvcheck
 
@@ -85,10 +86,11 @@ def main():
 						t.recover()
 						t.markRecovered()
 
-				except Exception as e:
-					print ('Error in task %s: %s' % (t.name, e))
+				except Exception:
+					print ('Error in task %s: %s' % (t.name, traceback.format_exc()))
 
-		notification.flush()
+		notification.flush()		
+		sys.stdout.flush()
 		time.sleep(TTS)
 
 if __name__ == "__main__":

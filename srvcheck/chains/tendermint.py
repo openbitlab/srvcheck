@@ -1,20 +1,20 @@
 from ..notification import Emoji
 from .chain import Chain
-from ..tasks import Task,  hours
+from ..tasks import Task,  hours, minutes
 import requests
 from ..utils import Bash
+from ..utils import confGetOrDefault
 import json
 import configparser
 import re
 
 class TaskTendermintBlockMissed(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
-		self.BLOCK_WINDOW = int(conf["chain"]["blockWindow"])
-		self.THRESHOLD_NOTSIGNED = int(conf["chain"]["thresholdNotsigned"])
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
+		self.BLOCK_WINDOW = confGetOrDefault(conf, 'chain.blockWindow', 100)
+		self.THRESHOLD_NOTSIGNED = confGetOrDefault(conf, 'chain.thresholdNotsigned', 5)
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
-		self.prev = None
 
 	def isPluggable(conf):
 		return True
@@ -22,16 +22,13 @@ class TaskTendermintBlockMissed(Task):
 	def run(self):
 		nblockh = self.chain.getHeight()
 
-		if not self.prev:
-			self.prev = nblockh
-		elif nblockh - self.prev >= self.BLOCK_WINDOW:
-			block = self.prev
-			missed = 0
-			while block < self.prev + self.BLOCK_WINDOW:
-				if self.chain.getValidatorAddress() not in self.chain.getSignatures(block): missed += 1
-				block += 1
-			if missed >= self.THRESHOLD_NOTSIGNED:
-				return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
+		missed = 0
+		start = nblockh - self.BLOCK_WINDOW
+		while start < nblockh:
+				if not next((x for x in self.chain.getSignatures(start) if x['validator_address'] == self.chain.getValidatorAddress()), None): missed += 1
+				start += 1
+				if missed >= self.THRESHOLD_NOTSIGNED:
+					return self.notify('%d not signed blocks in the latest %d %s' % (missed, self.BLOCK_WINDOW, Emoji.BlockMiss))
 
 		return False
 
@@ -54,12 +51,11 @@ class TaskTendermintNewProposal(Task):
 
 		return False
 
-
 class TaskTendermintPositionChanged(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintPositionChanged',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
-		self.ACTIVE_SET = conf["chain"]["activeSet"]
+		self.ACTIVE_SET = confGetOrDefault(conf, 'chain.activeSet')
 		self.prev = None
 
 	def isPluggable(conf):
@@ -75,17 +71,16 @@ class TaskTendermintPositionChanged(Task):
 			prev = self.prev
 			self.prev = npos
 			if npos > prev:
-				return self.notify('position decreased from %d to %d %s' % (self.prev, npos, Emoji.PosUp))
+				return self.notify('position decreased from %d to %d %s' % (prev, npos, Emoji.PosDown))
 			else:
-				return self.notify('position increased from %d to %d %s' % (self.prev, npos, Emoji.PosDown))
+				return self.notify('position increased from %d to %d %s' % (prev, npos, Emoji.PosUp))
 				
 		return False
-
 
 	def getValidatorPosition(self):
 		bh = str(self.chain.getHeight())
 		active_vals = []
-		if (self.ACTIVE_SET == ''):
+		if (self.ACTIVE_SET is None):
 			active_s = int(self.chain.rpcCall('validators', [bh, "1", "1"])['total'])
 		else:
 			active_s = int(self.ACTIVE_SET)
@@ -137,10 +132,6 @@ class Tendermint (Chain):
 	def getHealth(self):
 		return self.rpcCall('health')
 
-	def getLatestVersion(self):
-		c = requests.get('https://api.github.com/repos/' + self.conf['chain']['ghRepository']+ '/releases/latest').json()
-		return c['tag_name']
-
 	def getVersion(self):
 		return self.rpcCall('abci_info')
 
@@ -148,7 +139,10 @@ class Tendermint (Chain):
 		try:
 			return self.getVersion()["response"]["version"]
 		except:
-			return self.conf['chain']['localVersion']
+			ver = confGetOrDefault(self.conf, 'chain.localVersion')
+			if ver is None:
+				raise Exception('No local version of the software specified!')
+			return ver
 
 	def getHeight(self):
 		return int(self.rpcCall('abci_info')['response']['last_block_height'])
@@ -172,9 +166,12 @@ class Tendermint (Chain):
 		return self.rpcCall('block', [str(height)])['block']['last_commit']['signatures']
 
 	def isSynching(self):
-		return json.loads(self.rpcCall('status')['sync_info']['catching_up'].lower())
+		return self.rpcCall('status')['sync_info']['catching_up']
 	
 	def getLatestProposal(self):
-		cmd = configparser.ConfigParser().read('/etc/systemd/system/'+self.chain.conf["chain"]["service"])
-		cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]
-		return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").value())["proposals"][0]
+		serv = confGetOrDefault(self.conf, 'chain.service')
+		if serv:
+			cmd = configparser.ConfigParser().read(f"/etc/systemd/system/{serv}")
+			cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]
+			return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").value())["proposals"][0]
+		raise Exception('No service file name specified!')

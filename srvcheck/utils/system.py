@@ -1,4 +1,5 @@
 from .bash import Bash 
+from .misc import confGetOrDefault
 
 def toGB(size):
     return size / 1024 / 1024
@@ -36,8 +37,9 @@ class System:
         return Bash('ip addr').value().split('inet ')[-1].split('/')[0]
 
     def getServiceUptime(self):
-        if 'service' in self.conf['chain']:
-            return " ".join(Bash('systemctl status ' + self.conf['chain']['service']).value().split('\n')[2].split(";")[-1].strip().split()[:-1])
+        serv = confGetOrDefault(self.conf, 'chain.service')
+        if serv:
+            return " ".join(Bash(f"systemctl status {serv}").value().split('\n')[2].split(";")[-1].strip().split()[:-1])
         return 'na'
 
     def getUsage(self):
