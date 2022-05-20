@@ -18,7 +18,7 @@ class Chain:
         self.conf = conf
         ep = confGetOrDefault(self.conf, 'chain.endpoint', '')
         if ep != '': self.EP = ep       
-        b = confGetOrDefault(self.conf, 'chain.blockTime', 10)
+        b = confGetOrDefault(self.conf, 'chain.blockTime', 10, int)
         if b != '': self.BLOCKTIME = b
         n = confGetOrDefault(self.conf, 'chain.name', '')
         if n != '': self.NAME = n

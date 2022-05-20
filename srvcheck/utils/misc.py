@@ -1,10 +1,7 @@
-def confGetOrDefault (conf, key, default=None):
+def confGetOrDefault (conf, key, default=None, cast=lambda y: y):
     def iteOver(c, k):
         if len(k) == 1:
-            out = c[k[0]] if k[0] in c else default
-            if out == '':
-                out = default
-            return int(out) if type(out) == str and out.strip().isdigit() else out
+            return cast(c[k[0]]) if k[0] in c else default
         else:
             ke = k[0]
             k = k[1:]
