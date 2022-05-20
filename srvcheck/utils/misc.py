@@ -2,6 +2,8 @@ def confGetOrDefault (conf, key, default=None):
     def iteOver(c, k):
         if len(k) == 1:
             out = c[k[0]] if k[0] in c else default
+            if out == '':
+                out = default
             return int(out) if type(out) == str and out.isdigit() else out
         else:
             ke = k[0]
