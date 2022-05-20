@@ -1,5 +1,6 @@
 name=$(hostname)
 branch="main"
+verbosity="-q"
 
 install() {
     echo "[*] Installing monitor..."
@@ -21,15 +22,16 @@ print_help () {
  -n  --name <name> monitor name [default is the server hostname]
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
- -g  --gov enable checks on new governance proposals (tendermint)"
+ -g  --gov enable checks on new governance proposals (tendermint)
+  -v  --verbose enable verbose installation"
 }
 
 install_monitor () {
     config_file="/etc/srvcheck.conf"
     apt -qq update
     apt -qq install git python3-pip -y
-    pip3 -q install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck
-    wget -q https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
+    pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck
+    wget $verbosity https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
     sed -i -e "s/^tagVersion =.*/tagVersion = $(curl https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags -s | jq .[-1] | jq .ref | grep -oP '(?<=v).*?(?=\")')/" $config_file
@@ -98,6 +100,10 @@ case $1 in
         fi
         shift # past argument
         shift # past value
+    ;;
+    -v|--verbose)
+        verbosity=""
+        shift # past argument
     ;;
     --branch)
         if [[ -z $2 ]]
