@@ -2,7 +2,7 @@ def confGetOrDefault (conf, key, default=None, cast=lambda y: y):
     def iteOver(c, k):
         if len(k) == 1:
             out = c[k[0]] if k[0] in c else default
-            return cast(out) if out != '' else out
+            return cast(out) if out != '' else default
         else:
             ke = k[0]
             k = k[1:]
