@@ -4,7 +4,6 @@
 
 Srvcheck helps you to monitor blockchain nodes.
 
-
 It supports these ecosystems:
 - Substrate
 - Tendermint
@@ -13,16 +12,38 @@ It supports these ecosystems:
 - Solana
 - Aptos
 
-And offer tasks for checking:
-- system usage (cpu, disk)
-- chain stuck
-- block miss
-- low peer
-- other ecosystem related tasks
 
-The software supports these notification outputs:
+It supports these notification outputs:
 - stdout
 - telegram chats 
+
+
+And offer tasks for checking:
+- TaskAutoUpdater
+- TaskChainStuck
+- TaskChainLowPeer
+- TaskSystemCpuAlert
+- TaskSystemUsage
+- TaskNewRelease
+- TaskSystemDiskAlert
+
+Solana specific tasks:
+- TaskSolanaHealthError
+- TaskSolanaDelinquentCheck
+- TaskSolanaBalanceCheck
+
+Aptos specific tasks:
+- TaskAptosHealthError
+- TaskAptosValidatorProposalCheck
+
+Tendermint specific tasks
+- TaskTendermintBlockMissed
+- TaskTendermintNewProposal
+- TaskTendermintPositionChanged
+- TaskTendermintHealthError
+
+Substrate specific tasks:
+- TaskSubstrateNewReferenda
 
 
 ## Install & Update
