@@ -10,8 +10,8 @@ import re
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
-		self.BLOCK_WINDOW = confGetOrDefault(conf, 'chain.blockWindow', 100)
-		self.THRESHOLD_NOTSIGNED = confGetOrDefault(conf, 'chain.thresholdNotsigned', 5)
+		self.BLOCK_WINDOW = confGetOrDefault(conf, 'chain.blockWindow', 100, int)
+		self.THRESHOLD_NOTSIGNED = confGetOrDefault(conf, 'chain.thresholdNotsigned', 5, int)
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)

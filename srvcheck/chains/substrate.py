@@ -1,12 +1,14 @@
 import json
 import requests
+
+from srvcheck.tasks.task import hours
 from .chain import Chain
 from ..tasks import Task
 from ..utils import confGetOrDefault
 from substrateinterface import SubstrateInterface
 
 class TaskSubstrateNewReferenda(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=60*60, notifyEvery=60*10*60):
+	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
 		super().__init__('TaskSubstrateNewReferenda',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
@@ -83,7 +85,7 @@ class Substrate (Chain):
 		return self.rpcCall('system_chain')
 
 	def isStaking(self):
-		c = self.rpcCall('babe_epochAuthorship').json()
+		c = self.rpcCall('babe_epochAuthorship')
 		if len(c.keys()) == 0:
 			return False 
 
@@ -91,5 +93,5 @@ class Substrate (Chain):
 		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0
 
 	def isSynching(self):
-		c = self.rpcCall('system_chain')
+		c = self.rpcCall('system_syncState')
 		return c['highestBlock'] < c['currentBlock']

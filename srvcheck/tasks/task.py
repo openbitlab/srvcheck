@@ -34,8 +34,8 @@ class Task:
 	def markChecked(self):
 		self.lastCheck = time.time()
 
-	def notify(self, nstr):
-		if self.shouldBeNotified():
+	def notify(self, nstr, noCheck = False):
+		if self.shouldBeNotified() or noCheck:
 			self.lastNotify = time.time()
 			self.notification.append(nstr)
 			return True
