@@ -1,3 +1,5 @@
+from statistics import median
+from wsgiref.validate import validator
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
@@ -63,7 +65,8 @@ class TaskSolanaLastVoteCheck(Task):
 		if self.prev == None:
 			self.prev = lastVote
 		elif self.prev == lastVote:
-			return self.notify(' last vote stuck at height: %d %s' % (lastVote, Emoji.Stuck))
+			median = self.chain.getMedianLastVote()
+			return self.notify(' last vote stuck at height: %d, median is: %d %s' % (lastVote, median, Emoji.Stuck))
 		self.prev = lastVote
 		return False
 
@@ -120,13 +123,13 @@ class Solana (Chain):
 		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
 
 	def isDelinquent(self):
-		return self.getValidatorInfo["delinquent"]
+		return self.getValidatorInfo()["delinquent"]
 
 	def getValidatorBalance(self):
 		return float(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'").value())
 
 	def getLastVote(self):
-		return self.getValidatorInfo["lastVote"]
+		return self.getValidatorInfo()["lastVote"]
 
 	def getValidatorInfo(self):
 		validators = self.getValidators()
@@ -134,3 +137,10 @@ class Solana (Chain):
 		if val_info:
 			return val_info
 		raise Exception('Identity not found in the validators list')
+	
+	def getMedianLastVote(self):
+		validators = self.getValidators()
+		votes = []
+		for v in validators:
+			votes.append(v["lastVote"])
+		return median(votes)
