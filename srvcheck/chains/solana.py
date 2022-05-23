@@ -188,7 +188,7 @@ class Solana (Chain):
 		identityAddr = self.getIdentityAddress()
 		schedule = self.rpcCall('getLeaderSchedule', [ None, { "identity": identityAddr } ])
 		if len(schedule) == 1:
-			return schedule[identityAddr]
+			return json.loads(schedule[identityAddr])
 		raise Exception('No leader slot assigned to your Identity for the current epoch')
 
 	def getBlockProduction(self):
