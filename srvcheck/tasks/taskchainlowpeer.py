@@ -14,7 +14,7 @@ class TaskChainLowPeer(Task):
 		p = self.chain.getPeerCount()
 
 		if p < MIN_PEERS:
-			return self.notify('Chain has only %s peers %s' % (p, Emoji.Peers))
+			return self.notify('chain has only %s peers %s' % (p, Emoji.Peers))
 		
 		return False
 		

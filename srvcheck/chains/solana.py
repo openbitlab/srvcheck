@@ -1,3 +1,4 @@
+from statistics import median
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
@@ -19,7 +20,7 @@ class TaskSolanaHealthError(Task):
 			self.chain.getHealth()
 			return False
 		except Exception as e:
-			return self.notify('Health error! %s' % Emoji.Health)
+			return self.notify('health error! %s' % Emoji.Health)
 
 class TaskSolanaDelinquentCheck(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
@@ -63,7 +64,8 @@ class TaskSolanaLastVoteCheck(Task):
 		if self.prev == None:
 			self.prev = lastVote
 		elif self.prev == lastVote:
-			return self.notify(' last vote stuck at height: %d %s' % (lastVote, Emoji.Stuck))
+			median = self.chain.getMedianLastVote()
+			return self.notify('last vote stuck at height: %d, median is: %d %s' % (lastVote, median, Emoji.Slow))
 		self.prev = lastVote
 		return False
 
@@ -213,3 +215,10 @@ class Solana (Chain):
 		if val_info:
 			return val_info
 		raise Exception('Identity not found in the validators list')
+	
+	def getMedianLastVote(self):
+		validators = self.getValidators()
+		votes = []
+		for v in validators:
+			votes.append(v["lastVote"])
+		return median(votes)

@@ -24,6 +24,7 @@ class Emoji:
 	LowBal      = "\U0001F4B8"
 	ActStake    = "\U0001F37B"
 	NoLeader    = "\U0001F534"
+	Slow	    = "\U0001f40c"
 
 class Notification:
 	def __init__(self, name):

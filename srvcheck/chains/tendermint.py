@@ -110,7 +110,7 @@ class TaskTendermintHealthError(Task):
 			self.chain.getHealth()
 			return False
 		except Exception as e:
-			return self.notify('Health error! %s' % Emoji.Health)
+			return self.notify('health error! %s' % Emoji.Health)
 
 class Tendermint (Chain):
 	TYPE = "tendermint"
