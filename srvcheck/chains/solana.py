@@ -1,5 +1,4 @@
 from statistics import median
-from wsgiref.validate import validator
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
@@ -21,7 +20,7 @@ class TaskSolanaHealthError(Task):
 			self.chain.getHealth()
 			return False
 		except Exception as e:
-			return self.notify('Health error! %s' % Emoji.Health)
+			return self.notify('health error! %s' % Emoji.Health)
 
 class TaskSolanaDelinquentCheck(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
@@ -66,12 +65,10 @@ class TaskSolanaLastVoteCheck(Task):
 			self.prev = lastVote
 		elif self.prev == lastVote:
 			median = self.chain.getMedianLastVote()
-			return self.notify(' last vote stuck at height: %d, median is: %d %s' % (lastVote, median, Emoji.Slow))
+			return self.notify('last vote stuck at height: %d, median is: %d %s' % (lastVote, median, Emoji.Slow))
 		self.prev = lastVote
 		return False
 
-
-		
 class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
