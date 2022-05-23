@@ -23,6 +23,7 @@ class Emoji:
 	Delinq      = "\U0001F46E"
 	LowBal      = "\U0001F4B8"
 	ActStake    = "\U0001F37B"
+	NoLeader    = "\U0001F534"
 
 class Notification:
 	def __init__(self, name):

@@ -88,15 +88,38 @@ class TaskSolanaEpochActiveStake(Task):
 		if self.prevEpoch != ep:
 			self.prev = act_stake
 			self.prevEpoch = ep
-			return self.notify(' active stake for epoch %s: %d SOL %s' % (ep, act_stake, Emoji.ActStake))
+			return self.notify('active stake for epoch %s: %d SOL %s' % (ep, act_stake, Emoji.ActStake))
 		return False
-		
+
+class TaskSolanaLeaderSchedule(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(24)):
+		super().__init__('TaskSolanaLeaderSchedule', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		ep = self.chain.getEpoch()
+
+		if self.prev == None:
+			self.prev = ep
+
+		try:
+			if self.prev != ep:
+				self.chain.getLeaderSchedule()
+				self.prev = ep
+			return False
+		except Exception:
+			return self.notify('no leader slot assigned for the epoch %s %s' % (ep, Emoji.NoLeader))
+
 class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
 	BLOCKTIME = 60
+	THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
 	EP = "http://localhost:8899/"
-	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaEpochActiveStake ]
+	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule ]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
