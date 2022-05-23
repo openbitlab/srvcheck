@@ -127,6 +127,13 @@ class Solana (Chain):
 	def getEpoch(self):
 		return self.rpcCall('getEpochInfo')['epoch']
 
+	def getLeaderSchedule(self):
+		identityAddr = self.getIdentityAddress()
+		schedule = self.rpcCall('getLeaderSchedule', [ None, { "identity": identityAddr } ])
+		if len(schedule) == 1:
+			return schedule[identityAddr]
+		raise Exception('No leader slot assigned to your Identity for the current epoch')
+
 	def getPeerCount(self):
 		raise Exception('Abstract getPeerCount()')
 
