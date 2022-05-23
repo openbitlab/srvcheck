@@ -58,7 +58,7 @@ class TestTaskSystemDiskAlert(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'Disk usage is above 90% (99%) (/var/log: 0.0G) 💾')
+        self.assertEqual(n.events[0], 'disk usage is above 90% (99%) (/var/log: 0.0G) 💾')
 
 
 class TestTaskChainLowPeer(unittest.TestCase):
@@ -75,7 +75,7 @@ class TestTaskChainLowPeer(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'Chain has only 0 peers' + ' ' + Emoji.Peers)
+        self.assertEqual(n.events[0], 'chain has only 0 peers' + ' ' + Emoji.Peers)
 
 
 
@@ -96,7 +96,7 @@ class TestTaskChainStuck(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'Chain is stuck at block 0x1234567890' + ' ' + Emoji.Stuck)
+        self.assertEqual(n.events[0], 'chain is stuck at block 0x1234567890' + ' ' + Emoji.Stuck)
 
 
     def test_noblockhash(self):
@@ -115,7 +115,7 @@ class TestTaskChainStuck(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'Chain is stuck at block 1' + ' ' + Emoji.Stuck)
+        self.assertEqual(n.events[0], 'chain is stuck at block 1' + ' ' + Emoji.Stuck)
 
 
 class TestTaskNewRelease(unittest.TestCase):

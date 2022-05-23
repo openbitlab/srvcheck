@@ -22,7 +22,7 @@ class TestTaskTendermintHealthError(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'Health error! 🚨')
+        self.assertEqual(n.events[0], 'health error! 🚨')
 
 class TestTaskTendermintNewProposal(unittest.TestCase):
     def test_noalert(self):

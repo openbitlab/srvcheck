@@ -1,6 +1,7 @@
+from statistics import median
 from ..notification import Emoji
 from .chain import Chain
-from ..tasks import Task,  hours
+from ..tasks import Task,  hours, minutes
 from ..utils import Bash
 from ..utils import confGetOrDefault
 import requests
@@ -19,7 +20,7 @@ class TaskSolanaHealthError(Task):
 			self.chain.getHealth()
 			return False
 		except Exception as e:
-			return self.notify('Health error! %s' % Emoji.Health)
+			return self.notify('health error! %s' % Emoji.Health)
 
 class TaskSolanaDelinquentCheck(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
@@ -49,6 +50,24 @@ class TaskSolanaBalanceCheck(Task):
 			return self.notify('validator balance is too low, %s SOL left %s' % (balance, Emoji.LowBal))
 		else:
 			return False
+
+class TaskSolanaLastVoteCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = 30, notifyEvery=minutes(5)):
+		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		lastVote = self.chain.getLastVote()
+		if self.prev == None:
+			self.prev = lastVote
+		elif self.prev == lastVote:
+			median = self.chain.getMedianLastVote()
+			return self.notify('last vote stuck at height: %d, median is: %d %s' % (lastVote, median, Emoji.Slow))
+		self.prev = lastVote
+		return False
 
 class Solana (Chain):
 	TYPE = "solana"
@@ -101,11 +120,24 @@ class Solana (Chain):
 		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
 
 	def isDelinquent(self):
-		validators = self.getValidators()
-		val_info = next((x for x in validators if x['identityPubkey'] == self.getIdentityAddress()), None)
-		if val_info:
-			return val_info["delinquent"]
-		raise Exception('Identity not found in the validators list')
+		return self.getValidatorInfo()["delinquent"]
 
 	def getValidatorBalance(self):
 		return float(Bash(f"solana balance {self.getIdentityAddress()} --url {self.EP} | grep -o '[0-9.]*'").value())
+
+	def getLastVote(self):
+		return self.getValidatorInfo()["lastVote"]
+
+	def getValidatorInfo(self):
+		validators = self.getValidators()
+		val_info = next((x for x in validators if x['identityPubkey'] == self.getIdentityAddress()), None)
+		if val_info:
+			return val_info
+		raise Exception('Identity not found in the validators list')
+	
+	def getMedianLastVote(self):
+		validators = self.getValidators()
+		votes = []
+		for v in validators:
+			votes.append(v["lastVote"])
+		return median(votes)

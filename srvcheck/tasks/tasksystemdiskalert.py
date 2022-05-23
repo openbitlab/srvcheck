@@ -20,10 +20,10 @@ class TaskSystemDiskAlert(Task):
 			self.prevDiskSize = usage.diskSize
 
 		if usage.diskPercentageUsed > DISK_LIMIT:
-			return self.notify('Disk usage is above %d%% (%d%%) (/var/log: %.1fG) %s' % (DISK_LIMIT, usage.diskPercentageUsed, toGB(usage.diskUsedByLog), Emoji.Disk))
+			return self.notify('disk usage is above %d%% (%d%%) (/var/log: %.1fG) %s' % (DISK_LIMIT, usage.diskPercentageUsed, toGB(usage.diskUsedByLog), Emoji.Disk))
 
 		if usage.diskSize > self.prevDiskSize:
-			c = self.notify('Disk size increased (%.1fG -> %.1fG) %s' % (toGB(self.prevDiskSize), toGB(usage.diskSize), Emoji.Disk), True)
+			c = self.notify('disk size increased (%.1fG -> %.1fG) %s' % (toGB(self.prevDiskSize), toGB(usage.diskSize), Emoji.Disk), True)
 			self.prevDiskSize = usage.diskSize
 			return c
 			
