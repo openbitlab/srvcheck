@@ -114,13 +114,27 @@ class TaskSolanaLeaderSchedule(Task):
 		except Exception:
 			return self.notify('no leader slot assigned for the epoch %s %s' % (ep, Emoji.NoLeader))
 
+class TaskSolanaSkippedSlots(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(24), notifyEvery=hours(24)):
+		super().__init__('TaskSolanaSkippedSlots', conf, notification, system, chain, checkEvery, notifyEvery)
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		bp_info = self.chain.getBlockProduction()
+		skipped_perc = bp_info[1] / bp_info[0]
+		if skipped_perc > self.THRESHOLD_SKIPPED_SLOT:
+			return self.notify('skipped %d%% of assigned slots (%d/%d) %s' % (int(skipped_perc), bp_info[1], bp_info[0], Emoji.BlockMiss))
+		return False
+
 class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
 	BLOCKTIME = 60
 	THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
 	EP = "http://localhost:8899/"
-	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule ]
+	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule, TaskSolanaSkippedSlots ]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -154,8 +168,15 @@ class Solana (Chain):
 		identityAddr = self.getIdentityAddress()
 		schedule = self.rpcCall('getLeaderSchedule', [ None, { "identity": identityAddr } ])
 		if len(schedule) == 1:
-			return schedule[identityAddr]
+			return json.loads(schedule[identityAddr])
 		raise Exception('No leader slot assigned to your Identity for the current epoch')
+
+	def getBlockProduction(self):
+		identityAddr = self.getIdentityAddress()
+		b_prod_info = self.rpcCall('getBlockProduction', [ { "identity": identityAddr } ])['value']['byIdentity']
+		if len(b_prod_info) == 1:
+			return json.loads(b_prod_info[identityAddr])
+		raise Exception('No blocks produced in the current epoch')
 
 	def getPeerCount(self):
 		raise Exception('Abstract getPeerCount()')
