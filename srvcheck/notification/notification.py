@@ -22,6 +22,7 @@ class Emoji:
 	Proposal	= "\U0001f4e5"
 	Delinq      = "\U0001F46E"
 	LowBal      = "\U0001F4B8"
+	ActStake    = "\U0001F37B"
 
 class Notification:
 	def __init__(self, name):
