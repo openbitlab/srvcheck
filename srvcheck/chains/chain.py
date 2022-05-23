@@ -18,7 +18,7 @@ class Chain:
         self.conf = conf
         ep = confGetOrDefault(self.conf, 'chain.endpoint', '')
         if ep != '': self.EP = ep       
-        b = confGetOrDefault(self.conf, 'chain.blockTime', 10)
+        b = confGetOrDefault(self.conf, 'chain.blockTime', 10, int)
         if b != '': self.BLOCKTIME = b
         n = confGetOrDefault(self.conf, 'chain.name', '')
         if n != '': self.NAME = n
@@ -35,10 +35,6 @@ class Chain:
     def detect():
         """ Checks if the current server is running this chain """
         raise Exception('Abstract detect()')
-
-    def getLatestVersion(self):
-        """ Returns the latest version """
-        raise Exception('Abstract getLatestVersion()')
 
     def getVersion(self):
         """ Returns software version """

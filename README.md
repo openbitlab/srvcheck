@@ -4,7 +4,6 @@
 
 Srvcheck helps you to monitor blockchain nodes.
 
-
 It supports these ecosystems:
 - Substrate
 - Tendermint
@@ -13,16 +12,38 @@ It supports these ecosystems:
 - Solana
 - Aptos
 
-And offer tasks for checking:
-- system usage (cpu, disk)
-- chain stuck
-- block miss
-- low peer
-- other ecosystem related tasks
 
-The software supports these notification outputs:
+It supports these notification outputs:
 - stdout
 - telegram chats 
+
+
+And offer tasks for checking:
+- TaskAutoUpdater
+- TaskChainStuck
+- TaskChainLowPeer
+- TaskSystemCpuAlert
+- TaskSystemUsage
+- TaskNewRelease
+- TaskSystemDiskAlert
+
+Solana specific tasks:
+- TaskSolanaHealthError
+- TaskSolanaDelinquentCheck
+- TaskSolanaBalanceCheck
+
+Aptos specific tasks:
+- TaskAptosHealthError
+- TaskAptosValidatorProposalCheck
+
+Tendermint specific tasks
+- TaskTendermintBlockMissed
+- TaskTendermintNewProposal
+- TaskTendermintPositionChanged
+- TaskTendermintHealthError
+
+Substrate specific tasks:
+- TaskSubstrateNewReferenda
 
 
 ## Install & Update
@@ -45,6 +66,7 @@ install --help
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
  -g  --gov enable checks on new governance proposals (tendermint)
+ -v  --verbose enable verbose installation
 ```
 
 
@@ -77,8 +99,8 @@ blockTime =
 activeSet = 
 thresholdNotsigned = 
 blockWindow = 
-; Github repository
-ghRepository = org/repo
+; Github repository (org/repo)
+ghRepository = 
 ; software version
 localVersion = 
 

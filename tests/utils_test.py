@@ -30,6 +30,7 @@ class TestUtilGetConfOrDefault(unittest.TestCase):
         'name': 'Test',
         'chain': {
             'endpoint': 'http://localhost:8080',
+            'type': '',
         }
     }
 
@@ -37,11 +38,15 @@ class TestUtilGetConfOrDefault(unittest.TestCase):
         self.assertEqual(confGetOrDefault(self.CONF, 'chain.endpoint'), 'http://localhost:8080')
 
     def test_getFromConfExistingInteger(self):
-        self.assertEqual(confGetOrDefault(self.CONF, 'id'), 1)
+        self.assertEqual(confGetOrDefault(self.CONF, 'id', cast=int), 1)
 
     def test_getFromConfNotExistingString(self):
         self.assertEqual(confGetOrDefault(self.CONF, 'chain.id'), None)
 
     def test_getFromConfNotExistingDefault(self):
-        self.assertNotEqual(confGetOrDefault(self.CONF, 'chain.id', 3), None)
+        self.assertNotEqual(confGetOrDefault(self.CONF, 'chain.id', 3, int), None)
         self.assertEqual(confGetOrDefault(self.CONF, 'type', 'tendermint'), 'tendermint')
+
+    def test_getFromConfExistingButEmptyDefault(self):
+        self.assertNotEqual(confGetOrDefault(self.CONF, 'chain.type', 'mockchain'), '')
+        self.assertEqual(confGetOrDefault(self.CONF, 'chain.type', 'mockchain'), 'mockchain')
