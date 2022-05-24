@@ -126,7 +126,7 @@ class TaskSolanaSkippedSlots(Task):
 		bp_info = self.chain.getBlockProduction()
 		skipped_perc = (bp_info[0] - bp_info[1]) / bp_info[0]
 		if skipped_perc > self.THRESHOLD_SKIPPED_SLOT:
-			return self.notify('skipped %d%% of assigned slots (%d/%d) %s' % (int(skipped_perc), bp_info[1], bp_info[0], Emoji.BlockMiss))
+			return self.notify('skipped %d%% of assigned slots (%d/%d) %s' % (int(skipped_perc) * 100, bp_info[1], bp_info[0], Emoji.BlockMiss))
 		return False
 
 class Solana (Chain):
