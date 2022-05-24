@@ -152,7 +152,6 @@ class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
 	BLOCKTIME = 60
-	THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
 	EP = "http://localhost:8899/"
 	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaLastVoteCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule, TaskSolanaSkippedSlots ]
 	
