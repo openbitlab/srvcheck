@@ -8,10 +8,10 @@ def _linearize(e, cc = {}, xx = ''):
 
 
 class ConfItem:
-	def __init__(self, name, defaultValue=None, type=str, description=None):
+	def __init__(self, name, defaultValue=None, cast=lambda y: y, description=None):
 		self.name = name
 		self.defaultValue = defaultValue
-		self.type = type
+		self.cast = cast
 		self.description = description
 
 
@@ -44,15 +44,10 @@ class ConfSet:
 
 		return iteOver(self.conf, key)
 
-	def getOrDefault(self, name: str, failSafe=True):
+	def getOrDefault(self, name: str, failSafe=True, cast=lambda y: y):
 		if not (name in self.items):
 			if failSafe:
 				return None 
 			raise Exception('conf item %s not found' % name)
 
-		i = self.items[name]
-
-		if i.type:
-			return i.type(self.conf[name])
-		else:
-			return self.conf[name]
+		return cast(self.items[name].cast(self.conf[name]))

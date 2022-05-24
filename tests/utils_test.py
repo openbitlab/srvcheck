@@ -39,13 +39,13 @@ class TestUtilConfSet(unittest.TestCase):
         self.assertEqual(self.CONFS.getOrDefault('chain.endpoint'), 'http://localhost:8080')
 
     def test_getFromConfExistingInteger(self):
-        self.assertEqual(self.CONFS.getOrDefault('id', type=int), 1)
+        self.assertEqual(self.CONFS.getOrDefault('id', cast=int), 1)
 
     def test_getFromConfNotExistingString(self):
         self.assertEqual(self.CONFS.getOrDefault('chain.id'), None)
 
     def test_getFromConfNotExistingDefault(self):
-        self.assertNotEqual(self.CONFS.getOrDefault('chain.id', 3, type=int), None)
+        self.assertNotEqual(self.CONFS.getOrDefault('chain.id', 3, cast=int), None)
         self.assertEqual(self.CONFS.getOrDefault('type', 'tendermint'), 'tendermint')
 
     def test_getFromConfExistingButEmptyDefault(self):
