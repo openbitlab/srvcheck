@@ -23,7 +23,9 @@ class Emoji:
 	Delinq      = "\U0001F46E"
 	LowBal      = "\U0001F4B8"
 	ActStake    = "\U0001F37B"
+	Leader      = "\U0001F7E2"
 	NoLeader    = "\U0001F534"
+	BlockProd   = "\U0001F528"
 	Slow	    = "\U0001f40c"
 
 class Notification:
