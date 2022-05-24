@@ -169,14 +169,14 @@ class Solana (Chain):
 		identityAddr = self.getIdentityAddress()
 		schedule = self.rpcCall('getLeaderSchedule', [ None, { "identity": identityAddr } ])
 		if len(schedule) == 1:
-			return json.loads(schedule[identityAddr])
+			return schedule[identityAddr]
 		raise Exception('No leader slot assigned to your Identity for the current epoch')
 
 	def getBlockProduction(self):
 		identityAddr = self.getIdentityAddress()
 		b_prod_info = self.rpcCall('getBlockProduction', [ { "identity": identityAddr } ])['value']['byIdentity']
 		if len(b_prod_info) == 1:
-			return json.loads(b_prod_info[identityAddr])
+			return b_prod_info[identityAddr]
 		raise Exception('No blocks produced in the current epoch')
 
 	def getPeerCount(self):
