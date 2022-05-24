@@ -10,8 +10,8 @@ import re
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
-		self.BLOCK_WINDOW = self.confSet.getOrDefault(conf, 'chain.blockWindow', 100, int)
-		self.THRESHOLD_NOTSIGNED = self.confSet.getOrDefault(conf, 'chain.thresholdNotsigned', 5, int)
+		self.BLOCK_WINDOW = self.conf.getOrDefault(conf, 'chain.blockWindow', 100, int)
+		self.THRESHOLD_NOTSIGNED = self.conf.getOrDefault(conf, 'chain.thresholdNotsigned', 5, int)
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
@@ -55,7 +55,7 @@ class TaskTendermintPositionChanged(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintPositionChanged',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
-		self.ACTIVE_SET = self.confSet.getOrDefault('chain.activeSet')
+		self.ACTIVE_SET = self.conf.getOrDefault('chain.activeSet')
 		self.prev = None
 
 	def isPluggable(conf):
@@ -123,9 +123,9 @@ class Tendermint (Chain):
 	
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.confSet.addItem(ConfItem('chain.activeSet', None, None, 'active set of validators'))
-		self.confSet.addItem(ConfItem('chain.blockWindow', 100, int))
-		self.confSet.addItem(ConfItem('chain.thresholdNotsigned', 5, int))
+		self.conf.addItem(ConfItem('chain.activeSet', None, None, 'active set of validators'))
+		self.conf.addItem(ConfItem('chain.blockWindow', 100, int))
+		self.conf.addItem(ConfItem('chain.thresholdNotsigned', 5, int))
 
 	def detect(conf):
 		try:
@@ -144,7 +144,7 @@ class Tendermint (Chain):
 		try:
 			return self.getVersion()["response"]["version"]
 		except:
-			ver = self.confSet.getOrDefault('chain.localVersion')
+			ver = self.conf.getOrDefault('chain.localVersion')
 			if ver is None:
 				raise Exception('No local version of the software specified!')
 			return ver
@@ -174,7 +174,7 @@ class Tendermint (Chain):
 		return self.rpcCall('status')['sync_info']['catching_up']
 	
 	def getLatestProposal(self):
-		serv = self.confSet.getOrDefault('chain.service')
+		serv = self.conf.getOrDefault('chain.service')
 		if serv:
 			cmd = configparser.ConfigParser().read(f"/etc/systemd/system/{serv}")
 			cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]

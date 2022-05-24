@@ -7,8 +7,8 @@ class TelegramNotification(NotificationProvider):
 	
 	def __init__(self, conf):
 		try:
-			self.apiToken = conf['notification.telegram']['apiToken'].strip('\"')
-			self.chatIds = json.loads(conf['notification.telegram']['chatIds'])
+			self.apiToken = conf.getOrDefault('notification.telegram.apiToken').strip('\"')
+			self.chatIds = json.loads(conf.getOrDefault('notification.telegram.chatIds'))
 
 		except Exception as e:
 			self.apiToken = ""

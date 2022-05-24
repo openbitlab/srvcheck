@@ -1,5 +1,5 @@
 import unittest
-from srvcheck.utils import Bash, System, confGetOrDefault
+from srvcheck.utils import Bash, System, ConfSet
 
 class TestUtilsBash(unittest.TestCase):
     def test_echo(self):
@@ -24,7 +24,7 @@ class TestUtilsSystem(unittest.TestCase):
         self.assertNotEqual(us.ramFree, 0)
         self.assertNotEqual(us.cpuUsage, 0)
 
-class TestUtilGetConfOrDefault(unittest.TestCase):
+class TestUtilConfSet(unittest.TestCase):
     CONF = {
         'id': 1,
         'name': 'Test',
@@ -33,20 +33,21 @@ class TestUtilGetConfOrDefault(unittest.TestCase):
             'type': '',
         }
     }
+    CONFS = ConfSet(CONF)
 
     def test_getFromConfExistingString(self):
-        self.assertEqual(confGetOrDefault(self.CONF, 'chain.endpoint'), 'http://localhost:8080')
+        self.assertEqual(self.CONFS.getOrDefault('chain.endpoint'), 'http://localhost:8080')
 
     def test_getFromConfExistingInteger(self):
-        self.assertEqual(confGetOrDefault(self.CONF, 'id', cast=int), 1)
+        self.assertEqual(self.CONFS.getOrDefault('id', type=int), 1)
 
     def test_getFromConfNotExistingString(self):
-        self.assertEqual(confGetOrDefault(self.CONF, 'chain.id'), None)
+        self.assertEqual(self.CONFS.getOrDefault('chain.id'), None)
 
     def test_getFromConfNotExistingDefault(self):
-        self.assertNotEqual(confGetOrDefault(self.CONF, 'chain.id', 3, int), None)
-        self.assertEqual(confGetOrDefault(self.CONF, 'type', 'tendermint'), 'tendermint')
+        self.assertNotEqual(self.CONFS.getOrDefault('chain.id', 3, type=int), None)
+        self.assertEqual(self.CONFS.getOrDefault('type', 'tendermint'), 'tendermint')
 
     def test_getFromConfExistingButEmptyDefault(self):
-        self.assertNotEqual(confGetOrDefault(self.CONF, 'chain.type', 'mockchain'), '')
-        self.assertEqual(confGetOrDefault(self.CONF, 'chain.type', 'mockchain'), 'mockchain')
+        self.assertNotEqual(self.CONFS.getOrDefault('chain.type', 'mockchain'), '')
+        self.assertEqual(self.CONFS.getOrDefault('chain.type', 'mockchain'), 'mockchain')

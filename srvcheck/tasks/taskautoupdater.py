@@ -5,10 +5,10 @@ import requests
 import srvcheck
 
 class TaskAutoUpdater(Task):
-    def __init__(self, confSet, notification, system, chain):
-        super().__init__('TaskAutoUpdater', confSet, notification, system, chain, minutes(60), hours(2))
+    def __init__(self, conf, notification, system, chain):
+        super().__init__('TaskAutoUpdater', conf, notification, system, chain, minutes(60), hours(2))
 
-    def isPluggable(confSet):
+    def isPluggable(conf):
         return True
     
     def run(self):

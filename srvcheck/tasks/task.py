@@ -7,9 +7,9 @@ def hours(h):
 	return h * 60 * 60
 
 class Task:
-	def __init__(self, name, confSet, notification, system, chain, checkEvery = minutes(15), notifyEvery = minutes(15), recoverEvery = hours(2)):
+	def __init__(self, name, conf, notification, system, chain, checkEvery = minutes(15), notifyEvery = minutes(15), recoverEvery = hours(2)):
 		self.name = name
-		self.confSet = confSet
+		self.conf = conf
 		self.system = system
 		self.chain = chain
 		self.checkEvery = checkEvery
@@ -21,7 +21,7 @@ class Task:
 		self.lastNotify = 0
 		self.lastRecover = 0
 
-	def isPluggable(confSet):
+	def isPluggable(conf):
 		""" Returns true if the task can be plugged in """
 		raise Exception('Abstract isPluggable()')
 

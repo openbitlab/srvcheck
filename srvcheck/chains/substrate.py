@@ -4,7 +4,6 @@ import requests
 from srvcheck.tasks.task import hours
 from .chain import Chain
 from ..tasks import Task
-from ..utils import confGetOrDefault
 from substrateinterface import SubstrateInterface
 
 class TaskSubstrateNewReferenda(Task):

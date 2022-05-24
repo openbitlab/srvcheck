@@ -3,7 +3,6 @@ from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
 from ..utils import Bash
-from ..utils import confGetOrDefault
 import requests
 import json
 

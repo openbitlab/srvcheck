@@ -36,49 +36,49 @@ def addTasks(chain, notification, system, config):
 
 def main():
 	# Parse configuration
-	config = configparser.ConfigParser()
-	config.read('/etc/srvcheck.conf')
+	confRaw = configparser.ConfigParser()
+	confRaw.read('/etc/srvcheck.conf')
 
-	confSet = ConfSet(config)
-	confSet.addItem(ConfItem('chain.type', None, str))
-	confSet.addItem(ConfItem('chain.name', None, str))
-	confSet.addItem(ConfItem('notification.telegram', None, str))
+	conf = ConfSet(confRaw)
+	conf.addItem(ConfItem('chain.type', None, str))
+	conf.addItem(ConfItem('chain.name', None, str))
+	conf.addItem(ConfItem('tasks.autoRecover', False, bool))
 
 	# Get version
 	version = srvcheck.__version__
 
 	# Initialization
-	notification = Notification (config['chain']['name'])
+	notification = Notification (conf.getOrDefault('chain.name'))
 
 	for x in NOTIFICATION_SERVICES:
-		if ('notification.' + x) in config and config['notification.' + x]['enabled'] == 'true':
-			notification.addProvider (NOTIFICATION_SERVICES[x](config))
+		if conf.exists('notification.%s.enabled' % x) and conf.getOrDefault('notification.%s.enabled' % x, False):
+			notification.addProvider (NOTIFICATION_SERVICES[x](conf))
 	
 	notification.send("monitor v%s started %s" %(version, Emoji.Start))
 
-	system = System(config)
+	system = System(conf)
 	print (system.getUsage())
 
 	# Get the chain by name or by detect
 	chain = None
 	tasks = []
 	for x in CHAINS:
-		if 'chain' in config and config['chain']['type'] == x.TYPE:
-			chain = x(config)
-			tasks = addTasks(chain, notification, system, config)
+		if conf.getOrDefault('chain.type') == x.TYPE:
+			chain = x(conf)
+			tasks = addTasks(chain, notification, system, conf)
 			break
 
 	if not chain:
 		for x in CHAINS:
-			if x.detect(config):
-				chain = x(config)
+			if x.detect(conf):
+				chain = x(conf)
 				print ("Detected chain %s", chain.TYPE)
-				tasks = addTasks(chain, notification, system, config)
+				tasks = addTasks(chain, notification, system, conf)
 				break
 
 	# Mainloop
 	TTS = 60
-	autoRecover = 'autoRecover' in config['tasks'] and config['tasks']['autoRecover'] == 'true'
+	autoRecover = conf.getOrDefault('tasks.autoRecover')
 
 	while True:
 		for t in tasks:
