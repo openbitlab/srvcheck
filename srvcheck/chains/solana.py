@@ -108,8 +108,9 @@ class TaskSolanaLeaderSchedule(Task):
 
 		try:
 			if self.prev != ep:
-				self.chain.getLeaderSchedule()
+				schedule = self.chain.getLeaderSchedule()
 				self.prev = ep
+				return self.notify('%d leader slot assigned for the epoch %s %s' % (len(schedule), ep, Emoji.Leader))
 			return False
 		except Exception:
 			return self.notify('no leader slot assigned for the epoch %s %s' % (ep, Emoji.NoLeader))
@@ -117,16 +118,34 @@ class TaskSolanaLeaderSchedule(Task):
 class TaskSolanaSkippedSlots(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(24), notifyEvery=hours(24)):
 		super().__init__('TaskSolanaSkippedSlots', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+		self.prevBP = 0
+		self.prevM = 0
 		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
 
 	def isPluggable(conf):
 		return True
 
 	def run(self):
+		ep = self.chain.getEpoch()
+
+		if self.prev == None:
+			self.prev = ep
+
 		bp_info = self.chain.getBlockProduction()
-		skipped_perc = (bp_info[0] - bp_info[1]) / bp_info[0]
-		if skipped_perc > self.THRESHOLD_SKIPPED_SLOT:
-			return self.notify('skipped %d%% of assigned slots (%d/%d) %s' % (int(skipped_perc) * 100, bp_info[1], bp_info[0], Emoji.BlockMiss))
+		if bp_info[0] != 0:
+			skipped_perc = (bp_info[0] - bp_info[1]) / bp_info[0]
+			if self.prev == ep:
+				self.prevBP = bp_info[0]
+				self.prevM = bp_info[1]
+			if skipped_perc > self.THRESHOLD_SKIPPED_SLOT:
+				return self.notify('skipped %d%% of assigned slots (%d/%d) %s' % (int(skipped_perc) * 100, bp_info[1], bp_info[0], Emoji.BlockMiss))
+		if self.prev != ep:
+			e = self.prev
+			self.prev = ep
+			if self.prevBP != 0:
+				skipped_perc = (self.prevBP - self.prevM) / self.prevBP
+				return self.notify('skipped %d%% of assigned slots (%d/%d) in the epoch %s %s' % (int(skipped_perc) * 100,  self.prevBP, self.prevM, e, Emoji.BlockProd))
 		return False
 
 class Solana (Chain):
