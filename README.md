@@ -31,6 +31,10 @@ Solana specific tasks:
 - TaskSolanaHealthError
 - TaskSolanaDelinquentCheck
 - TaskSolanaBalanceCheck
+- TaskSolanaLastVoteCheck
+- TaskSolanaEpochActiveStake
+- TaskSolanaLeaderSchedule
+- TaskSolanaSkippedSlots
 
 Aptos specific tasks:
 - TaskAptosHealthError

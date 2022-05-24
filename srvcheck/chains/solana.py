@@ -69,12 +69,92 @@ class TaskSolanaLastVoteCheck(Task):
 		self.prev = lastVote
 		return False
 
+class TaskSolanaEpochActiveStake(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(24)):
+		super().__init__('TaskSolanaEpochActiveStake', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+		self.prevEpoch = None
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		ep = self.chain.getEpoch()
+		act_stake = self.chain.getActiveStake()
+
+		if self.prev == None:
+			self.prev = act_stake
+		if self.prevEpoch == None:
+			self.prevEpoch = ep
+		
+		if self.prevEpoch != ep:
+			self.prev = act_stake
+			self.prevEpoch = ep
+			return self.notify('active stake for epoch %s: %d SOL %s' % (ep, act_stake, Emoji.ActStake))
+		return False
+
+class TaskSolanaLeaderSchedule(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(24)):
+		super().__init__('TaskSolanaLeaderSchedule', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		ep = self.chain.getEpoch()
+
+		if self.prev == None:
+			self.prev = ep
+
+		try:
+			if self.prev != ep:
+				schedule = self.chain.getLeaderSchedule()
+				self.prev = ep
+				return self.notify('%d leader slot assigned for the epoch %s %s' % (len(schedule), ep, Emoji.Leader))
+			return False
+		except Exception:
+			return self.notify('no leader slot assigned for the epoch %s %s' % (ep, Emoji.NoLeader))
+
+class TaskSolanaSkippedSlots(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(24), notifyEvery=hours(24)):
+		super().__init__('TaskSolanaSkippedSlots', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+		self.prevBP = 0
+		self.prevM = 0
+		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
+
+	def isPluggable(conf):
+		return True
+
+	def run(self):
+		ep = self.chain.getEpoch()
+
+		if self.prev == None:
+			self.prev = ep
+
+		bp_info = self.chain.getBlockProduction()
+		if bp_info[0] != 0:
+			skipped_perc = (bp_info[0] - bp_info[1]) / bp_info[0]
+			if self.prev == ep:
+				self.prevBP = bp_info[0]
+				self.prevM = bp_info[1]
+			if skipped_perc > self.THRESHOLD_SKIPPED_SLOT:
+				return self.notify('skipped %d%% of assigned slots (%d/%d) %s' % (int(skipped_perc) * 100, bp_info[1], bp_info[0], Emoji.BlockMiss))
+		if self.prev != ep:
+			e = self.prev
+			self.prev = ep
+			if self.prevBP != 0:
+				skipped_perc = (self.prevBP - self.prevM) / self.prevBP
+				return self.notify('skipped %d%% of assigned slots (%d/%d) in the epoch %s %s' % (int(skipped_perc) * 100,  self.prevBP, self.prevM, e, Emoji.BlockProd))
+		return False
+
 class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:8899/"
-	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck ]
+	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaLastVoteCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule, TaskSolanaSkippedSlots ]
 	
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -100,6 +180,23 @@ class Solana (Chain):
 
 	def getBlockHash(self):
 		return self.rpcCall('getLatestBlockhash')['value']['blockhash']
+
+	def getEpoch(self):
+		return self.rpcCall('getEpochInfo')['epoch']
+
+	def getLeaderSchedule(self):
+		identityAddr = self.getIdentityAddress()
+		schedule = self.rpcCall('getLeaderSchedule', [ None, { "identity": identityAddr } ])
+		if len(schedule) == 1:
+			return schedule[identityAddr]
+		raise Exception('No leader slot assigned to your Identity for the current epoch')
+
+	def getBlockProduction(self):
+		identityAddr = self.getIdentityAddress()
+		b_prod_info = self.rpcCall('getBlockProduction', [ { "identity": identityAddr } ])['value']['byIdentity']
+		if len(b_prod_info) == 1:
+			return b_prod_info[identityAddr]
+		raise Exception('No blocks produced in the current epoch')
 
 	def getPeerCount(self):
 		raise Exception('Abstract getPeerCount()')
@@ -127,6 +224,9 @@ class Solana (Chain):
 
 	def getLastVote(self):
 		return self.getValidatorInfo()["lastVote"]
+
+	def getActiveStake(self):
+		return int(self.getValidatorInfo()["activatedStake"]) / (10**9)
 
 	def getValidatorInfo(self):
 		validators = self.getValidators()
