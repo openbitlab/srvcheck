@@ -6,11 +6,11 @@ LOG_SIZE_THRESHOLD = 4 #GB
 DISK_LIMIT = 90
 
 class TaskSystemDiskAlert(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskSystemDiskAlert', conf, notification, system, chain, minutes(15), hours(2))
+	def __init__(self, confSet, notification, system, chain):
+		super().__init__('TaskSystemDiskAlert', confSet, notification, system, chain, minutes(15), hours(2))
 		self.prevDiskSize = None
 
-	def isPluggable(conf):
+	def isPluggable(confSet):
 		return True
 
 	def run(self):

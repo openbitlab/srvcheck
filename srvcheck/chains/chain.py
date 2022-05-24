@@ -1,4 +1,4 @@
-from ..utils import confGetOrDefault
+from ..utils import confGetOrDefault, ConfSet, ConfItem
 import requests
 
 def rpcCall(url, method, params=[]):
@@ -15,13 +15,13 @@ class Chain:
     BLOCKTIME = 10
 
     def __init__(self, conf):
-        self.conf = conf
-        ep = confGetOrDefault(self.conf, 'chain.endpoint', '')
-        if ep != '': self.EP = ep       
-        b = confGetOrDefault(self.conf, 'chain.blockTime', 10, int)
-        if b != '': self.BLOCKTIME = b
-        n = confGetOrDefault(self.conf, 'chain.name', '')
-        if n != '': self.NAME = n
+        self.confSet = ConfSet(conf)
+        self.confSet.addItem(ConfItem('chain.endpoint', self.EP))
+        self.confSet.addItem(ConfItem('chain.blockTime', 10, int))
+        self.confSet.addItem(ConfItem('chain.name', self.NAME))
+        self.confSet.addItem(ConfItem('chain.ghRepository'))
+        self.confSet.addItem(ConfItem('chain.service'))
+        self.confSet.addItem(ConfItem('chain.localVersion'))
 
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """
@@ -42,7 +42,7 @@ class Chain:
 
     def getLatestVersion(self):
         """ Returns software local version """
-        gh_repo = confGetOrDefault(self.conf, 'chain.ghRepository')
+        gh_repo = self.confSet.getOrDefault('chain.ghRepository')
         if gh_repo:
             c = requests.get(f"https://api.github.com/repos/{gh_repo}/releases/latest").json()
             return c['tag_name']

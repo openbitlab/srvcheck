@@ -8,7 +8,7 @@ import srvcheck
 
 from .notification import Emoji, Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
 from .tasks import *
-from .utils import System
+from .utils import System, ConfSet, ConfItem
 from .chains import CHAINS
 
 if sys.version_info[0] < 3:
@@ -38,6 +38,11 @@ def main():
 	# Parse configuration
 	config = configparser.ConfigParser()
 	config.read('/etc/srvcheck.conf')
+
+	confSet = ConfSet(config)
+	confSet.addItem(ConfItem('chain.type', None, str))
+	confSet.addItem(ConfItem('chain.name', None, str))
+	confSet.addItem(ConfItem('notification.telegram', None, str))
 
 	# Get version
 	version = srvcheck.__version__

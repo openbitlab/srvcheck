@@ -2,8 +2,8 @@ from ..notification import Emoji
 from . import Task, minutes
 
 class TaskChainStuck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
+	def __init__(self, confSet, notification, system, chain):
+		super().__init__('TaskChainStuck', confSet, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
 		self.prev = None
 
 		try:
@@ -13,7 +13,7 @@ class TaskChainStuck(Task):
 			self.method = self.chain.getHeight
 
 
-	def isPluggable(conf):
+	def isPluggable(confSet):
 		return True
 
 	def run(self):

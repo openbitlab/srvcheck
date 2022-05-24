@@ -3,10 +3,10 @@ from . import Task, minutes, hours
 import re
 
 class TaskNewRelease(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(15), hours(2))
+	def __init__(self, confSet, notification, system, chain):
+		super().__init__('TaskNewRelease', confSet, notification, system, chain, minutes(15), hours(2))
 
-	def isPluggable(conf):
+	def isPluggable(confSet):
 		return True
 
 	def run(self):

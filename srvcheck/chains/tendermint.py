@@ -3,15 +3,15 @@ from .chain import Chain
 from ..tasks import Task,  hours, minutes
 import requests
 from ..utils import Bash
-from ..utils import confGetOrDefault
+from ..utils import ConfItem
 import json
 import configparser
 import re
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
-		self.BLOCK_WINDOW = confGetOrDefault(conf, 'chain.blockWindow', 100, int)
-		self.THRESHOLD_NOTSIGNED = confGetOrDefault(conf, 'chain.thresholdNotsigned', 5, int)
+		self.BLOCK_WINDOW = self.confSet.getOrDefault(conf, 'chain.blockWindow', 100, int)
+		self.THRESHOLD_NOTSIGNED = self.confSet.getOrDefault(conf, 'chain.thresholdNotsigned', 5, int)
 
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
@@ -55,7 +55,7 @@ class TaskTendermintPositionChanged(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintPositionChanged',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
-		self.ACTIVE_SET = confGetOrDefault(conf, 'chain.activeSet')
+		self.ACTIVE_SET = self.confSet.getOrDefault('chain.activeSet')
 		self.prev = None
 
 	def isPluggable(conf):
@@ -112,6 +112,8 @@ class TaskTendermintHealthError(Task):
 		except Exception as e:
 			return self.notify('health error! %s' % Emoji.Health)
 
+
+
 class Tendermint (Chain):
 	TYPE = "tendermint"
 	NAME = ""
@@ -121,6 +123,9 @@ class Tendermint (Chain):
 	
 	def __init__(self, conf):
 		super().__init__(conf)
+		self.confSet.addItem(ConfItem('chain.activeSet', None, None, 'active set of validators'))
+		self.confSet.addItem(ConfItem('chain.blockWindow', 100, int))
+		self.confSet.addItem(ConfItem('chain.thresholdNotsigned', 5, int))
 
 	def detect(conf):
 		try:
@@ -139,7 +144,7 @@ class Tendermint (Chain):
 		try:
 			return self.getVersion()["response"]["version"]
 		except:
-			ver = confGetOrDefault(self.conf, 'chain.localVersion')
+			ver = self.confSet.getOrDefault('chain.localVersion')
 			if ver is None:
 				raise Exception('No local version of the software specified!')
 			return ver
@@ -169,7 +174,7 @@ class Tendermint (Chain):
 		return self.rpcCall('status')['sync_info']['catching_up']
 	
 	def getLatestProposal(self):
-		serv = confGetOrDefault(self.conf, 'chain.service')
+		serv = self.confSet.getOrDefault('chain.service')
 		if serv:
 			cmd = configparser.ConfigParser().read(f"/etc/systemd/system/{serv}")
 			cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]

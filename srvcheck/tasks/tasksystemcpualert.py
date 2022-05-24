@@ -4,10 +4,10 @@ from . import Task, minutes, hours
 CPU_LIMIT = 90
 
 class TaskSystemCpuAlert(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskSystemCpuAlert', conf, notification, system, chain, minutes(15), hours(2))
+	def __init__(self, confSet, notification, system, chain):
+		super().__init__('TaskSystemCpuAlert', confSet, notification, system, chain, minutes(15), hours(2))
 
-	def isPluggable(conf):
+	def isPluggable(confSet):
 		return True
 
 	def run(self):
