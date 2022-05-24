@@ -117,6 +117,7 @@ class TaskSolanaLeaderSchedule(Task):
 class TaskSolanaSkippedSlots(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(24), notifyEvery=hours(24)):
 		super().__init__('TaskSolanaSkippedSlots', conf, notification, system, chain, checkEvery, notifyEvery)
+		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
 
 	def isPluggable(conf):
 		return True
@@ -132,7 +133,6 @@ class Solana (Chain):
 	TYPE = "solana"
 	NAME = ""
 	BLOCKTIME = 60
-	THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
 	EP = "http://localhost:8899/"
 	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaLastVoteCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule, TaskSolanaSkippedSlots ]
 	
