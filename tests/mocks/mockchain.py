@@ -4,6 +4,7 @@ import json
 
 class MockChain (Chain):
 	NAME = "mockchain"
+	TYPE = "testchain"
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
 
