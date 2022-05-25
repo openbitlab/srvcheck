@@ -3,7 +3,7 @@ def _linearize(e, cc = {}, xx = ''):
 		if type(e[x]) == dict:
 			cc = _linearize(e[x], cc, (xx + '.' + x) if (xx != '') else x)
 		else:
-			cc[xx + '.' + x] = e[x]			
+			cc[xx + ('.' if xx != '' else '') + x] = e[x]			
 	return cc
 
 
@@ -16,15 +16,18 @@ class ConfItem:
 
 
 class ConfSet:
+	items = {} 
+
 	def __init__(self, conf):
 		self.conf = _linearize(conf)
-		self.items = {}
 
-	def addItem(self, item: ConfItem):
-		if not (item.name in self.items):
-			if item.defaultValue is None:
-				raise Exception('default value is not set for item %s and value is missing in conf' % item.name)
-			self.conf[item.name] = item.defaultValue
+	@staticmethod
+	def addItem(item: ConfItem):
+		ConfSet.items[item.name] = item
+
+	@staticmethod
+	def setDefaultValue (name: str, value):
+		ConfSet.items[name].defaultValue = value
 
 	def exists(self, name):
 		return name in self.conf
@@ -48,6 +51,50 @@ class ConfSet:
 		if not (name in self.items):
 			if failSafe:
 				return None 
-			raise Exception('conf item %s not found' % name)
+			raise Exception('missing definition for conf item %s' % name)
+		
+		v = None
+		if not (name in self.conf):
+			v = self.items[name].defaultValue
+		else:
+			v = self.conf[name]
 
-		return cast(self.items[name].cast(self.conf[name]))
+		return cast(self.items[name].cast(v))
+
+
+	def help():	
+		d = {}
+
+		for k in ConfSet.items:
+			ks = k.split('.')
+			ks = ['.'.join(ks[:-1]), ks[-1]]
+
+			if len(ks) == 1:
+				d[k] = ConfSet.items[k]
+			else:
+				if not (ks[0] in d):
+					d[ks[0]] = {}
+				d[ks[0]][ks[1]] = ConfSet.items[k]
+
+		# dump d as an ini file
+		s = ''
+		for k in d:
+			s += '[' + k + ']\n'
+			for kk in d[k]:
+				nl = kk + ' = ' 
+				if d[k][kk].defaultValue:
+					nl +=  str(d[k][kk].defaultValue)
+				else:
+					nl = '; ' + nl
+					
+				if d[k][kk].description:
+					nl += '\t\t; ' + d[k][kk].description
+					if d[k][kk].cast:
+						nl += ' (' + str(d[k][kk].cast).split("'")[1] + ')'
+				else:
+					nl += '\t\t; ' + '(' + str(d[k][kk].cast).split("'")[1] + ')'
+
+				s += nl + '\n'
+			s += '\n'
+		return s
+

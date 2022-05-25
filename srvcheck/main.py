@@ -6,7 +6,7 @@ import traceback
 
 import srvcheck
 
-from .notification import Emoji, Notification, DummyNotification, TelegramNotification, NOTIFICATION_SERVICES
+from .notification import Emoji, Notification, NOTIFICATION_SERVICES
 from .tasks import *
 from .utils import System, ConfSet, ConfItem
 from .chains import CHAINS
@@ -21,6 +21,13 @@ except:
 	print ('please install requests library (pip3 install requests)')
 	sys.exit (0)
 
+
+
+ConfSet.addItem(ConfItem('chain.type', None, str, 'type of the chain'))
+ConfSet.addItem(ConfItem('chain.name', None, str, 'name of the chain'))
+ConfSet.addItem(ConfItem('tasks.autoRecover', False, bool, 'enable auto recoverable tasks'))
+
+
 def addTasks(chain, notification, system, config):
 	# Create the list of tasks
 	tasks = []
@@ -34,16 +41,19 @@ def addTasks(chain, notification, system, config):
 			tasks.append(task)
 	return tasks
 
+
+def defaultConf():
+	print (ConfSet.help())
+
 def main():
+	cf = '/etc/srvcheck.conf'	
+
 	# Parse configuration
 	confRaw = configparser.ConfigParser()
-	confRaw.read('/etc/srvcheck.conf')
+	confRaw.read(cf)
 
 	conf = ConfSet(confRaw)
-	conf.addItem(ConfItem('chain.type', None, str))
-	conf.addItem(ConfItem('chain.name', None, str))
-	conf.addItem(ConfItem('tasks.autoRecover', False, bool))
-
+	
 	# Get version
 	version = srvcheck.__version__
 

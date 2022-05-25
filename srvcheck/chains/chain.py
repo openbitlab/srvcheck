@@ -1,5 +1,12 @@
-from ..utils import ConfItem
+from ..utils import ConfItem, ConfSet
 import requests
+
+ConfSet.addItem(ConfItem('chain.endpoint', None, str, 'api endpoint'))
+ConfSet.addItem(ConfItem('chain.blockTime', 10, int, 'block time in seconds'))
+ConfSet.addItem(ConfItem('chain.name', None, str, 'chain name'))
+ConfSet.addItem(ConfItem('chain.ghRepository', None, str, 'github repository'))
+ConfSet.addItem(ConfItem('chain.service', None, str, 'systemd service name'))
+ConfSet.addItem(ConfItem('chain.localVersion', None, str, 'local version'))
 
 def rpcCall(url, method, params=[]):
     d = requests.post(url, json={'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}).json()
@@ -15,12 +22,10 @@ class Chain:
     BLOCKTIME = 10
 
     def __init__(self, conf):
-        self.conf.addItem(ConfItem('chain.endpoint', self.EP))
-        self.conf.addItem(ConfItem('chain.blockTime', 10, int))
-        self.conf.addItem(ConfItem('chain.name', self.NAME))
-        self.conf.addItem(ConfItem('chain.ghRepository'))
-        self.conf.addItem(ConfItem('chain.service'))
-        self.conf.addItem(ConfItem('chain.localVersion'))
+        self.conf = conf
+        ConfSet.setDefaultValue('chain.endpoint', self.EP)
+        ConfSet.setDefaultValue('chain.name', self.NAME)
+
 
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """

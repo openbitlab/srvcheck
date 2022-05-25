@@ -1,5 +1,6 @@
 import unittest
 from srvcheck.utils import Bash, System, ConfSet
+from srvcheck.utils.confset import ConfItem
 
 class TestUtilsBash(unittest.TestCase):
     def test_echo(self):
@@ -30,24 +31,24 @@ class TestUtilConfSet(unittest.TestCase):
         'name': 'Test',
         'chain': {
             'endpoint': 'http://localhost:8080',
-            'type': '',
+            'type': 'mockchain',
         }
     }
+    ConfSet.addItem(ConfItem('id', None, int))
+    ConfSet.addItem(ConfItem('chain.type', 'mockchain', str))
     CONFS = ConfSet(CONF)
 
     def test_getFromConfExistingString(self):
         self.assertEqual(self.CONFS.getOrDefault('chain.endpoint'), 'http://localhost:8080')
 
     def test_getFromConfExistingInteger(self):
-        self.assertEqual(self.CONFS.getOrDefault('id', cast=int), 1)
+        self.assertEqual(self.CONFS.getOrDefault('id'), 1)
 
     def test_getFromConfNotExistingString(self):
         self.assertEqual(self.CONFS.getOrDefault('chain.id'), None)
 
     def test_getFromConfNotExistingDefault(self):
-        self.assertNotEqual(self.CONFS.getOrDefault('chain.id', 3, cast=int), None)
-        self.assertEqual(self.CONFS.getOrDefault('type', 'tendermint'), 'tendermint')
+        self.assertEqual(self.CONFS.getOrDefault('chain.id', failSafe=True, cast=int), None)
 
     def test_getFromConfExistingButEmptyDefault(self):
-        self.assertNotEqual(self.CONFS.getOrDefault('chain.type', 'mockchain'), '')
-        self.assertEqual(self.CONFS.getOrDefault('chain.type', 'mockchain'), 'mockchain')
+        self.assertEqual(self.CONFS.getOrDefault('chain.type'), 'mockchain')

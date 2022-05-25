@@ -3,10 +3,14 @@ from .chain import Chain
 from ..tasks import Task,  hours, minutes
 import requests
 from ..utils import Bash
-from ..utils import ConfItem
+from ..utils import ConfItem, ConfSet
 import json
 import configparser
 import re
+
+ConfSet.addItem(ConfItem('chain.activeSet', None, None, 'active set of validators'))
+ConfSet.addItem(ConfItem('chain.blockWindow', 100, int))
+ConfSet.addItem(ConfItem('chain.thresholdNotsigned', 5, int))
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
@@ -123,9 +127,6 @@ class Tendermint (Chain):
 	
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.conf.addItem(ConfItem('chain.activeSet', None, None, 'active set of validators'))
-		self.conf.addItem(ConfItem('chain.blockWindow', 100, int))
-		self.conf.addItem(ConfItem('chain.thresholdNotsigned', 5, int))
 
 	def detect(conf):
 		try:
