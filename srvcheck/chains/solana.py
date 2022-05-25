@@ -1,7 +1,7 @@
 from statistics import median
 from ..notification import Emoji
 from .chain import Chain
-from ..tasks import Task,  hours, minutes
+from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
 from ..utils import confGetOrDefault
 import requests
@@ -52,7 +52,7 @@ class TaskSolanaBalanceCheck(Task):
 			return False
 
 class TaskSolanaLastVoteCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = 30, notifyEvery=minutes(5)):
+	def __init__(self, conf, notification, system, chain, checkEvery = seconds(30), notifyEvery=minutes(5)):
 		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
@@ -117,7 +117,7 @@ class TaskSolanaLeaderSchedule(Task):
 			return self.notify('no leader slot assigned for the epoch %s %s' % (ep, Emoji.NoLeader))
 
 class TaskSolanaSkippedSlots(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(24), notifyEvery=hours(24)):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(6), notifyEvery=hours(6)):
 		super().__init__('TaskSolanaSkippedSlots', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
 		self.prevBP = 0
