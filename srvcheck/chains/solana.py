@@ -213,8 +213,11 @@ class Solana (Chain):
 	def getIdentityAddress(self):
 		return Bash(f"solana address --url {self.EP}").value()
 
+	def getValidatorsInfo(self):
+		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())
+
 	def getValidators(self):
-		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
+		return self.getValidatorInfo()["validators"]
 
 	def isDelinquent(self):
 		return self.getValidatorInfo()["delinquent"]
@@ -227,6 +230,12 @@ class Solana (Chain):
 
 	def getActiveStake(self):
 		return int(self.getValidatorInfo()["activatedStake"]) / (10**9)
+
+	def getDelinquentStakePerc(self):
+		val_info = self.getValidatorInfo()
+		act_stake = val_info["totalActiveStake"]
+		del_stake = val_info["totalDelinquentStake"]
+		return f"{del_stake / act_stake * 100:.2f}"
 
 	def getValidatorInfo(self):
 		validators = self.getValidators()
