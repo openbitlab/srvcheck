@@ -16,6 +16,11 @@ class TaskNewRelease(Task):
 		l_ver = re.findall(r'(\d+[.]\d+[.]\d+)', latest)[0]
 
 		if c_ver != l_ver:
-			return self.notify('has new release: %s %s' % (latest, Emoji.Rel))
+			output = f"has new release: {latest} {Emoji.Rel}"
+			if self.chain.TYPE == "solana":
+				d_stake = self.chain.getDelinquentStakePerc()
+				output += f"\n\tDelinquent Stake: {d_stake}%"
+				output += f"\n\tIt's recommended to upgrade when there's less than 5% delinquent stake"
+			return self.notify(output)
 
 		return False

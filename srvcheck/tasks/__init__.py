@@ -1,4 +1,4 @@
-from .task import Task, minutes, hours
+from .task import Task, seconds, minutes, hours
 from .taskchainstuck import TaskChainStuck
 from .tasksystemusage import TaskSystemUsage
 from .tasksystemdiskalert import TaskSystemDiskAlert

@@ -6,7 +6,6 @@ class TestUtilsBash(unittest.TestCase):
     def test_echo(self):
         self.assertEqual(Bash('echo "Hello World!"').value(), 'Hello World!')
 
-
 class TestUtilsSystem(unittest.TestCase):
     def test_getIP(self):
         pass 
