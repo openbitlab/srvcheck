@@ -1,5 +1,8 @@
 import time 
 
+def seconds(m):
+	return m
+
 def minutes(m):
 	return m * 60
 

@@ -1,7 +1,7 @@
 from statistics import median
 from ..notification import Emoji
 from .chain import Chain
-from ..tasks import Task,  hours, minutes
+from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
 from ..utils import confGetOrDefault
 import requests
@@ -52,7 +52,7 @@ class TaskSolanaBalanceCheck(Task):
 			return False
 
 class TaskSolanaLastVoteCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = 30, notifyEvery=minutes(5)):
+	def __init__(self, conf, notification, system, chain, checkEvery = seconds(30), notifyEvery=minutes(5)):
 		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
@@ -117,7 +117,7 @@ class TaskSolanaLeaderSchedule(Task):
 			return self.notify('no leader slot assigned for the epoch %s %s' % (ep, Emoji.NoLeader))
 
 class TaskSolanaSkippedSlots(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(24), notifyEvery=hours(24)):
+	def __init__(self, conf, notification, system, chain, checkEvery = hours(6), notifyEvery=hours(6)):
 		super().__init__('TaskSolanaSkippedSlots', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
 		self.prevBP = 0
@@ -213,8 +213,11 @@ class Solana (Chain):
 	def getIdentityAddress(self):
 		return Bash(f"solana address --url {self.EP}").value()
 
+	def getGeneralValidatorsInfo(self):
+		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())
+
 	def getValidators(self):
-		return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())["validators"]
+		return self.getGeneralValidatorsInfo()["validators"]
 
 	def isDelinquent(self):
 		return self.getValidatorInfo()["delinquent"]
@@ -227,6 +230,12 @@ class Solana (Chain):
 
 	def getActiveStake(self):
 		return int(self.getValidatorInfo()["activatedStake"]) / (10**9)
+
+	def getDelinquentStakePerc(self):
+		val_info = self.getGeneralValidatorsInfo()
+		act_stake = val_info["totalActiveStake"]
+		del_stake = val_info["totalDelinquentStake"]
+		return f"{del_stake / act_stake * 100:.2f}"
 
 	def getValidatorInfo(self):
 		validators = self.getValidators()
