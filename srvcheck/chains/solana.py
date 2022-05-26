@@ -3,8 +3,6 @@ from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
-from ..utils import confGetOrDefault
-import requests
 import json
 
 class TaskSolanaHealthError(Task):
@@ -139,14 +137,15 @@ class TaskSolanaSkippedSlots(Task):
 			if self.prev == ep:
 				self.prevBP = bp_info[0]
 				self.prevM = bp_info[1]
-			if skipped_perc > self.THRESHOLD_SKIPPED_SLOT:
-				return self.notify('skipped %d%% of assigned slots (%d/%d) %s' % (int(skipped_perc) * 100, bp_info[1], bp_info[0], Emoji.BlockMiss))
+			if skipped_perc >= self.THRESHOLD_SKIPPED_SLOT:
+				skip_p = f"{skipped_perc * 100:.2f}"
+				return self.notify('skipped %s%% of assigned slots (%d/%d) %s' % (skip_p, bp_info[1], bp_info[0], Emoji.BlockMiss))
 		if self.prev != ep:
 			e = self.prev
 			self.prev = ep
 			if self.prevBP != 0:
-				skipped_perc = (self.prevBP - self.prevM) / self.prevBP
-				return self.notify('skipped %d%% of assigned slots (%d/%d) in the epoch %s %s' % (int(skipped_perc) * 100,  self.prevBP, self.prevM, e, Emoji.BlockProd))
+				skip_p = f"{(self.prevBP - self.prevM) / self.prevBP * 100:.2f}"
+				return self.notify('skipped %s%% of assigned slots (%d/%d) in the epoch %s %s' % (skip_p,  self.prevBP, self.prevM, e, Emoji.BlockProd))
 		return False
 
 class Solana (Chain):
