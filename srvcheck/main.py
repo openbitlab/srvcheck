@@ -26,6 +26,7 @@ except:
 ConfSet.addItem(ConfItem('chain.type', None, str, 'type of the chain'))
 ConfSet.addItem(ConfItem('chain.name', None, str, 'name of the chain'))
 ConfSet.addItem(ConfItem('tasks.autoRecover', False, bool, 'enable auto recoverable tasks'))
+ConfSet.addItem(ConfItem('tasks.disabled', '', str, 'comma separated list of disabled tasks'))
 
 
 def addTasks(chain, notification, system, config):
@@ -34,7 +35,7 @@ def addTasks(chain, notification, system, config):
 
 	for x in TASKS + chain.CUSTOM_TASKS:
 		task = x(config, notification, system, chain)
-		if 'disabled' in config['tasks'] and config['tasks']['disabled'].find(task.name) != -1:
+		if config.getOrDefault('tasks.disabled').find(task.name) != -1:
 			continue
 
 		if task.isPluggable():
