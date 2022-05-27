@@ -1,17 +1,18 @@
-from .chain import Chain
-from ..utils import Bash 
 import json
+from .chain import Chain
+from ..utils import Bash
 
 class Lisk (Chain):
 	TYPE = "lisk"
 	NAME = "lisk"
-	BLOCKTIME = 15 
+	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
 	CUSTOM_TASKS = []
 
 	def __init__(self, conf):
 		super().__init__(conf)
 
+	@staticmethod
 	def detect(conf):
 		try:
 			Lisk(conf).getVersion()
@@ -21,7 +22,7 @@ class Lisk (Chain):
 
 	def _nodeInfo(self):
 		return json.loads(Bash('lisk-core node:info').value())
-		
+
 	def _forgingStatus(self):
 		return json.loads(Bash('lisk-core node:info').value())
 
@@ -30,7 +31,7 @@ class Lisk (Chain):
 
 	def getLocalVersion(self):
 		return self.getVersion()
-		
+
 	def getVersion(self):
 		return self._nodeInfo()['version']
 

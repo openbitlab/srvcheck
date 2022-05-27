@@ -1,5 +1,5 @@
-from ..utils import confGetOrDefault
 import requests
+from ..utils import confGetOrDefault
 
 def rpcCall(url, method, params=[]):
     d = requests.post(url, json={'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}).json()
@@ -32,7 +32,8 @@ class Chain:
         return getCall(self.EP + r, data)
 
     ### Abstract methods
-    def detect():
+    @staticmethod
+    def detect(conf):
         """ Checks if the current server is running this chain """
         raise Exception('Abstract detect()')
 
