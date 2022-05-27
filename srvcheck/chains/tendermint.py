@@ -14,11 +14,11 @@ ConfSet.addItem(ConfItem('chain.thresholdNotsigned', 5, int))
 
 class TaskTendermintBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
-		self.BLOCK_WINDOW = self.conf.getOrDefault('chain.blockWindow')
-		self.THRESHOLD_NOTSIGNED = self.conf.getOrDefault('chain.thresholdNotsigned')
-
 		super().__init__('TaskTendermintBlockMissed',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
+			  
+		self.BLOCK_WINDOW = self.conf.getOrDefault('chain.blockWindow')
+		self.THRESHOLD_NOTSIGNED = self.conf.getOrDefault('chain.thresholdNotsigned')
 
 	def isPluggable(conf):
 		return True
