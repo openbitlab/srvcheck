@@ -59,6 +59,9 @@ class ConfSet:
 		else:
 			v = self.conf[name]
 
+		if v == None:
+			return None
+			
 		return cast(self.items[name].cast(v))
 
 
