@@ -344,6 +344,12 @@ function-naming-style=camelCase
 good-names=i,
            j,
            k,
+           x,
+           y,
+           it,
+           bh,
+           c,
+           cc,
            ex,
            Run,
            _
