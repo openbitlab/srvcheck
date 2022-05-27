@@ -27,7 +27,7 @@ class Chain:
         """ Calls the RPC method with the given parameters """
         return rpcCall(self.EP, method, params)
 
-    def getCall(self, r, data):
+    def getCall(self, r, data=None):
         """ Calls the GET method with the given parameters """
         return getCall(self.EP + r, data)
 

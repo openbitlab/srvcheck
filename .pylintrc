@@ -95,7 +95,8 @@ disable=raw-checker-failed,
         missing-module-docstring,
         missing-function-docstring,
         too-few-public-methods,
-        dangerous-default-value
+        dangerous-default-value,
+        bare-except
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -348,8 +349,11 @@ good-names=i,
            x,
            y,
            it,
+           r,
            bh,
            c,
+           st,
+           s,
            cc,
            d,
            ex,

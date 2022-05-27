@@ -10,6 +10,7 @@ class Tezos (Chain):
 	def __init__(self, conf):
 		super().__init__(conf)
 
+	@staticmethod
 	def detect(conf):
 		try:
 			Tezos(conf).getVersion()
@@ -22,7 +23,7 @@ class Tezos (Chain):
 
 	def getVersion(self):
 		a = self.getCall('version')
-		return 'v%s.%s.%s' % (a['major'], a['minor'])
+		return f'v%s.%s.0' % (a['major'], a['minor'])
 
 	def getLocalVersion(self):
 		return self.getVersion()
