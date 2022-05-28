@@ -96,7 +96,9 @@ disable=raw-checker-failed,
         missing-function-docstring,
         too-few-public-methods,
         dangerous-default-value,
-        bare-except
+        bare-except,
+        consider-using-enumerate,
+        unspecified-encoding
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -343,26 +345,15 @@ function-naming-style=camelCase
 #function-rgx=
 
 # Good variable names which should always be accepted, separated by a comma.
-good-names=i,
-           j,
-           k,
-           x,
-           y,
-           it,
-           r,
-           bh,
-           c,
-           st,
-           s,
-           cc,
-           d,
-           ex,
-           Run,
+good-names=
            _
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
 good-names-rgxs=
+           [a-z],
+           [a-z]*,
+           [a-z]*[0-9]*
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no
