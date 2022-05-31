@@ -12,7 +12,7 @@ class TaskChainStuck(Task):
 		except:
 			self.method = self.chain.getHeight
 
-
+	@staticmethod
 	def isPluggable(conf):
 		return True
 

@@ -12,6 +12,7 @@ class TaskSubstrateNewReferenda(Task):
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
 		
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -58,6 +59,7 @@ class Substrate (Chain):
 	def getSubstrateInterface(self):
 		return SubstrateInterface(url=self.EP)
 
+	@staticmethod
 	def detect(conf):
 		try:
 			Substrate(conf).getVersion()

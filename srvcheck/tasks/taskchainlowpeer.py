@@ -7,6 +7,7 @@ class TaskChainLowPeer(Task):
 	def __init__(self, conf, notification, system, chain):
 		super().__init__('TaskChainLowPeer', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 

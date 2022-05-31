@@ -21,6 +21,7 @@ class TaskTendermintBlockMissed(Task):
 		self.THRESHOLD_NOTSIGNED = self.conf.getOrDefault('chain.thresholdNotsigned')
 		self.prev = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -46,6 +47,7 @@ class TaskTendermintNewProposal(Task):
 		      conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev=None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 	
@@ -66,6 +68,7 @@ class TaskTendermintPositionChanged(Task):
 		self.ACTIVE_SET = self.conf.getOrDefault('chain.activeSet')
 		self.prev = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -110,6 +113,7 @@ class TaskTendermintHealthError(Task):
 		super().__init__('TaskTendermintHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -132,6 +136,7 @@ class Tendermint (Chain):
 	def __init__(self, conf):
 		super().__init__(conf)
 
+	@staticmethod
 	def detect(conf):
 		try:
 			Tendermint(conf).getVersion()

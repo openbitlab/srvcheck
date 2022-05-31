@@ -8,6 +8,7 @@ class TaskAutoUpdater(Task):
     def __init__(self, conf, notification, system, chain):
         super().__init__('TaskAutoUpdater', conf, notification, system, chain, minutes(60), hours(2))
 
+    @staticmethod
     def isPluggable(conf):
         return True
     

@@ -26,7 +26,6 @@ class Chain:
         ConfSet.setDefaultValue('chain.endpoint', self.EP)
         ConfSet.setDefaultValue('chain.name', self.NAME)
 
-
     def rpcCall(self, method, params=[]):
         """ Calls the RPC method with the given parameters """
         return rpcCall(self.EP, method, params)

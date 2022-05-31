@@ -6,6 +6,7 @@ class TaskNewRelease(Task):
 	def __init__(self, conf, notification, system, chain):
 		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(15), hours(2))
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 

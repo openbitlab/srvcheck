@@ -10,6 +10,7 @@ class TaskSolanaHealthError(Task):
 		super().__init__('TaskSolanaHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -25,6 +26,7 @@ class TaskSolanaDelinquentCheck(Task):
 		super().__init__('TaskSolanaDelinquentCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -39,6 +41,7 @@ class TaskSolanaBalanceCheck(Task):
 		super().__init__('TaskSolanaBalanceCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -54,6 +57,7 @@ class TaskSolanaLastVoteCheck(Task):
 		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -73,6 +77,7 @@ class TaskSolanaEpochActiveStake(Task):
 		self.prev = None
 		self.prevEpoch = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -96,6 +101,7 @@ class TaskSolanaLeaderSchedule(Task):
 		super().__init__('TaskSolanaLeaderSchedule', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -122,6 +128,7 @@ class TaskSolanaSkippedSlots(Task):
 		self.prevM = 0
 		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -158,6 +165,7 @@ class Solana (Chain):
 	def __init__(self, conf):
 		super().__init__(conf)
 
+	@staticmethod
 	def detect(conf):
 		try:
 			Solana(conf).getVersion()

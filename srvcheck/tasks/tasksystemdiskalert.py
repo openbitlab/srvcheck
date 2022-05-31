@@ -10,6 +10,7 @@ class TaskSystemDiskAlert(Task):
 		super().__init__('TaskSystemDiskAlert', conf, notification, system, chain, minutes(15), hours(2))
 		self.prevDiskSize = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
