@@ -1,6 +1,4 @@
 from srvcheck.chains import Chain
-import json
-
 
 class MockChain (Chain):
 	NAME = "mockchain"
@@ -9,7 +7,7 @@ class MockChain (Chain):
 	EP = "http://localhost:26657/"
 
 	peers = 0
-	
+
 	hash = '0x1234567890'
 	height = 0
 
@@ -21,6 +19,7 @@ class MockChain (Chain):
 	def __init__(self, conf):
 		super().__init__(conf)
 
+	@staticmethod
 	def detect(conf):
 		return True
 
