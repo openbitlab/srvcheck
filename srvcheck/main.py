@@ -37,7 +37,7 @@ def addTasks(chain, notification, system, config):
 		if config.getOrDefault('tasks.disabled').find(task.name) != -1:
 			continue
 
-		if task.isPluggable():
+		if task.isPluggable(config):
 			tasks.append(task)
 	return tasks
 
