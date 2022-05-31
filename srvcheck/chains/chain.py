@@ -1,5 +1,6 @@
 from ..utils import ConfItem, ConfSet
 import requests
+from ..utils import confGetOrDefault
 
 ConfSet.addItem(ConfItem('chain.endpoint', None, str, 'api endpoint'))
 ConfSet.addItem(ConfItem('chain.blockTime', 10, int, 'block time in seconds'))
@@ -31,12 +32,13 @@ class Chain:
         """ Calls the RPC method with the given parameters """
         return rpcCall(self.EP, method, params)
 
-    def getCall(self, r, data):
+    def getCall(self, r, data=None):
         """ Calls the GET method with the given parameters """
         return getCall(self.EP + r, data)
 
     ### Abstract methods
-    def detect():
+    @staticmethod
+    def detect(conf):
         """ Checks if the current server is running this chain """
         raise Exception('Abstract detect()')
 
