@@ -1,6 +1,6 @@
 import json
-from ..utils.confset import ConfItem, ConfSet
 import requests
+from ..utils.confset import ConfItem, ConfSet
 from .notificationprovider import NotificationProvider
 
 ConfSet.addItem(ConfItem('notification.telegram.enabled', None, bool, 'enable telegram notification'))

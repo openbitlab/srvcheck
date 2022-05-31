@@ -19,12 +19,12 @@ class TaskChainStuck(Task):
 	def run(self):
 		bh = self.method()
 
-		if self.prev == None:
+		if self.prev is None:
 			self.prev = bh
-			return False 
+			return False
 
 		if bh == self.prev or self.chain.isSynching():
-			return self.notify('chain is stuck at block %s %s' % (str(bh), Emoji.Stuck))
-		
+			return self.notify(f'chain is stuck at block {bh} {Emoji.Stuck}')
+
 		self.prev = bh
 		return False

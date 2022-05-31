@@ -27,7 +27,7 @@ class TaskSystemDiskAlert(Task):
 			c = self.notify('disk size increased (%.1fG -> %.1fG) %s' % (toGB(self.prevDiskSize), toGB(usage.diskSize), Emoji.Disk), True)
 			self.prevDiskSize = usage.diskSize
 			return c
-			
+
 		return False
 
 	def canRecover(self):

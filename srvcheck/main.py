@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import sys 
+import sys
 import time
 import configparser
 import traceback
@@ -7,7 +7,7 @@ import traceback
 import srvcheck
 
 from .notification import Emoji, Notification, NOTIFICATION_SERVICES
-from .tasks import *
+from .tasks import TASKS
 from .utils import System, ConfSet, ConfItem
 from .chains import CHAINS
 
@@ -20,7 +20,6 @@ try:
 except:
 	print ('please install requests library (pip3 install requests)')
 	sys.exit (0)
-
 
 
 ConfSet.addItem(ConfItem('chain.type', None, str, 'type of the chain'))
@@ -47,7 +46,7 @@ def defaultConf():
 	print (ConfSet.help())
 
 def main():
-	cf = '/etc/srvcheck.conf'	
+	cf = '/etc/srvcheck.conf'
 
 	# Parse configuration
 	confRaw = configparser.ConfigParser()
@@ -61,11 +60,11 @@ def main():
 	# Initialization
 	notification = Notification (conf.getOrDefault('chain.name'))
 
-	for x in NOTIFICATION_SERVICES:
-		if conf.exists('notification.%s.enabled' % x) and conf.getOrDefault('notification.%s.enabled' % x, False):
-			notification.addProvider (NOTIFICATION_SERVICES[x](conf))
-	
-	notification.send("monitor v%s started %s" %(version, Emoji.Start))
+	for x, v in NOTIFICATION_SERVICES.items():
+		if conf.exists(f'notification.{x}.enabled') and conf.getOrDefault(f'notification.{x}.enabled', False):
+			notification.addProvider (v(conf))
+
+	notification.send(f"monitor v{version} started {Emoji.Start}")
 
 	system = System(conf)
 	print (system.getUsage())
@@ -103,9 +102,9 @@ def main():
 						t.markRecovered()
 
 				except Exception:
-					print ('Error in task %s: %s' % (t.name, traceback.format_exc()))
+					print (f'Error in task {t.name}: {traceback.format_exc()}')
 
-		notification.flush()		
+		notification.flush()
 		sys.stdout.flush()
 		time.sleep(TTS)
 

@@ -1,4 +1,4 @@
-import time 
+import time
 
 def seconds(m):
 	return m
