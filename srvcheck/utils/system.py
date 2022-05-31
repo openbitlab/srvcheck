@@ -33,7 +33,7 @@ class System:
 
     def getIP(self):
         """ Return IP address """
-        return Bash('ip addr').value().split('inet ')[-1].split('/')[0]
+        return Bash('ip addr').value().rsplit('inet ', 1)[-1].split('/')[0]
 
     def getServiceUptime(self):
         serv = self.conf.getOrDefault('chain.service')
@@ -48,7 +48,7 @@ class System:
         u.diskSize = int(Bash('df /').value().split('\n')[1].split()[1])
         u.diskUsed = int(Bash('df /').value().split('\n')[1].split()[2])
         u.diskPercentageUsed = float(Bash('df /').value().split('\n')[1].split()[4].replace('%', ''))
-        u.diskUsedByLog = int(Bash('du /var/log').value().split('\n')[-1].split()[0])
+        u.diskUsedByLog = int(Bash('du /var/log').value().rsplit('\n', 1)[-1].split()[0])
 
         u.ramSize = int(Bash('free').value().split('\n')[1].split()[1])
         u.ramUsed = int(Bash('free').value().split('\n')[1].split()[2])
