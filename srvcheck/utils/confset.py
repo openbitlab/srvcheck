@@ -1,9 +1,9 @@
 def _linearize(e, cc = {}, xx = ''):
 	for x in e:
-		if type(e[x]) == dict:
+		if isinstance(e[x], dict):
 			cc = _linearize(e[x], cc, (xx + '.' + x) if (xx != '') else x)
 		else:
-			cc[xx + ('.' if xx != '' else '') + x] = e[x]			
+			cc[xx + ('.' if xx != '' else '') + x] = e[x]
 	return cc
 
 
@@ -16,7 +16,7 @@ class ConfItem:
 
 
 class ConfSet:
-	items = {} 
+	items = {}
 
 	def __init__(self, conf):
 		self.conf = _linearize(conf)
@@ -41,63 +41,64 @@ class ConfSet:
 				ke = k[0]
 				k = k[1:]
 				return iteOver (c[ke], k) if ke in self.conf else default
-				
-		if type(key) == str:
+
+		if isinstance(key, str):
 			key = key.split('.')
 
 		return iteOver(self.conf, key)
 
 	def getOrDefault(self, name: str, failSafe=True, cast=lambda y: y):
-		if not (name in self.items):
+		if name not in self.items:
 			if failSafe:
-				return None 
-			raise Exception('missing definition for conf item %s' % name)
-		
+				return None
+			raise Exception(f'missing definition for conf item {name}')
+
 		v = None
-		if not (name in self.conf):
+		if name not in self.conf:
 			v = self.items[name].defaultValue
 		else:
 			v = self.conf[name]
 
-		if v == None:
+		if v is None:
 			return None
-			
+
 		return cast(self.items[name].cast(v))
 
-
-	def help():	
+	@staticmethod
+	def help():
 		d = {}
 
-		for k in ConfSet.items:
+		for k,  v in ConfSet.items.items():
 			ks = k.split('.')
 			ks = ['.'.join(ks[:-1]), ks[-1]]
 
 			if len(ks) == 1:
-				d[k] = ConfSet.items[k]
+				d[k] = v
 			else:
-				if not (ks[0] in d):
+				if ks[0] not in d:
 					d[ks[0]] = {}
-				d[ks[0]][ks[1]] = ConfSet.items[k]
+				d[ks[0]][ks[1]] = v
 
 		# dump d as an ini file
 		s = ''
-		for k in d:
+		for k, v in d.items():
 			s += '[' + k + ']\n'
-			for kk in d[k]:
-				nl = kk + ' = ' 
-				if d[k][kk].defaultValue:
-					nl +=  str(d[k][kk].defaultValue)
+			for kk in v:
+				nl = kk + ' = '
+				if v[kk].defaultValue:
+					nl +=  str(v[kk].defaultValue)
 				else:
 					nl = '; ' + nl
-					
-				if d[k][kk].description:
-					nl += '\t\t; ' + d[k][kk].description
-					if d[k][kk].cast:
-						nl += ' (' + str(d[k][kk].cast).split("'")[1] + ')'
+
+				if v[kk].description:
+					nl += '\t\t; ' + v[kk].description
+					if v[kk].cast:
+						cst = str(v[kk].cast)
+						if cst.find("'") != -1:
+							nl += ' (' + cst.split("'")[1] + ')'
 				else:
-					nl += '\t\t; ' + '(' + str(d[k][kk].cast).split("'")[1] + ')'
+					nl += '\t\t; ' + '(' + str(v[kk].cast).split("'")[1] + ')'
 
 				s += nl + '\n'
 			s += '\n'
 		return s
-
