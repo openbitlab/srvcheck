@@ -1,15 +1,16 @@
 from statistics import median
+import json
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
-import json
 
 class TaskSolanaHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskSolanaHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
-		self.prev = None 
+		self.prev = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -17,20 +18,21 @@ class TaskSolanaHealthError(Task):
 		try:
 			self.chain.getHealth()
 			return False
-		except Exception as e:
-			return self.notify('health error! %s' % Emoji.Health)
+		except Exception as _:
+			return self.notify(f'health error! {Emoji.Health}')
 
 class TaskSolanaDelinquentCheck(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskSolanaDelinquentCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
 	def run(self):
 		if self.chain.isDelinquent():
-			return self.notify('validator is delinquent %s' % Emoji.Delinq)
+			return self.notify(f'validator is delinquent {Emoji.Delinq}')
 		else:
 			return False
 
@@ -39,13 +41,14 @@ class TaskSolanaBalanceCheck(Task):
 		super().__init__('TaskSolanaBalanceCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
 	def run(self):
 		balance = self.chain.getValidatorBalance()
 		if balance < 1.0:
-			return self.notify('validator balance is too low, %s SOL left %s' % (balance, Emoji.LowBal))
+			return self.notify(f'validator balance is too low, {balance} SOL left {Emoji.LowBal}')
 		else:
 			return False
 
@@ -54,16 +57,17 @@ class TaskSolanaLastVoteCheck(Task):
 		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None 
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
 	def run(self):
 		lastVote = self.chain.getLastVote()
-		if self.prev == None:
+		if self.prev is None:
 			self.prev = lastVote
 		elif self.prev == lastVote:
-			median = self.chain.getMedianLastVote()
-			return self.notify('last vote stuck at height: %d, median is: %d %s' % (lastVote, median, Emoji.Slow))
+			md = self.chain.getMedianLastVote()
+			return self.notify(f'last vote stuck at height: {lastVote}, median is: {md} {Emoji.Slow}')
 		self.prev = lastVote
 		return False
 
@@ -73,6 +77,7 @@ class TaskSolanaEpochActiveStake(Task):
 		self.prev = None
 		self.prevEpoch = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -80,15 +85,15 @@ class TaskSolanaEpochActiveStake(Task):
 		ep = self.chain.getEpoch()
 		act_stake = self.chain.getActiveStake()
 
-		if self.prev == None:
+		if self.prev is None:
 			self.prev = act_stake
-		if self.prevEpoch == None:
+		if self.prevEpoch is None:
 			self.prevEpoch = ep
-		
+
 		if self.prevEpoch != ep:
 			self.prev = act_stake
 			self.prevEpoch = ep
-			return self.notify('active stake for epoch %s: %d SOL %s' % (ep, act_stake, Emoji.ActStake))
+			return self.notify(f'active stake for epoch {ep}: {act_stake} SOL {Emoji.ActStake}')
 		return False
 
 class TaskSolanaLeaderSchedule(Task):
@@ -96,23 +101,24 @@ class TaskSolanaLeaderSchedule(Task):
 		super().__init__('TaskSolanaLeaderSchedule', conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
 	def run(self):
 		ep = self.chain.getEpoch()
 
-		if self.prev == None:
+		if self.prev is None:
 			self.prev = ep
 
 		try:
 			if self.prev != ep:
 				schedule = self.chain.getLeaderSchedule()
 				self.prev = ep
-				return self.notify('%d leader slot assigned for the epoch %s %s' % (len(schedule), ep, Emoji.Leader))
+				return self.notify(f'{len(schedule)} leader slot assigned for the epoch {ep} {Emoji.Leader}')
 			return False
 		except Exception:
-			return self.notify('no leader slot assigned for the epoch %s %s' % (ep, Emoji.NoLeader))
+			return self.notify(f'no leader slot assigned for the epoch {ep} {Emoji.NoLeader}')
 
 class TaskSolanaSkippedSlots(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(6), notifyEvery=hours(6)):
@@ -120,15 +126,16 @@ class TaskSolanaSkippedSlots(Task):
 		self.prev = None
 		self.prevBP = 0
 		self.prevM = 0
-		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 % 
+		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 %
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
 	def run(self):
 		ep = self.chain.getEpoch()
 
-		if self.prev == None:
+		if self.prev is None:
 			self.prev = ep
 
 		bp_info = self.chain.getBlockProduction()
@@ -153,11 +160,10 @@ class Solana (Chain):
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:8899/"
-	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck, TaskSolanaLastVoteCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule, TaskSolanaSkippedSlots ]
-	
-	def __init__(self, conf):
-		super().__init__(conf)
+	CUSTOM_TASKS = [ TaskSolanaHealthError, TaskSolanaDelinquentCheck, TaskSolanaBalanceCheck,
+		TaskSolanaLastVoteCheck, TaskSolanaEpochActiveStake, TaskSolanaLeaderSchedule, TaskSolanaSkippedSlots ]
 
+	@staticmethod
 	def detect(conf):
 		try:
 			Solana(conf).getVersion()
@@ -242,7 +248,7 @@ class Solana (Chain):
 		if val_info:
 			return val_info
 		raise Exception('Identity not found in the validators list')
-	
+
 	def getMedianLastVote(self):
 		validators = self.getValidators()
 		votes = []

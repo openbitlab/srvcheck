@@ -7,11 +7,11 @@ from .taskchainlowpeer import TaskChainLowPeer
 from .tasknewrelease import TaskNewRelease
 from .taskautoupdater import TaskAutoUpdater
 
-TASKS = [ 
-    TaskChainStuck, 
+TASKS = [
+    TaskChainStuck,
     TaskChainLowPeer,
-    TaskSystemUsage, 
-    TaskSystemDiskAlert, 
+    TaskSystemUsage,
+    TaskSystemDiskAlert,
     TaskSystemCpuAlert,
     TaskNewRelease,
     TaskAutoUpdater

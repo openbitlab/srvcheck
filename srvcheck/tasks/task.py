@@ -1,4 +1,4 @@
-import time 
+import time
 
 def seconds(m):
 	return m
@@ -24,6 +24,7 @@ class Task:
 		self.lastNotify = 0
 		self.lastRecover = 0
 
+	@staticmethod
 	def isPluggable(conf):
 		""" Returns true if the task can be plugged in """
 		raise Exception('Abstract isPluggable()')

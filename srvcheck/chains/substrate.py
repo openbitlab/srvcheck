@@ -1,18 +1,16 @@
-import json
-import requests
+from substrateinterface import SubstrateInterface
 
 from srvcheck.tasks.task import hours
 from .chain import Chain
 from ..tasks import Task
-from ..utils import confGetOrDefault
-from substrateinterface import SubstrateInterface
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
 		super().__init__('TaskSubstrateNewReferenda',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
-		
+
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -30,20 +28,19 @@ class TaskSubstrateNewReferenda(Task):
 
 		count = result.value
 
-		if self.prev == None:
+		if self.prev is None:
 			self.prev = count
 			return False
 
 		if count > self.prev:
 			self.prev = count
-			return self.notify('New referendum found on %s: %d' % (n, count - 1))
-		 
-		
+			return self.notify(f'New referendum found on {n}: {n, count - 1}')
+
 
 class Substrate (Chain):
 	TYPE = "substrate"
 	NAME = ""
-	BLOCKTIME = 15 
+	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
 	CUSTOM_TASKS = [] #[TaskSubstrateNewReferenda]
 
@@ -54,11 +51,12 @@ class Substrate (Chain):
 	def rpcCall(self, method, params=[]):
 		if method in self.rpcMethods:
 			return super().rpcCall(method, params)
-		return None 
+		return None
 
 	def getSubstrateInterface(self):
 		return SubstrateInterface(url=self.EP)
 
+	@staticmethod
 	def detect(conf):
 		try:
 			Substrate(conf).getVersion()

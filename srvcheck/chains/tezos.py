@@ -7,9 +7,6 @@ class Tezos (Chain):
 	EP = 'http://127.0.0.1:8732/'
 	CUSTOM_TASKS = []
 
-	def __init__(self, conf):
-		super().__init__(conf)
-
 	@staticmethod
 	def detect(conf):
 		try:
@@ -27,7 +24,7 @@ class Tezos (Chain):
 
 	def getLocalVersion(self):
 		return self.getVersion()
-		
+
 	def getHeight(self):
 		return self.getCall('chains/main/blocks/head/helpers/current_level')['level']
 

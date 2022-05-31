@@ -1,11 +1,12 @@
+import re
 from ..notification import Emoji
 from . import Task, minutes, hours
-import re
 
 class TaskNewRelease(Task):
 	def __init__(self, conf, notification, system, chain):
 		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(15), hours(2))
 
+	@staticmethod
 	def isPluggable(conf):
 		return True
 
@@ -20,7 +21,7 @@ class TaskNewRelease(Task):
 			if self.chain.TYPE == "solana":
 				d_stake = self.chain.getDelinquentStakePerc()
 				output += f"\n\tDelinquent Stake: {d_stake}%"
-				output += f"\n\tIt's recommended to upgrade when there's less than 5% delinquent stake"
+				output += "\n\tIt's recommended to upgrade when there's less than 5%% delinquent stake"
 			return self.notify(output)
 
 		return False

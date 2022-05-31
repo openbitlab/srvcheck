@@ -1,14 +1,19 @@
 import json
 import requests
+from ..utils.confset import ConfItem, ConfSet
 from .notificationprovider import NotificationProvider
+
+ConfSet.addItem(ConfItem('notification.telegram.enabled', None, bool, 'enable telegram notification'))
+ConfSet.addItem(ConfItem('notification.telegram.apiToken', None, str, 'telegram api token'))
+ConfSet.addItem(ConfItem('notification.telegram.chatIds', None, str, 'telegram chat ids'))
 
 class TelegramNotification(NotificationProvider):
 	LOG_LEVEL = 0
 
 	def __init__(self, conf):
 		try:
-			self.apiToken = conf['notification.telegram']['apiToken'].strip('\"')
-			self.chatIds = json.loads(conf['notification.telegram']['chatIds'])
+			self.apiToken = conf.getOrDefault('notification.telegram.apiToken').strip('\"')
+			self.chatIds = json.loads(conf.getOrDefault('notification.telegram.chatIds'))
 
 		except:
 			self.apiToken = ""
