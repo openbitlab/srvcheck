@@ -26,6 +26,3 @@ class TestNotification(unittest.TestCase):
 		n.append('Hello WorldB!')
 		n.flush()
 		self.assertEqual(mn.events[0], 'Test Hello WorldA!\nTest Hello WorldB!')
-
-
-	

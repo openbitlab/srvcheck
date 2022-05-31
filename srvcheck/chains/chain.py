@@ -1,5 +1,5 @@
-from ..utils import ConfItem, ConfSet
 import requests
+from ..utils import ConfItem, ConfSet
 
 ConfSet.addItem(ConfItem('chain.endpoint', None, str, 'api endpoint'))
 ConfSet.addItem(ConfItem('chain.blockTime', 10, int, 'block time in seconds'))

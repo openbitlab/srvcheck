@@ -9,9 +9,6 @@ class Lisk (Chain):
 	EP = 'http://localhost:9933/'
 	CUSTOM_TASKS = []
 
-	def __init__(self, conf):
-		super().__init__(conf)
-
 	@staticmethod
 	def detect(conf):
 		try:
@@ -24,7 +21,7 @@ class Lisk (Chain):
 		return json.loads(Bash('lisk-core node:info').value())
 
 	def _forgingStatus(self):
-		return json.loads(Bash('lisk-core node:info').value())
+		return json.loads(Bash('lisk-core forging:info').value())
 
 	def getLatestVersion(self):
 		raise Exception('Abstract getLatestVersion()')

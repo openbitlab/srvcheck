@@ -113,7 +113,7 @@ class TaskTendermintPositionChanged(Task):
 class TaskTendermintHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
-		self.prev = None 
+		self.prev = None
 
 	@staticmethod
 	def isPluggable(conf):
@@ -135,9 +135,6 @@ class Tendermint (Chain):
 	EP = "http://localhost:26657/"
 	CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError]
 
-	def __init__(self, conf):
-		super().__init__(conf)
-
 	@staticmethod
 	def detect(conf):
 		try:
@@ -155,10 +152,10 @@ class Tendermint (Chain):
 	def getLocalVersion(self):
 		try:
 			return self.getVersion()["response"]["version"]
-		except:
+		except Exception as e:
 			ver = self.conf.getOrDefault('chain.localVersion')
 			if ver is None:
-				raise Exception('No local version of the software specified!')
+				raise Exception('No local version of the software specified!') from e
 			return ver
 
 	def getHeight(self):
