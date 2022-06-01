@@ -36,7 +36,7 @@ class ConfSet:
 	def exists(self, name):
 		items = []
 		for x in self.conf.items():
-			if len(x) > 0 and isinstance(x[1], dict):
+			if len(x) > 0:
 				for k in x[1]:
 					items.append(f'{x[0]}.{k}')
 		return name in self.conf or name in items
