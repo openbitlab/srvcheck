@@ -1,6 +1,7 @@
 import unittest
 from srvcheck.utils import Bash, System, ConfSet
 from srvcheck.utils.confset import ConfItem
+import configparser
 
 class TestUtilsBash(unittest.TestCase):
 	def test_echo(self):
@@ -26,28 +27,38 @@ class TestUtilsSystem(unittest.TestCase):
 
 class TestUtilConfSet(unittest.TestCase):
 	CONF = {
-		'id': 1,
-		'name': 'Test',
 		'chain': {
+			'name': 'test',
 			'endpoint': 'http://localhost:8080',
-			'type': 'mockchain',
+			'type': '',
+			'blockTime': 10,
+			'service': '',
+			'activeSet': ''
 		}
 	}
-	ConfSet.addItem(ConfItem('id', None, int))
-	ConfSet.addItem(ConfItem('chain.type', 'mockchain', str))
-	CONFS = ConfSet(CONF)
 
+	confRaw = configparser.ConfigParser()
+	confRaw.optionxform=str
+	confRaw.read_dict(CONF)
+
+	conf = ConfSet(confRaw)
+	ConfSet.addItem(ConfItem('chain.type', 'mockchain', str))
+	ConfSet.addItem(ConfItem('chain.name', None, str))
+	ConfSet.addItem(ConfItem('chain.endpoint', None, str))
+	ConfSet.addItem(ConfItem('chain.blockTime', None, int))
+	ConfSet.addItem(ConfItem('chain.service', None, str))
+	
 	def test_getFromConfExistingString(self):
-		self.assertEqual(self.CONFS.getOrDefault('chain.endpoint'), 'http://localhost:8080')
+		self.assertEqual(self.conf.getOrDefault('chain.endpoint'), 'http://localhost:8080')
 
 	def test_getFromConfExistingInteger(self):
-		self.assertEqual(self.CONFS.getOrDefault('id'), 1)
+		self.assertEqual(self.conf.getOrDefault('chain.blockTime'), 10)
 
 	def test_getFromConfNotExistingString(self):
-		self.assertEqual(self.CONFS.getOrDefault('chain.id'), None)
+		self.assertEqual(self.conf.getOrDefault('chain.service'), None)
 
 	def test_getFromConfNotExistingDefault(self):
-		self.assertEqual(self.CONFS.getOrDefault('chain.id', failSafe=True, cast=int), None)
+		self.assertEqual(self.conf.getOrDefault('chain.activeSet', failSafe=True, cast=int), None)
 
 	def test_getFromConfExistingButEmptyDefault(self):
-		self.assertEqual(self.CONFS.getOrDefault('chain.type'), 'mockchain')
+		self.assertEqual(self.conf.getOrDefault('chain.type'), 'mockchain')
