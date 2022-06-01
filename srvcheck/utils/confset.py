@@ -29,8 +29,16 @@ class ConfSet:
 	def setDefaultValue (name: str, value):
 		ConfSet.items[name].defaultValue = value
 
+	@staticmethod
+	def getDefaultValue(name: str):
+		return ConfSet.items[name].defaultValue
+
 	def exists(self, name):
-		return name in self.conf
+		items = []
+		for x in self.conf.items():
+			for k in dict(x[1]).keys():
+				items.append(f'{x[0]}.{k}')
+		return name in self.conf or name in items
 
 	def retrieve (self, key, default=None, cast=lambda y: y):
 		def iteOver(c, k):
@@ -43,7 +51,7 @@ class ConfSet:
 				return iteOver (c[ke], k) if ke in self.conf else default
 
 		if isinstance(key, str):
-			key = key.split('.')
+			key = key.rsplit('.',1)
 
 		return iteOver(self.conf, key)
 
@@ -54,10 +62,10 @@ class ConfSet:
 			raise Exception(f'missing definition for conf item {name}')
 
 		v = None
-		if name not in self.conf:
-			v = self.items[name].defaultValue
+		if not self.exists(name):
+			v = self.getDefaultValue(name)
 		else:
-			v = self.conf[name]
+			v = self.retrieve(name, self.getDefaultValue(name))
 
 		if v is None:
 			return None

@@ -50,6 +50,7 @@ def main():
 
 	# Parse configuration
 	confRaw = configparser.ConfigParser()
+	confRaw.optionxform=str
 	confRaw.read(cf)
 
 	conf = ConfSet(confRaw)
@@ -59,13 +60,11 @@ def main():
 
 	# Initialization
 	notification = Notification (conf.getOrDefault('chain.name'))
-
 	for x, v in NOTIFICATION_SERVICES.items():
 		if conf.exists(f'notification.{x}.enabled') and conf.getOrDefault(f'notification.{x}.enabled', False):
 			notification.addProvider (v(conf))
 
 	notification.send(f"monitor v{version} started {Emoji.Start}")
-
 	system = System(conf)
 	print (system.getUsage())
 
