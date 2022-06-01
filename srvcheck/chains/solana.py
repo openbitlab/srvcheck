@@ -63,10 +63,10 @@ class TaskSolanaLastVoteCheck(Task):
 
 	def run(self):
 		lastVote = self.chain.getLastVote()
+		md = self.chain.getMedianLastVote()
 		if self.prev is None:
 			self.prev = lastVote
-		elif self.prev == lastVote:
-			md = self.chain.getMedianLastVote()
+		elif self.prev == lastVote and md > lastVote:
 			return self.notify(f'last vote stuck at height: {lastVote}, median is: {md} {Emoji.Slow}')
 		self.prev = lastVote
 		return False
