@@ -19,6 +19,7 @@ class TaskTendermintBlockMissed(Task):
 		self.BLOCK_WINDOW = self.conf.getOrDefault('chain.blockWindow')
 		self.THRESHOLD_NOTSIGNED = self.conf.getOrDefault('chain.thresholdNotsigned')
 		self.prev = None
+		self.prevMissed = None
 
 	@staticmethod
 	def isPluggable(conf):
@@ -32,11 +33,14 @@ class TaskTendermintBlockMissed(Task):
 		missed = 0
 		start = nblockh - self.BLOCK_WINDOW
 		while start < nblockh:
-			if not next((x for x in self.chain.getSignatures(start) if x['validator_address'] == self.chain.getValidatorAddress()), None): 
+			if not next((x for x in self.chain.getSignatures(start) if x['validator_address'] == self.chain.getValidatorAddress()), None):
+				lastMissed = start 
 				missed += 1
+
 			start += 1
 
-		if missed >= self.THRESHOLD_NOTSIGNED and self.prev != nblockh:
+		if missed >= self.THRESHOLD_NOTSIGNED and (self.prevMissed is None or self.prevMissed != lastMissed):
+			self.prevMissed = lastMissed
 			self.prev = nblockh
 			return self.notify(f'{missed} not signed blocks in the latest {self.BLOCK_WINDOW} {Emoji.BlockMiss}')
 
