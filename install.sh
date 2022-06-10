@@ -181,14 +181,7 @@ case $1 in
         shift # past value
     ;;
     --gov)
-        if [[ -z $2 ]]
-        then
-            print_help
-            exit 1
-        else
-            enable_gov=true
-        fi
-        shift # past argument
+        enable_gov=true
         shift # past value
     ;;
     -*|--*)
