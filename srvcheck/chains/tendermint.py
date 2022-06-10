@@ -191,5 +191,8 @@ class Tendermint (Chain):
 			cmd = re.split(' ', c["Service"]["ExecStart"])[0]
 			print("Cmd: ", cmd)
 			print("Result: ", Bash(cmd+" q gov proposals --reverse --limit 1 --output json").value())
+			print("Result1: ", Bash("celestia-appd q gov proposals --reverse --limit 1 --output json").value())
+			print("Result2: ", Bash("id").value())
+			print("Result3: ", Bash("celestia-appd version").value())
 			return json.loads(Bash(cmd+" q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
 		raise Exception('No service file name specified!')
