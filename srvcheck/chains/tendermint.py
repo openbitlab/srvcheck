@@ -59,11 +59,11 @@ class TaskTendermintNewProposal(Task):
 	def run(self):
 		nProposal = self.chain.getLatestProposal()
 		if not self.prev:
-				self.prev = self.chain.getLatestProposal()
-				return self.notify(f'last proposal: {self.prev["messages"][0]["content"]["title"]} {Emoji.Proposal}')
-		elif self.prev["messages"][0]["proposal_id"] != nProposal["messages"][0]["proposal_id"]:
 				self.prev = nProposal
-				return self.notify(f'got new proposal: {nProposal["messagges"][0]["content"]["title"]} {Emoji.Proposal}')
+				return self.notify(f'last proposal: {self.prev["messages"][0]["content"]["title"]} {Emoji.Proposal}')
+		elif self.prev["id"] != nProposal["id"]:
+				self.prev = nProposal
+				return self.notify(f'got new proposal: {nProposal["messages"][0]["content"]["title"]} {Emoji.Proposal}')
 		return False
 
 class TaskTendermintPositionChanged(Task):
@@ -187,8 +187,8 @@ class Tendermint (Chain):
 	def getLatestProposal(self):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
-				c = configparser.ConfigParser()
-				c.read(f"/etc/systemd/system/{serv}")
-				cmd = re.split(' ', c["Service"]["ExecStart"])[0]
-				return json.loads(Bash(cmd+" q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
+			c = configparser.ConfigParser()
+			c.read(f"/etc/systemd/system/{serv}")
+			cmd = re.split(' ', c["Service"]["ExecStart"])[0]
+			return json.loads(Bash(cmd+" q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
 		raise Exception('No service file name specified!')
