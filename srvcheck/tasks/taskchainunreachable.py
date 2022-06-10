@@ -1,3 +1,4 @@
+from ..notification import Emoji
 from . import Task, minutes, hours
 
 class TaskChainUnreachable(Task):
@@ -12,4 +13,4 @@ class TaskChainUnreachable(Task):
 		try:
 			self.chain.getHeight()
 		except Exception:
-			self.notify('chain is not reachable')
+			self.notify(f'chain is not reachable {Emoji.Unreachable}')
