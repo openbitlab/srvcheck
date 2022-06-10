@@ -22,6 +22,7 @@ And offer tasks for checking:
 - TaskAutoUpdater
 - TaskChainStuck
 - TaskChainLowPeer
+- TaskChainUnreachable
 - TaskSystemCpuAlert
 - TaskSystemUsage
 - TaskNewRelease
