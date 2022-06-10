@@ -152,7 +152,7 @@ class TaskSolanaSkippedSlots(Task):
 			self.prev = ep
 			if self.prevBP != 0:
 				skip_p = f"{(self.prevBP - self.prevM) / self.prevBP * 100:.2f}"
-				return self.notify('skipped %s%% of assigned slots (%d/%d) in the epoch %s %s' % (skip_p,  self.prevBP, self.prevM, e, Emoji.BlockProd))
+				return self.notify('skipped %s%% of assigned slots (%d/%d) in the epoch %s %s' % (skip_p, self.prevM, self.prevBP, e, Emoji.BlockProd))
 		return False
 
 class Solana (Chain):

@@ -191,5 +191,5 @@ class Tendermint (Chain):
 		if serv:
 			cmd = configparser.ConfigParser().read(f"/etc/systemd/system/{serv}") 
 			cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]
-			return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").value())["proposals"][0]
+			return json.loads(Bash(cmd+" q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
 		raise Exception('No service file name specified!')
