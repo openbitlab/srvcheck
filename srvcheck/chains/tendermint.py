@@ -60,7 +60,7 @@ class TaskTendermintNewProposal(Task):
 		nProposal = self.chain.getLatestProposal()
 		if not self.prev:
 				self.prev = self.chain.getLatestProposal()
-				return self.notify(f'last proposal: {self.prev["messages"][0]["content"]["title"]}')
+				return self.notify(f'last proposal: {self.prev["messages"][0]["content"]["title"]} {Emoji.Proposal}')
 		elif self.prev["messages"][0]["proposal_id"] != nProposal["messages"][0]["proposal_id"]:
 				self.prev = nProposal
 				return self.notify(f'got new proposal: {nProposal["messagges"][0]["content"]["title"]} {Emoji.Proposal}')
