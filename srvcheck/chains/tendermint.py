@@ -137,7 +137,7 @@ class Tendermint (Chain):
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
-	CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError]
+	CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError, TaskTendermintNewProposal]
 
 	@staticmethod
 	def detect(conf):

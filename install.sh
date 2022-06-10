@@ -182,7 +182,7 @@ case $1 in
     ;;
     --gov)
         enable_gov=true
-        shift # past value
+        shift # past argument
     ;;
     -*|--*)
         echo "Unknown option $1"
