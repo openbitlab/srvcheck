@@ -3,7 +3,7 @@ import sys
 import time
 import configparser
 import traceback
-
+from functools import reduce
 import srvcheck
 
 from .notification import Emoji, Notification, NOTIFICATION_SERVICES
@@ -41,7 +41,6 @@ def addTasks(chain, notification, system, config):
 			tasks.append(task)
 	return tasks
 
-
 def defaultConf():
 	print (ConfSet.help())
 
@@ -54,7 +53,7 @@ def main():
 	confRaw.read(cf)
 
 	conf = ConfSet(confRaw)
-	
+
 	# Get version
 	version = srvcheck.__version__
 
@@ -64,7 +63,7 @@ def main():
 		if conf.exists(f'notification.{x}.enabled') and conf.getOrDefault(f'notification.{x}.enabled', False):
 			notification.addProvider (v(conf))
 
-	notification.send(f"monitor v{version} started {Emoji.Start}")
+	print(f"starting monitor v{version} {Emoji.Start}")
 	system = System(conf)
 	print (system.getUsage())
 
@@ -84,6 +83,12 @@ def main():
 				print ("Detected chain %s", chain.TYPE)
 				tasks = addTasks(chain, notification, system, conf)
 				break
+
+	if not chain:
+		print ("No chain detected")
+		sys.exit (0)
+
+	notification.send(f"monitor v{version} started {Emoji.Start}\n'Enabled tasks: {reduce(lambda x, y: x + ', ' + y, [x.name for x in tasks])}")
 
 	# Mainloop
 	TTS = 60
