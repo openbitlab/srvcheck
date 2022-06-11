@@ -1,14 +1,16 @@
 import re
 from ..notification import Emoji
 from . import Task, minutes, hours
+from ..utils import ConfItem, ConfSet
 
 class TaskNewRelease(Task):
 	def __init__(self, conf, notification, system, chain):
 		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(15), hours(2))
+		self.conf = conf
 
 	@staticmethod
 	def isPluggable(conf):
-		return True
+		return True if conf.getOrDefault('chain.ghRepository') else False
 
 	def run(self):
 		current = self.chain.getLocalVersion()
