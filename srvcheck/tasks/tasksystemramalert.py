@@ -13,8 +13,8 @@ class TaskSystemRamAlert(Task):
 
 	def run(self):
 		usage = self.system.getUsage()
-		ramUsed = usage.ramUsed/usage.ramSize*100
+		ramUsed = round(usage.ramUsed/usage.ramSize*100, 1)
 		if ramUsed > RAM_LIMIT:
-			return self.notify('Ram usage is above %d%% (%d%%) %s' % (RAM_LIMIT, usage.ramUsage, Emoji.Ram))
+			return self.notify('Ram usage is above %d%% (%d%%) %s' % (RAM_LIMIT, ramUsed, Emoji.Ram))
 
 		return False
