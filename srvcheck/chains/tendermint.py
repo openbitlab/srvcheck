@@ -60,9 +60,16 @@ class TaskTendermintNewProposal(Task):
 		nProposal = self.chain.getLatestProposal()
 		if not self.prev:
 			self.prev = nProposal
-		elif self.prev["id"] != nProposal["id"]:
+			if "id" in self.prev:
+				return self.notify(f'got new proposal: {nProposal["messages"][0]["content"]["title"]} {Emoji.Proposal}')
+			elif "proposal_id" in self.prev:
+				return self.notify(f'got new proposal: {nProposal["content"]["title"]} {Emoji.Proposal}')
+		elif "id" in self.prev and self.prev["id"] != nProposal["id"]:
 			self.prev = nProposal
 			return self.notify(f'got new proposal: {nProposal["messages"][0]["content"]["title"]} {Emoji.Proposal}')
+		elif "proposal_id" in self.prev and self.prev["proposal_id"] != nProposal["proposal_id"]:
+			self.prev = nProposal
+			return self.notify(f'got new proposal: {nProposal["content"]["title"]} {Emoji.Proposal}')
 		return False
 
 class TaskTendermintPositionChanged(Task):
@@ -189,10 +196,5 @@ class Tendermint (Chain):
 			c = configparser.ConfigParser()
 			c.read(f"/etc/systemd/system/{serv}")
 			cmd = re.split(' ', c["Service"]["ExecStart"])[0]
-			print("Cmd: ", cmd)
-			print("Result: ", Bash(cmd+" q gov proposals --reverse --limit 1 --output json").value())
-			print("Result1: ", Bash("celestia-appd q gov proposals --reverse --limit 1 --output json").value())
-			print("Result2: ", Bash("id").value())
-			print("Result3: ", Bash("celestia-appd version").value())
-			return json.loads(Bash(cmd+" q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
+			return json.loads(Bash(cmd + " q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
 		raise Exception('No service file name specified!')
