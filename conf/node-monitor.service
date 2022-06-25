@@ -5,6 +5,7 @@ Description=Node Monitor
 ExecStart=
 Restart=always
 RestartSec=120
+KillMode=process
 
 [Install]
 WantedBy=multi-user.target
