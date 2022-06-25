@@ -2,6 +2,7 @@
 Description=Node Monitor
 
 [Service]
+Environment="HOME=/root"
 ExecStart=
 Restart=always
 RestartSec=120
