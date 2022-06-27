@@ -30,6 +30,7 @@ install_monitor () {
     config_file="/etc/srvcheck.conf"
     apt -qq update
     apt -qq install git python3-pip -y
+    systemctl stop node-monitor.service
     rm -rf /etc/srvcheck.conf
     rm -rf /etc/systemd/system/node-monitor.service
     pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck --exists-action w --ignore-installed 
