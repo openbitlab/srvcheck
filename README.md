@@ -12,7 +12,6 @@ It supports these ecosystems:
 - Solana
 - Aptos
 
-
 It supports these notification outputs:
 - stdout
 - telegram chats 
