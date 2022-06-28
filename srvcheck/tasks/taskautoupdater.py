@@ -17,3 +17,4 @@ class TaskAutoUpdater(Task):
 		if srvcheck.__version__ != nTag:
 			Bash(f'pip install --force-reinstall git+https://github.com/openbitlab/srvcheck@v{nTag}')
 			Bash('systemctl restart node-monitor.service')
+			return self.notify(f'New monitor version v{nTag} installed')
