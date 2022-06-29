@@ -1,8 +1,11 @@
 from substrateinterface import SubstrateInterface
 
+
 from srvcheck.tasks.task import hours
 from .chain import Chain
 from ..tasks import Task
+from ..notification import Emoji
+
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
@@ -35,6 +38,27 @@ class TaskSubstrateNewReferenda(Task):
 		if count > self.prev:
 			self.prev = count
 			return self.notify(f'New referendum found on {n}: {n, count - 1}')
+
+class TaskRelayChainStuck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=30, notifyEvery=60*5):
+		super().__init__('TaskRelayChainStuck',
+			  conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+
+	@staticmethod
+	def isPluggable(conf):
+		service = conf.retrieve('service')
+		f = open(service, "r")
+		if "--collator" in f.read():
+			return True
+		return False
+
+	def run(self):
+		if self.prev is None:
+			self.prev = self.chain.getRelayHeight()
+		elif self.prev == self.chain.getRelayHeight():
+			return self.notify(f'Relay is stuck at block {self.prev} {Emoji.Stuck}')
+		return False
 
 
 class Substrate (Chain):
@@ -85,7 +109,7 @@ class Substrate (Chain):
 	def isStaking(self):
 		c = self.rpcCall('babe_epochAuthorship')
 		if len(c.keys()) == 0:
-			return False 
+			return False
 
 		cc = c[c.keys()[0]]
 		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0
@@ -93,3 +117,7 @@ class Substrate (Chain):
 	def isSynching(self):
 		c = self.rpcCall('system_syncState')
 		return c['highestBlock'] < c['currentBlock']
+
+	def getRelayHeight(self):
+		c = self.rpcCall('chain_getBlock')['extrinsics'][0]['method']['args']['data']['validationData']['relayParentNumber']
+		return c
