@@ -49,7 +49,7 @@ class TaskRelayChainStuck(Task):
 	def isPluggable(conf):
 		service = conf.retrieve('service')
 		f = open(service, "r")
-		if "--collator" in f.read():
+		if "--parachain-id" in f.read():
 			return True
 		return False
 
