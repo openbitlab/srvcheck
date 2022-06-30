@@ -5,6 +5,7 @@ from srvcheck.tasks.task import hours
 from .chain import Chain
 from ..tasks import Task
 from ..notification import Emoji
+from ..utils import Bash
 
 
 class TaskSubstrateNewReferenda(Task):
@@ -47,9 +48,9 @@ class TaskRelayChainStuck(Task):
 
 	@staticmethod
 	def isPluggable(conf):
-		service = conf.retrieve('service')
-		f = open(service, "r")
-		if "--parachain-id" in f.read():
+		service = conf.getOrDefault('chain.service')
+		s = Bash('systemctl cat '+service).value()
+		if "--parachain-id" in s:
 			return True
 		return False
 
