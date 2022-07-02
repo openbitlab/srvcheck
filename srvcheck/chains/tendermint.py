@@ -56,16 +56,23 @@ class TaskTendermintNewProposal(Task):
 	def isPluggable(conf):
 		return True
 
+	def getProposalTitle(self, proposal):
+		if "id" in proposal:
+			return proposal["messages"][0]["content"]["title"]
+		elif "proposal_id" in proposal:
+			return proposal["content"]["title"]
+
 	def run(self):
 		nProposal = self.chain.getLatestProposal()
 		if not self.prev:
 			self.prev = nProposal
+			return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		elif "id" in self.prev and self.prev["id"] != nProposal["id"]:
 			self.prev = nProposal
-			return self.notify(f'got new proposal: {nProposal["messages"][0]["content"]["title"]} {Emoji.Proposal}')
+			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		elif "proposal_id" in self.prev and self.prev["proposal_id"] != nProposal["proposal_id"]:
 			self.prev = nProposal
-			return self.notify(f'got new proposal: {nProposal["content"]["title"]} {Emoji.Proposal}')
+			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		return False
 
 class TaskTendermintPositionChanged(Task):
