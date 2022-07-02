@@ -48,11 +48,7 @@ class TaskRelayChainStuck(Task):
 
 	@staticmethod
 	def isPluggable(conf):
-		service = conf.getOrDefault('chain.service')
-		s = Bash('systemctl cat '+service).value()
-		if "--parachain-id" in s:
-			return True
-		return False
+		return Substrate.isParachain(conf)
 
 	def run(self):
 		if self.prev is None:
@@ -122,3 +118,11 @@ class Substrate (Chain):
 	def getRelayHeight(self):
 		c = self.rpcCall('chain_getBlock')['extrinsics'][0]['method']['args']['data']['validationData']['relayParentNumber']
 		return c
+
+	@staticmethod
+	def isParachain(conf):
+		service = conf.getOrDefault('chain.service')
+		s = Bash('systemctl cat '+service).value()
+		if "--parachain-id" in s:
+			return True
+		return False
