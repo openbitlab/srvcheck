@@ -58,7 +58,7 @@ class TaskRelayChainStuck(Task):
 		if self.prev is None:
 			self.prev = self.chain.getRelayHeight()
 		elif self.prev == self.chain.getRelayHeight():
-			return self.notify(f'Relay is stuck at block {self.prev} {Emoji.Stuck}')
+			return self.notify(f'relay is stuck at block {self.prev} {Emoji.Stuck}')
 		return False
 
 
