@@ -15,10 +15,10 @@ class TaskNewRelease(Task):
 	def run(self):
 		current = self.chain.getLocalVersion()
 		latest = self.chain.getLatestVersion()
-		c_ver = re.findall(r'(\d+[.]\d+[.]\d+)', current)[0]
-		l_ver = re.findall(r'(\d+[.]\d+[.]\d+)', latest)[0]
+		c_ver = int("".join(re.findall(r'(\d+[.]\d+[.]\d+)', current)[0].split('.')))
+		l_ver = int("".join(re.findall(r'(\d+[.]\d+[.]\d+)', latest)[0].split('.')))
 
-		if c_ver != l_ver:
+		if c_ver < l_ver:
 			output = f"has new release: {latest} {Emoji.Rel}"
 			if self.chain.TYPE == "solana":
 				d_stake = self.chain.getDelinquentStakePerc()

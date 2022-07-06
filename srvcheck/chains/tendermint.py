@@ -47,7 +47,7 @@ class TaskTendermintBlockMissed(Task):
 		return False
 
 class TaskTendermintNewProposal(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=hours(2), notifyEvery=hours(10)):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=hours(1)):
 		super().__init__('TaskTendermintNewProposal',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev=None
@@ -56,16 +56,24 @@ class TaskTendermintNewProposal(Task):
 	def isPluggable(conf):
 		return True
 
+	def getProposalTitle(self, proposal):
+		if "id" in proposal:
+			return proposal["messages"][0]["content"]["title"]
+		elif "proposal_id" in proposal:
+			return proposal["content"]["title"]
+
 	def run(self):
 		nProposal = self.chain.getLatestProposal()
 		if not self.prev:
 			self.prev = nProposal
+			if nProposal["status"] == "PROPOSAL_STATUS_VOTING_PERIOD":
+				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		elif "id" in self.prev and self.prev["id"] != nProposal["id"]:
 			self.prev = nProposal
-			return self.notify(f'got new proposal: {nProposal["messages"][0]["content"]["title"]} {Emoji.Proposal}')
+			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		elif "proposal_id" in self.prev and self.prev["proposal_id"] != nProposal["proposal_id"]:
 			self.prev = nProposal
-			return self.notify(f'got new proposal: {nProposal["content"]["title"]} {Emoji.Proposal}')
+			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		return False
 
 class TaskTendermintPositionChanged(Task):
