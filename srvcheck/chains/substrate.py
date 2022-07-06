@@ -122,7 +122,10 @@ class Substrate (Chain):
 
 
 	def getParachainId(self):
-		return self.rpcCall('parachainInfo_parachainId')
+		si = self.getSubstrateInterface()
+		result = si.query(module='ParachainInfo', storage_function='ParachainId', params=[])
+		return result.value
+
 
 	def isParachain(self):
 		try:
