@@ -8,7 +8,7 @@ class TaskSystemCpuAlert(Task):
 		super().__init__('TaskSystemCpuAlert', conf, notification, system, chain, minutes(15), hours(2))
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):

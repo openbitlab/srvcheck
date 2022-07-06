@@ -1,3 +1,4 @@
+from calendar import c
 from substrateinterface import SubstrateInterface
 
 
@@ -15,7 +16,7 @@ class TaskSubstrateNewReferenda(Task):
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -47,8 +48,8 @@ class TaskRelayChainStuck(Task):
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
-		return Substrate.isParachain(conf)
+	def isPluggable(conf, chain):
+		return chain.isParachain()
 
 	def run(self):
 		if self.prev is None:
@@ -119,10 +120,13 @@ class Substrate (Chain):
 		c = self.rpcCall('chain_getBlock')['extrinsics'][0]['method']['args']['data']['validationData']['relayParentNumber']
 		return c
 
-	@staticmethod
-	def isParachain(conf):
-		service = conf.getOrDefault('chain.service')
-		s = Bash('systemctl cat '+service).value()
-		if "--parachain-id" in s:
+
+	def getParachainId(self):
+		return self.rpcCall('parachainInfo_parachainId')
+
+	def isParachain(self):
+		try:
+			self.getParachainId()
 			return True
-		return False
+		except:
+			return False

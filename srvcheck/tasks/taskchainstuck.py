@@ -13,7 +13,7 @@ class TaskChainStuck(Task):
 			self.method = self.chain.getHeight
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):

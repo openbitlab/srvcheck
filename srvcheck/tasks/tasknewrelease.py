@@ -9,7 +9,7 @@ class TaskNewRelease(Task):
 		self.conf = conf
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True if conf.getOrDefault('chain.ghRepository') else False
 
 	def run(self):

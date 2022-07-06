@@ -8,10 +8,10 @@ import json
 class TaskAptosHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskAptosHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
-		self.prev = None 
+		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -27,7 +27,7 @@ class TaskAptosValidatorProposalCheck(Task):
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
