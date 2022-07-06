@@ -92,4 +92,4 @@ class Substrate (Chain):
 
 	def isSynching(self):
 		c = self.rpcCall('system_syncState')
-		return c['highestBlock'] < c['currentBlock']
+		return abs(c['currentBlock'] - c['highestBlock']) > 32
