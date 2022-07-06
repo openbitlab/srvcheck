@@ -64,7 +64,7 @@ class Substrate (Chain):
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = ['TaskRelayChainStuck'] #[TaskSubstrateNewReferenda]
+	CUSTOM_TASKS = [TaskRelayChainStuck] #[TaskSubstrateNewReferenda]
 
 	def __init__(self, conf):
 		super().__init__(conf)
