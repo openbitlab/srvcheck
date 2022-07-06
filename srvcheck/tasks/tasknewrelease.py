@@ -15,8 +15,18 @@ class TaskNewRelease(Task):
 	def run(self):
 		current = self.chain.getLocalVersion()
 		latest = self.chain.getLatestVersion()
-		c_ver = int("".join(re.findall(r'(\d+[.]\d+[.]\d+)', current)[0].split('.')))
-		l_ver = int("".join(re.findall(r'(\d+[.]\d+[.]\d+)', latest)[0].split('.')))
+		c_ver = "".join(re.findall(r'(\d+[.]\d+[.]\d+)', current)[0].split('.'))
+		l_ver = "".join(re.findall(r'(\d+[.]\d+[.]\d+)', latest)[0].split('.'))
+
+		if len(c_ver) < len(l_ver):
+			c_ver = int(c_ver.ljust(len(l_ver), "0"))
+			l_ver = int(l_ver)
+		elif len(l_ver) < len(c_ver):
+			l_ver = int(l_ver.ljust(len(l_ver), "0"))
+			c_ver = int(c_ver)
+		else:
+			c_ver = int(c_ver)
+			l_ver = int(l_ver)
 
 		if c_ver < l_ver:
 			output = f"has new release: {latest} {Emoji.Rel}"
