@@ -23,7 +23,7 @@ class TaskChainStuck(Task):
 			self.prev = bh
 			return False
 
-		if bh == self.prev or self.chain.isSynching():
+		if bh == self.prev:
 			return self.notify(f'chain is stuck at block {bh} {Emoji.Stuck}')
 
 		self.prev = bh

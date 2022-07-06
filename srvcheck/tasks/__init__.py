@@ -8,6 +8,7 @@ from .taskchainlowpeer import TaskChainLowPeer
 from .tasknewrelease import TaskNewRelease
 from .taskautoupdater import TaskAutoUpdater
 from .taskchainunreachable import TaskChainUnreachable
+from .taskchainsynching import TaskChainSynching
 
 TASKS = [
     TaskChainStuck,
@@ -18,5 +19,6 @@ TASKS = [
     TaskSystemRamAlert,
     TaskNewRelease,
     TaskAutoUpdater,
-    TaskChainUnreachable
+    TaskChainUnreachable,
+    TaskChainSynching
 ]
