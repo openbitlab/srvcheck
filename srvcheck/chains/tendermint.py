@@ -47,7 +47,7 @@ class TaskTendermintBlockMissed(Task):
 		return False
 
 class TaskTendermintNewProposal(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=hours(2), notifyEvery=hours(10)):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=hours(1)):
 		super().__init__('TaskTendermintNewProposal',
 		      conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev=None
@@ -56,14 +56,24 @@ class TaskTendermintNewProposal(Task):
 	def isPluggable(conf):
 		return True
 
-	def run(self):
-		nProposal=self.chain.getLatestProposal()
-		if not self.prev:
-			self.prev = self.chain.getLatestProposal()
-		elif self.prev["proposal_id"] != nProposal["proposal_id"]:
-			self.prev = nProposal
-			return self.notify(f' got new proposal: {nProposal["content"]["title"]} {Emoji.Proposal}')
+	def getProposalTitle(self, proposal):
+		if "id" in proposal:
+			return proposal["messages"][0]["content"]["title"]
+		elif "proposal_id" in proposal:
+			return proposal["content"]["title"]
 
+	def run(self):
+		nProposal = self.chain.getLatestProposal()
+		if not self.prev:
+			self.prev = nProposal
+			if nProposal["status"] == "PROPOSAL_STATUS_VOTING_PERIOD":
+				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
+		elif "id" in self.prev and self.prev["id"] != nProposal["id"]:
+			self.prev = nProposal
+			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
+		elif "proposal_id" in self.prev and self.prev["proposal_id"] != nProposal["proposal_id"]:
+			self.prev = nProposal
+			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		return False
 
 class TaskTendermintPositionChanged(Task):
@@ -130,14 +140,12 @@ class TaskTendermintHealthError(Task):
 		except Exception as _:
 			return self.notify(f'health error! {Emoji.Health}')
 
-
-
 class Tendermint (Chain):
 	TYPE = "tendermint"
 	NAME = ""
 	BLOCKTIME = 60
 	EP = "http://localhost:26657/"
-	CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError]
+	CUSTOM_TASKS = [TaskTendermintBlockMissed, TaskTendermintPositionChanged, TaskTendermintHealthError, TaskTendermintNewProposal]
 
 	@staticmethod
 	def detect(conf):
@@ -189,7 +197,8 @@ class Tendermint (Chain):
 	def getLatestProposal(self):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
-			cmd = configparser.ConfigParser().read(f"/etc/systemd/system/{serv}") 
-			cmd = re.split(' ', cmd["Service"]["ExecStart"])[0]
-			return json.loads(Bash(cmd+" q gov proposal --reverse --limit 1 --output json").value())["proposals"][0]
+			c = configparser.ConfigParser()
+			c.read(f"/etc/systemd/system/{serv}")
+			cmd = re.split(' ', c["Service"]["ExecStart"])[0]
+			return json.loads(Bash(cmd + " q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
 		raise Exception('No service file name specified!')

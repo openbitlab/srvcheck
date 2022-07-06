@@ -22,14 +22,17 @@ print_help () {
  -n  --name <name> monitor name [default is the server hostname]
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
- -g  --gov enable checks on new governance proposals (tendermint)
-  -v  --verbose enable verbose installation"
+     --gov enable checks on new governance proposals (tendermint)
+ -v  --verbose enable verbose installation"
 }
 
 install_monitor () {
     config_file="/etc/srvcheck.conf"
     apt -qq update
     apt -qq install git python3-pip -y
+    systemctl stop node-monitor.service
+    rm -rf /etc/srvcheck.conf
+    rm -rf /etc/systemd/system/node-monitor.service
     pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck --exists-action w --ignore-installed 
     wget $verbosity https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
@@ -180,16 +183,9 @@ case $1 in
         shift # past argument
         shift # past value
     ;;
-    -g|--gov)
-        if [[ -z $2 ]]
-        then
-            print_help
-            exit 1
-        else
-            enable_gov=true
-        fi
+    --gov)
+        enable_gov=true
         shift # past argument
-        shift # past value
     ;;
     -*|--*)
         echo "Unknown option $1"

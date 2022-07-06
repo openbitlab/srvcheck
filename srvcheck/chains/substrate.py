@@ -113,7 +113,7 @@ class Substrate (Chain):
 
 	def isSynching(self):
 		c = self.rpcCall('system_syncState')
-		return c['highestBlock'] < c['currentBlock']
+		return abs(c['currentBlock'] - c['highestBlock']) > 32
 
 	def getRelayHeight(self):
 		c = self.rpcCall('chain_getBlock')['extrinsics'][0]['method']['args']['data']['validationData']['relayParentNumber']

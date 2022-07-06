@@ -56,9 +56,7 @@ class MockChain (Chain):
 			raise Exception('Mockchain is not healthy')
 
 class MockChainTendermint(MockChain):
-	latestProposal = {"proposal_id":"3","content":{"@type":"/ibc.core.client.v1.ClientUpdateProposal","title":"Upgrade IBC client","description":"Upgrade the expired client to an active client","subject_client_id":"07-tendermint-0","substitute_client_id":"07-tendermint-3"},
-	"status":"PROPOSAL_STATUS_PASSED","final_tally_result":{"yes":"104002179704","abstain":"107000000","no":"47000000","no_with_veto":"0"},"submit_time":"2022-04-27T13:02:49.636982639Z","deposit_end_time":"2022-05-11T13:02:49.636982639Z","total_deposit":[{"denom":"ufis","amount":"1000000000"}],
-	"voting_start_time":"2022-04-27T13:03:09.707806299Z","voting_end_time":"2022-04-28T13:03:09.707806299Z"}
+	latestProposal = {"id":"1","messages":[{"@type":"/cosmos.gov.v1.MsgExecLegacyContent","content":{"@type":"/cosmos.params.v1beta1.ParameterChangeProposal","title":"Increase Signed Blocks Window Parameter to 2880","description":"Mamaki Testnet initially started with very strict slashing conditions. This proposal changes the signed_blocks_window to about 24 hours.","changes":[{"subspace":"slashing","key":"SignedBlocksWindow","value":"\"2880\""}]},"authority":"celestia10d07y265gmmuvt4z0w9aw880jnsr700jtgz4v7"}],"status":"PROPOSAL_STATUS_VOTING_PERIOD","final_tally_result":{"yes_count":"0","abstain_count":"0","no_count":"0","no_with_veto_count":"0"},"submit_time":"2022-06-10T13:43:02.649255900Z","deposit_end_time":"2022-06-12T13:43:02.649255900Z","total_deposit":[{"denom":"utia","amount":"100100000"}],"voting_start_time":"2022-06-10T13:49:16.069169911Z","voting_end_time":"2022-06-12T13:49:16.069169911Z","metadata":""}
 
 	def getLatestProposal(self):		
 		return self.latestProposal

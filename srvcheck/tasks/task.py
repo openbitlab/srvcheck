@@ -52,7 +52,7 @@ class Task:
 		return (self.lastRecover + self.recoverEvery) < time.time()
 
 	def canRecover(self):
-		return False 
+		return False
 
 	def recover(self):
 		return None
