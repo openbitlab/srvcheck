@@ -25,7 +25,7 @@ class Task:
 		self.lastRecover = 0
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		""" Returns true if the task can be plugged in """
 		raise Exception('Abstract isPluggable()')
 

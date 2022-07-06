@@ -11,7 +11,7 @@ class TaskSolanaHealthError(Task):
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -27,7 +27,7 @@ class TaskSolanaDelinquentCheck(Task):
 		self.prev = None 
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -42,7 +42,7 @@ class TaskSolanaBalanceCheck(Task):
 		self.prev = None 
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -58,7 +58,7 @@ class TaskSolanaLastVoteCheck(Task):
 		self.prev = None 
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -78,7 +78,7 @@ class TaskSolanaEpochActiveStake(Task):
 		self.prevEpoch = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -102,7 +102,7 @@ class TaskSolanaLeaderSchedule(Task):
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -129,7 +129,7 @@ class TaskSolanaSkippedSlots(Task):
 		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 %
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):

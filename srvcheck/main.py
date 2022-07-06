@@ -26,6 +26,7 @@ ConfSet.addItem(ConfItem('chain.type', None, str, 'type of the chain'))
 ConfSet.addItem(ConfItem('chain.name', None, str, 'name of the chain'))
 ConfSet.addItem(ConfItem('tasks.autoRecover', False, bool, 'enable auto recoverable tasks'))
 ConfSet.addItem(ConfItem('tasks.disabled', '', str, 'comma separated list of disabled tasks'))
+ConfSet.addItem(ConfItem('chain.service', None, str, 'node service name'))
 
 
 def addTasks(chain, notification, system, config):
@@ -37,7 +38,7 @@ def addTasks(chain, notification, system, config):
 		if config.getOrDefault('tasks.disabled').find(task.name) != -1:
 			continue
 
-		if task.isPluggable(config):
+		if task.isPluggable(config, chain):
 			tasks.append(task)
 	return tasks
 

@@ -5,7 +5,7 @@ class TaskSystemUsage(Task):
 		super().__init__('TaskSystemUsage', conf, notification, system, chain, hours(24), hours(24))
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):

@@ -11,7 +11,7 @@ class TaskSystemDiskAlert(Task):
 		self.prevDiskSize = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):

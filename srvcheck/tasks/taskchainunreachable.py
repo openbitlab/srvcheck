@@ -6,7 +6,7 @@ class TaskChainUnreachable(Task):
 		super().__init__('TaskChainUnreachable', conf, notification, system, chain, minutes(15), hours(1))
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):

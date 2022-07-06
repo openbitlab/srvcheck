@@ -22,7 +22,7 @@ class TaskTendermintBlockMissed(Task):
 		self.prevMissed = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -53,7 +53,7 @@ class TaskTendermintNewProposal(Task):
 		self.prev=None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def getProposalTitle(self, proposal):
@@ -84,7 +84,7 @@ class TaskTendermintPositionChanged(Task):
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -130,7 +130,7 @@ class TaskTendermintHealthError(Task):
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):

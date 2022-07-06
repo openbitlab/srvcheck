@@ -8,7 +8,7 @@ class TaskSystemRamAlert(Task):
 		super().__init__('TaskSystemRamAlert', conf, notification, system, chain, minutes(15), hours(2))
 
 	@staticmethod
-	def isPluggable(conf):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
