@@ -5,7 +5,7 @@ from .tasksystemdiskalert import TaskSystemDiskAlert
 from .tasksystemcpualert import TaskSystemCpuAlert
 from .tasksystemramalert import TaskSystemRamAlert
 from .taskchainlowpeer import TaskChainLowPeer
-from .tasknewrelease import TaskNewRelease
+from .tasknewrelease import TaskNewRelease, versionCompare
 from .taskautoupdater import TaskAutoUpdater
 from .taskchainunreachable import TaskChainUnreachable
 

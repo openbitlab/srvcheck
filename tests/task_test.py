@@ -1,6 +1,6 @@
 import unittest
 
-from srvcheck.tasks.tasknewrelease import TaskNewRelease
+from srvcheck.tasks.tasknewrelease import TaskNewRelease, versionCompare
 from srvcheck.utils.confset import ConfSet
 from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck, TaskSystemCpuAlert, TaskSystemDiskAlert, minutes, hours
 from srvcheck.notification.notification import Emoji
@@ -121,6 +121,11 @@ class TestTaskChainStuck(unittest.TestCase):
 
 
 class TestTaskNewRelease(unittest.TestCase):
+	def test_VersionCompare(self):
+		self.assertEqual(versionCompare('v1.0.0', 'v1.0.0'), 0)
+		self.assertEqual(versionCompare('v1.0.0', 'v1.0.1'), -1)
+		self.assertEqual(versionCompare('v1.2.0', 'v1.0.1'), 1)
+
 	def test_noalert(self):
 		c, n, t, s = buildTaskEnv(TaskNewRelease)
 		t.run()
