@@ -66,7 +66,7 @@ class TaskTendermintNewProposal(Task):
 		nProposal = self.chain.getLatestProposal()
 		if not self.prev:
 			self.prev = nProposal
-			if nProposal.status == "PROPOSAL_STATUS_VOTING_PERIOD":
+			if nProposal["status"] == "PROPOSAL_STATUS_VOTING_PERIOD":
 				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
 		elif "id" in self.prev and self.prev["id"] != nProposal["id"]:
 			self.prev = nProposal
