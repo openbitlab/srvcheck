@@ -98,7 +98,7 @@ class TestTaskChainStuck(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'chain is stuck at block 0x1234567890' + ' ' + Emoji.Stuck)
+		self.assertEqual(n.events[0], 'chain is stuck at block 0x1234567890 since 0 seconds (1)' + ' ' + Emoji.Stuck)
 
 
 	def test_noblockhash(self):
@@ -117,7 +117,7 @@ class TestTaskChainStuck(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'chain is stuck at block 1' + ' ' + Emoji.Stuck)
+		self.assertEqual(n.events[0], 'chain is stuck at block 1 since 0 seconds (1)' + ' ' + Emoji.Stuck)
 
 
 class TestTaskNewRelease(unittest.TestCase):
