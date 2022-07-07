@@ -28,3 +28,6 @@ class TelegramNotification(NotificationProvider):
 		print(st.encode('utf-8'))
 		for x in self.chatIds:
 			requests.get(f'https://api.telegram.org/bot{self.apiToken}/sendMessage?text={st}&chat_id={x}').json()
+
+	def format(self, name, string):
+		return '#' + name + ' ' + string

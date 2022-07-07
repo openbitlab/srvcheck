@@ -52,7 +52,7 @@ class Notification:
 		for x in self.providers:
 			if level < x.LOG_LEVEL and level != NotificationLevel.NotDeclared:
 				continue
-			x.send(self.name + ' ' + st)
+			x.send(x.format(self.name, st))
 
 	def sendPhoto(self, photo):
 		for x in self.providers:
