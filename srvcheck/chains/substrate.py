@@ -117,7 +117,7 @@ class Substrate (Chain):
 		return abs(c['currentBlock'] - c['highestBlock']) > 32
 
 	def getRelayHeight(self):
-		c = self.rpcCall('chain_getBlock')['extrinsics'][0]['method']['args']['data']['validationData']['relayParentNumber']
+		c = self.rpcCall('chain_getBlock')['block']['extrinsics'][0]['method']['args']['data']['validationData']['relayParentNumber']
 		return c
 
 
