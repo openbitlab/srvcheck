@@ -17,6 +17,9 @@ class NotificationProvider:
 	def append(self, s):
 		self.notifies.append(s)
 
+	def format(self, name, string):
+		return name + ' ' + string
+
 	def flush(self):
 		if len(self.notifies) > 0:
 			st = '\n'.join(self.notifies)
