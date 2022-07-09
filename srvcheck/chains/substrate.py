@@ -1,13 +1,8 @@
-from calendar import c
 from substrateinterface import SubstrateInterface
-
-
 from srvcheck.tasks.task import hours
 from .chain import Chain
 from ..tasks import Task
 from ..notification import Emoji
-from ..utils import Bash
-
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
@@ -119,7 +114,6 @@ class Substrate (Chain):
 	def getRelayHeight(self):
 		c = self.rpcCall('chain_getBlock')['block']['extrinsics'][0]['method']['args']['data']['validationData']['relayParentNumber']
 		return c
-
 
 	def getParachainId(self):
 		si = self.getSubstrateInterface()
