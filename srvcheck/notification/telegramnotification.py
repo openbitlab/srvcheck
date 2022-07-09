@@ -2,6 +2,7 @@ import json
 import requests
 from ..utils.confset import ConfItem, ConfSet
 from .notificationprovider import NotificationProvider
+import urllib.parse
 
 ConfSet.addItem(ConfItem('notification.telegram.enabled', None, bool, 'enable telegram notification'))
 ConfSet.addItem(ConfItem('notification.telegram.apiToken', None, str, 'telegram api token'))
@@ -30,4 +31,4 @@ class TelegramNotification(NotificationProvider):
 			requests.get(f'https://api.telegram.org/bot{self.apiToken}/sendMessage?text={st}&chat_id={x}').json()
 
 	def format(self, name, string):
-		return '#' + name + ' ' + string
+		return urllib.parse.quote('#' + name + ' ' + string)

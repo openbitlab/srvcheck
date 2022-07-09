@@ -1,5 +1,5 @@
 requests
 pytest
 tox
-substrateinterface
+substrate-interface
 # coverage
