@@ -113,7 +113,7 @@ class Substrate (Chain):
 
 	def getRelayHeight(self):
 		si = self.getSubstrateInterface()
-		result = si.query(module='ParachainInfo', storage_function='ValidationData', params=[])
+		result = si.query(module='ParachainSystem', storage_function='ValidationData', params=[])
 		return result.value["relay_parent_number"]
 
 	def getParachainId(self):
