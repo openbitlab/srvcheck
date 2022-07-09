@@ -13,7 +13,7 @@ class Emoji:
 	Rel 		= "\U0001F4BF"
 	Peers 		= "\U0001F198"
 	Sync 		= "\U00002757"
-	SyncOk 		= "\U000FEB4A"
+	SyncOk 		= "\U00002705"
 	PosUp 		= "\U0001F53C"
 	PosDown 	= "\U0001F53D"
 	BlockMiss 	= "\U0000274C"
