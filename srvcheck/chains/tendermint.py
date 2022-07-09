@@ -34,12 +34,12 @@ class TaskTendermintBlockMissed(Task):
 		start = nblockh - self.BLOCK_WINDOW
 		while start < nblockh:
 			if not next((x for x in self.chain.getSignatures(start) if x['validator_address'] == self.chain.getValidatorAddress()), None):
-				lastMissed = start 
+				lastMissed = start
 				missed += 1
 
 			start += 1
 
-		if missed >= self.THRESHOLD_NOTSIGNED and (self.prevMissed is None or self.prevMissed != lastMissed):
+		if self.chain.isStaking() and missed >= self.THRESHOLD_NOTSIGNED and (self.prevMissed is None or self.prevMissed != lastMissed):
 			self.prevMissed = lastMissed
 			self.prev = nblockh
 			return self.notify(f'{missed} not signed blocks in the latest {self.BLOCK_WINDOW} {Emoji.BlockMiss}')
@@ -93,6 +93,9 @@ class TaskTendermintPositionChanged(Task):
 		if not self.prev:
 			self.prev = npos
 
+		if not self.chain.isStaking():
+			return self.notify(f'out from the active set {Emoji.NoLeader}')
+
 		if npos != self.prev:
 			prev = self.prev
 			self.prev = npos
@@ -122,7 +125,7 @@ class TaskTendermintPositionChanged(Task):
 		else:
 			active_vals += self.chain.rpcCall('validators', [bh, "1", str(active_s)])['validators']
 		p = [i for i, j in enumerate(active_vals) if j['address'] == self.chain.getValidatorAddress()]
-		return p[0] + 1 if len(p) > 0 else -1 
+		return p[0] + 1 if len(p) > 0 else -1
 
 class TaskTendermintHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
