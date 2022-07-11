@@ -1,4 +1,5 @@
 import unittest
+import urllib.parse
 
 from srvcheck.tasks.tasknewrelease import TaskNewRelease, versionCompare
 from srvcheck.utils.confset import ConfSet
@@ -43,7 +44,7 @@ class TestTaskSystemCpuAlert(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'CPU usage is above 90% (99%) ⚠')
+		self.assertEqual(n.events[0], urllib.parse.quote('#CPU usage is above 90% (99%) ⚠ '))
 
 
 class TestTaskSystemDiskAlert(unittest.TestCase):
@@ -60,7 +61,7 @@ class TestTaskSystemDiskAlert(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'disk usage is above 90% (99%) (/var/log: 0.0G, /: 0.0G) 💾')
+		self.assertEqual(n.events[0], urllib.parse.quote('#disk usage is above 90% (99%) (/var/log: 0.0G, /: 0.0G) 💾 '))
 
 
 class TestTaskChainLowPeer(unittest.TestCase):
@@ -77,7 +78,7 @@ class TestTaskChainLowPeer(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'chain has only 0 peers' + ' ' + Emoji.Peers)
+		self.assertEqual(n.events[0], urllib.parse.quote('#chain has only 0 peers' + ' ' + Emoji.Peers + ' '))
 
 
 
@@ -98,7 +99,7 @@ class TestTaskChainStuck(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'chain is stuck at block 0x1234567890 since 0 seconds (1)' + ' ' + Emoji.Stuck)
+		self.assertEqual(n.events[0], urllib.parse.quote('#chain is stuck at block 0x1234567890 since 0 seconds (1)' + ' ' + Emoji.Stuck + ' '))
 
 
 	def test_noblockhash(self):
@@ -117,7 +118,7 @@ class TestTaskChainStuck(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'chain is stuck at block 1 since 0 seconds (1)' + ' ' + Emoji.Stuck)
+		self.assertEqual(n.events[0], urllib.parse.quote('#chain is stuck at block 1 since 0 seconds (1)' + ' ' + Emoji.Stuck + ' '))
 
 
 class TestTaskNewRelease(unittest.TestCase):
@@ -138,5 +139,5 @@ class TestTaskNewRelease(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], f'has new release: {c.latestVersion} {Emoji.Rel}')
+		self.assertEqual(n.events[0], urllib.parse.quote(f'#has new release: {c.latestVersion} {Emoji.Rel} '))
 

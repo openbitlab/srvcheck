@@ -1,4 +1,5 @@
 import unittest
+import urllib.parse
 from srvcheck.notification import Notification
 from srvcheck.utils import ConfSet
 from .mocks import MockNotification
@@ -9,7 +10,7 @@ class TestNotification(unittest.TestCase):
 		mn = MockNotification(ConfSet({}))
 		n.addProvider(mn)
 		n.send('Hello WorldS!')
-		self.assertEqual(mn.events[0], 'Test Hello WorldS!')
+		self.assertEqual(mn.events[0], urllib.parse.quote('#Test Hello WorldS!'))
 
 	def test_sendPhoto(self):
 		n = Notification('Test')
@@ -25,4 +26,4 @@ class TestNotification(unittest.TestCase):
 		n.append('Hello WorldA!')
 		n.append('Hello WorldB!')
 		n.flush()
-		self.assertEqual(mn.events[0], 'Test Hello WorldA!\nTest Hello WorldB!')
+		self.assertEqual(mn.events[0], urllib.parse.quote('#Test Hello WorldA!\nTest Hello WorldB! '))

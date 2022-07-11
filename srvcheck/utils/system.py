@@ -54,5 +54,5 @@ class System:
 		u.ramUsed = int(Bash('free').value().split('\n')[1].split()[2])
 		u.ramFree = int(Bash('free').value().split('\n')[1].split()[4])
 
-		u.cpuUsage = float(Bash('top -b -n 1 | grep Cpu').value().split()[1])
+		u.cpuUsage = float(Bash('top -b -n 1 | grep Cpu').value().split()[1].replace(',', '.'))
 		return u
