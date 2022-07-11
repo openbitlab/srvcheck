@@ -1,6 +1,6 @@
 import time
 from ..notification import Emoji
-from . import Task, minutes
+from . import Task
 
 def elapsedToString(since):
 	elapsed = (time.time() - since)
@@ -14,7 +14,7 @@ def elapsedToString(since):
 
 class TaskChainStuck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
+		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, chain.BLOCKTIME * 2)
 		self.prev = None
 		self.since = None
 		self.oc = 0
