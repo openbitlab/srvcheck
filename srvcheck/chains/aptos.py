@@ -45,7 +45,7 @@ class TaskAptosValidatorProposalCheck(Task):
 	
 class TaskAptosCurrentConsensusStuck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+		super().__init__('TaskAptosCurrentConsensusStuck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
 		self.prev = None
 
 	@staticmethod
