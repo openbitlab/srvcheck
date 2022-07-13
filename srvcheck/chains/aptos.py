@@ -3,6 +3,7 @@ from .chain import Chain
 from ..tasks import Task,  hours, minutes
 from ..utils import Bash
 import requests
+import re
 import json
 
 class TaskAptosHealthError(Task):
@@ -23,7 +24,7 @@ class TaskAptosHealthError(Task):
 
 class TaskAptosValidatorProposalCheck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
+		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, checkEvery = hours(1), notifyEvery = hours(1))
 		self.prev = None
 
 	@staticmethod
@@ -41,6 +42,27 @@ class TaskAptosValidatorProposalCheck(Task):
 		
 		self.prev = p_count
 		return False
+	
+class TaskAptosCurrentConsensusStuck(Task):
+	def __init__(self, conf, notification, system, chain):
+		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+		self.prev = None
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return True
+
+	def run(self):
+		cur_round = self.chain.getCurrentRound()
+
+		if self.prev is None:
+			self.prev = cur_round
+			return False 
+		if cur_round == self.prev:
+			return self.notify(f'consensus round stuck {Emoji.BlockMiss}')
+		
+		self.prev = cur_round
+		return False
 
 class Aptos (Chain):
 	TYPE = "aptos"
@@ -51,7 +73,7 @@ class Aptos (Chain):
 	EP_FULL = 'http://localhost:8081/'
 	EP_METRICS_VAL = 'http://localhost:9101/metrics'
 	EP_METRICS_FULL = 'http://localhost:9104/metrics'
-	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosValidatorProposalCheck]
+	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosValidatorProposalCheck, TaskAptosCurrentConsensusStuck]
 
 	@staticmethod
 	def detect(conf):
@@ -101,3 +123,8 @@ class Aptos (Chain):
 		if len(proposals_count) == 1:
 			return int(proposals_count[0].split(" ")[-1])
 		return -1
+
+	def getCurrentConsensus(self):
+		out = requests.get(self.EP_METRICS_VAL)
+		cur_round = re.findall('aptos_consensus_current_round [0-9]+',out.text)[0].split(" ")[1].replace('"', '')
+		return cur_round
