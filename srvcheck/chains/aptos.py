@@ -53,7 +53,7 @@ class TaskAptosCurrentConsensusStuck(Task):
 		return True
 
 	def run(self):
-		cur_round = self.chain.getCurrentRound()
+		cur_round = self.chain.getCurrentConsensus()
 
 		if self.prev is None:
 			self.prev = cur_round
