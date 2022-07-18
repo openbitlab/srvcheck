@@ -56,6 +56,30 @@ class TaskRelayChainStuck(Task):
 			return self.notify(f'relay is stuck at block {self.prev} {Emoji.Stuck}')
 		return False
 
+class TaskWillValidateCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(1)):
+		super().__init__('TaskWillValidateCheck',
+			  conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return chain.isParachain()
+
+	def run(self):
+		session = self.chain.getSession()
+
+		if self.prev is None:
+			self.prev = session
+
+		if self.prev != session:
+			self.prev = session
+			if self.chain.isValidator():
+				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}')
+			else:
+				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}')
+		return False
+
 class TaskBlockProductionCheck(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=minutes(10)):
 		super().__init__('TaskBlockProductionCheck',
@@ -67,13 +91,14 @@ class TaskBlockProductionCheck(Task):
 		return chain.isParachain()
 
 	def run(self):
-		block = self.chain.latestBlockProduced()
-		if block != 0:
-			if self.prev is None:
+		if self.chain.isCollating():
+			block = self.chain.latestBlockProduced()
+			if block != 0:
+				if self.prev is None:
+					self.prev = block
+				elif self.prev == block:
+					return self.notify(f'no block produced in the latest 10 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
 				self.prev = block
-			elif self.prev == block:
-				return self.notify(f'no block produced in the latest 10 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
-			self.prev = block
 		return False
 
 class TaskBlockProductionReport(Task):
@@ -88,21 +113,22 @@ class TaskBlockProductionReport(Task):
 		return chain.isParachain()
 
 	def run(self):
-		block = self.chain.latestBlockProduced()
-		if block != 0:
-			if self.prev is None:
+		if self.chain.isCollating():
+			block = self.chain.latestBlockProduced()
+			if block != 0:
+				if self.prev is None:
+					self.prev = block
+					self.oc += 1
+
+				if self.oc > 0:
+					prevOc = self.oc
+					self.oc = 0
+					return self.notify(f'block produced in the last hour {prevOc} {Emoji.BlockProd}')
+
+				if block != self.prev:
+					self.oc += 1
+
 				self.prev = block
-				self.oc += 1
-
-			if self.oc > 0:
-				prevOc = self.oc
-				self.oc = 0
-				return self.notify(f'block produced in the last hour {prevOc} {Emoji.BlockProd}')
-
-			if block != self.prev:
-				self.oc += 1
-
-			self.prev = block
 		return False
 
 class Substrate (Chain):
@@ -110,7 +136,7 @@ class Substrate (Chain):
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionCheck, TaskBlockProductionReport] #[TaskSubstrateNewReferenda]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskWillValidateCheck, TaskBlockProductionCheck, TaskBlockProductionReport] #[TaskSubstrateNewReferenda]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -179,7 +205,32 @@ class Substrate (Chain):
 		except:
 			return False
 
-	# Check latest block produced on Shiden/Shibuya
+	def getSession(self):
+		si = self.getSubstrateInterface()
+		result = si.query(module='Session', storage_function='CurrentIndex', params=[])
+		return result.value
+
+	def isValidator(self):
+		collator = self.conf.getOrDefault('chain.collatorAddress')
+		if collator:
+			si = self.getSubstrateInterface()
+			result = si.query(module='Session', storage_function='QueuedKeys', params=[])
+			for v in result.value:
+				if(v[0] == f'{collator}'):
+					return True
+		return False
+
+	# Check collator on Shiden/Shibuya
+	def isCollating(self):
+		collator = self.conf.getOrDefault('chain.collatorAddress')
+		if collator:
+			si = self.getSubstrateInterface()
+			result = si.query(module='CollatorSelection', storage_function='Candidates', params=[])
+			for c in result.value:
+				if c['who'] == f'{collator}':
+					return True
+		return False
+
 	def latestBlockProduced(self):
 		collator = self.conf.getOrDefault('chain.collatorAddress')
 		if collator:
