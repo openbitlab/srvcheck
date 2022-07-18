@@ -1,8 +1,11 @@
 from substrateinterface import SubstrateInterface
-from srvcheck.tasks.task import hours
+from srvcheck.tasks.task import hours, minutes
 from .chain import Chain
 from ..tasks import Task
 from ..notification import Emoji
+from ..utils import ConfItem, ConfSet
+
+ConfSet.addItem(ConfItem('chain.collatorAddress', description='Collator address'))
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
@@ -53,13 +56,59 @@ class TaskRelayChainStuck(Task):
 			return self.notify(f'relay is stuck at block {self.prev} {Emoji.Stuck}')
 		return False
 
+class TaskBlockProductionCheck(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=minutes(10)):
+		super().__init__('TaskBlockProductionCheck',
+			  conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return chain.isParachain()
+
+	def run(self):
+		block = self.chain.latestBlockProduced()
+		if self.prev is None:
+			self.prev = block
+		elif self.prev == block:
+			return self.notify(f'no block produced in the latest 10 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
+		self.prev = block
+		return False
+
+class TaskBlockProductionReport(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(1)):
+		super().__init__('TaskBlockProductionReport',
+			  conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
+		self.oc = 0
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return chain.isParachain()
+
+	def run(self):
+		block = self.chain.latestBlockProduced()
+		if self.prev is None:
+			self.prev = block
+			self.oc += 1
+
+		if self.oc > 0:
+			prevOc = self.oc
+			self.oc = 0
+			return self.notify(f'block produced in the last hour {prevOc} {Emoji.BlockProd}')
+
+		if block != self.prev:
+			self.oc += 1
+
+		self.prev = block
+		return False
 
 class Substrate (Chain):
 	TYPE = "substrate"
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck] #[TaskSubstrateNewReferenda]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionCheck, TaskBlockProductionReport] #[TaskSubstrateNewReferenda]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -121,10 +170,18 @@ class Substrate (Chain):
 		result = si.query(module='ParachainInfo', storage_function='ParachainId', params=[])
 		return result.value
 
-
 	def isParachain(self):
 		try:
 			self.getParachainId()
 			return True
 		except:
 			return False
+
+	# Check latest block produced on Shiden/Shibuya
+	def latestBlockProduced(self):
+		collator = self.conf.getOrDefault('chain.collatorAddress')
+		if collator:
+			si = self.getSubstrateInterface()
+			result = si.query(module='CollatorSelection', storage_function='LastAuthoredBlock', params=[collator])
+			return result.value
+		return False
