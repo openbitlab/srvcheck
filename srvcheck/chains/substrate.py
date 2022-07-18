@@ -56,30 +56,6 @@ class TaskRelayChainStuck(Task):
 			return self.notify(f'relay is stuck at block {self.prev} {Emoji.Stuck}')
 		return False
 
-class TaskWillValidateCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(1)):
-		super().__init__('TaskWillValidateCheck',
-			  conf, notification, system, chain, checkEvery, notifyEvery)
-		self.prev = None
-
-	@staticmethod
-	def isPluggable(conf, chain):
-		return chain.isParachain()
-
-	def run(self):
-		session = self.chain.getSession()
-
-		if self.prev is None:
-			self.prev = session
-
-		if self.prev != session:
-			self.prev = session
-			if self.chain.isValidator():
-				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}')
-			else:
-				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}')
-		return False
-
 class TaskBlockProductionCheck(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=minutes(10)):
 		super().__init__('TaskBlockProductionCheck',
@@ -106,6 +82,7 @@ class TaskBlockProductionReport(Task):
 		super().__init__('TaskBlockProductionReport',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
+		self.prevBlock = None
 		self.oc = 0
 
 	@staticmethod
@@ -113,22 +90,32 @@ class TaskBlockProductionReport(Task):
 		return chain.isParachain()
 
 	def run(self):
+		session = self.chain.getSession()
+
+		if self.prev is None:
+			self.prev = session
+
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
 			if block != 0:
-				if self.prev is None:
-					self.prev = block
+				if self.prevBlock is None:
+					self.prevBlock = block
 					self.oc += 1
 
-				if self.oc > 0:
-					prevOc = self.oc
-					self.oc = 0
-					return self.notify(f'block produced in the last hour {prevOc} {Emoji.BlockProd}')
-
-				if block != self.prev:
+				if block != self.prevBlock:
 					self.oc += 1
 
-				self.prev = block
+				self.prevBlock = block
+
+		if self.prev != session:
+			self.prev = session
+			if self.oc > 0:
+				report = f' {self.oc} block produced last session {Emoji.BlockProd}'
+				self.oc = 0
+			if self.chain.isValidator():
+				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n\t{report}')
+			else:
+				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n\t{report}')
 		return False
 
 class Substrate (Chain):
@@ -136,7 +123,7 @@ class Substrate (Chain):
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskWillValidateCheck, TaskBlockProductionCheck, TaskBlockProductionReport] #[TaskSubstrateNewReferenda]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionCheck, TaskBlockProductionReport] #[TaskSubstrateNewReferenda]
 
 	def __init__(self, conf):
 		super().__init__(conf)
