@@ -68,11 +68,12 @@ class TaskBlockProductionCheck(Task):
 
 	def run(self):
 		block = self.chain.latestBlockProduced()
-		if self.prev is None:
+		if block != 0:
+			if self.prev is None:
+				self.prev = block
+			elif self.prev == block:
+				return self.notify(f'no block produced in the latest 10 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
 			self.prev = block
-		elif self.prev == block:
-			return self.notify(f'no block produced in the latest 10 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
-		self.prev = block
 		return False
 
 class TaskBlockProductionReport(Task):
@@ -88,19 +89,20 @@ class TaskBlockProductionReport(Task):
 
 	def run(self):
 		block = self.chain.latestBlockProduced()
-		if self.prev is None:
+		if block != 0:
+			if self.prev is None:
+				self.prev = block
+				self.oc += 1
+
+			if self.oc > 0:
+				prevOc = self.oc
+				self.oc = 0
+				return self.notify(f'block produced in the last hour {prevOc} {Emoji.BlockProd}')
+
+			if block != self.prev:
+				self.oc += 1
+
 			self.prev = block
-			self.oc += 1
-
-		if self.oc > 0:
-			prevOc = self.oc
-			self.oc = 0
-			return self.notify(f'block produced in the last hour {prevOc} {Emoji.BlockProd}')
-
-		if block != self.prev:
-			self.oc += 1
-
-		self.prev = block
 		return False
 
 class Substrate (Chain):
