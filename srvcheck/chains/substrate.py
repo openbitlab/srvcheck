@@ -123,6 +123,7 @@ class TaskBlockProductionReport(Task):
 
 		if self.prev != session:
 			self.prev = session
+			prevOc = 0
 			report = ''
 			if self.oc > 0:
 				prevOc = self.oc
@@ -133,7 +134,7 @@ class TaskBlockProductionReport(Task):
 			elif block != -1:
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 			else:
-				report = f'{report} out of {self.totalBlockChecked} ({prevOc/self.totalBlockChecked * 100}%)'
+				report = f'{report} out of {self.totalBlockChecked} ({prevOc/self.totalBlockChecked * 100:.2f} %)'
 				self.totalBlockChecked = 0
 				return self.notify(report)
 		return False
