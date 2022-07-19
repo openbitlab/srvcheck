@@ -1,7 +1,7 @@
 import json
 from ..notification import Emoji
 from .chain import Chain
-from ..tasks import Task, seconds, hours, minutes
+from ..tasks import Task, seconds, hours, minutes, TaskChainLowPeer
 
 class Near (Chain):
     TYPE = "near"
@@ -23,4 +23,7 @@ class Near (Chain):
 
     def getHeight(self):
         return int(self.rpcCall("block", [{ "finality": "final" }]))
+
+    def isSynching(self):
+        return self.rpcCall('status')['sync_info']['syncing']
 
