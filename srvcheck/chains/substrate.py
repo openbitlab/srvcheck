@@ -279,9 +279,8 @@ class Substrate (Chain):
 			# Check block author Mangata
 			return self.checkAuthoredBlock(block)
 
-	def getSeals(self, block):		
-		seals = Bash("grep -Eo 'Pre-sealed block for proposal at {block}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
-		print(seals)
+	def getSeals(self, block):	
+		seals = Bash("grep -Eo 'Pre-sealed block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
 		return seals
 	
 	def checkAuthoredBlock(self, block):
