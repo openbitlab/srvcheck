@@ -1,9 +1,10 @@
 from substrateinterface import SubstrateInterface
+from substrateinterface.exceptions import StorageFunctionNotFound
 from srvcheck.tasks.task import hours, minutes
 from .chain import Chain
 from ..tasks import Task
 from ..notification import Emoji
-from ..utils import ConfItem, ConfSet
+from ..utils import ConfItem, ConfSet, Bash
 
 ConfSet.addItem(ConfItem('chain.collatorAddress', description='Collator address'))
 
@@ -69,7 +70,7 @@ class TaskBlockProductionCheck(Task):
 	def run(self):
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
-			if block != 0:
+			if block > 0:
 				if self.prev is None:
 					self.prev = block
 				elif self.prev == block:
@@ -83,6 +84,7 @@ class TaskBlockProductionReport(Task):
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
 		self.prevBlock = None
+		self.lastBlockChecked = None
 		self.oc = 0
 
 	@staticmethod
@@ -90,14 +92,15 @@ class TaskBlockProductionReport(Task):
 		return chain.isParachain()
 
 	def run(self):
-		session = self.chain.getSession()
+		s = self.chain.getSession()
+		session = s['current'] if 'current' in s else s
 
 		if self.prev is None:
 			self.prev = session
 
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
-			if block != 0:
+			if block > 0:
 				if self.prevBlock is None:
 					self.prevBlock = block
 					self.oc += 1
@@ -106,17 +109,27 @@ class TaskBlockProductionReport(Task):
 					self.oc += 1
 
 				self.prevBlock = block
+			elif block == -1:
+				startingRoundBlock = s['first']
+				currentBlock = self.chain.getHeight()
+				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and b > self.lastBlockChecked and b >= startingRoundBlock]
+				for b in blocksToCheck:
+					a = self.chain.getBlockAuthor(b)
+					if a == self.conf.getOrDefault('chain.collatorAddress'):
+						self.oc += 1
 
 		if self.prev != session:
 			self.prev = session
 			report = ''
 			if self.oc > 0:
-				report = f'{self.oc} block produced last session {Emoji.BlockProd}'
+				report = f'{self.oc} block produced last {"round" if "current" in s else "session"} {Emoji.BlockProd}'
 				self.oc = 0
 			if self.chain.isValidator():
 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
-			else:
+			elif block != -1:
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
+			else:
+				return self.notify(report)
 		return False
 
 class Substrate (Chain):
@@ -195,34 +208,63 @@ class Substrate (Chain):
 
 	def getSession(self):
 		si = self.getSubstrateInterface()
-		result = si.query(module='Session', storage_function='CurrentIndex', params=[])
-		return result.value
+		try:
+			# Check session on Shiden/Shibuya, Mangata
+			result = si.query(module='Session', storage_function='CurrentIndex', params=[])
+			return result.value
+		except StorageFunctionNotFound:
+			# Check session on Moonbase/Moonriver
+			result = si.query(module='ParachainStaking', storage_function='Round', params=[])
+			return result.value
 
 	def isValidator(self):
 		collator = self.conf.getOrDefault('chain.collatorAddress')
 		if collator:
-			si = self.getSubstrateInterface()
-			result = si.query(module='Session', storage_function='QueuedKeys', params=[])
-			for v in result.value:
-				if(v[0] == f'{collator}'):
-					return True
+			try:
+				# Check validator on Shiden/Shibuya, Mangata
+				si = self.getSubstrateInterface()
+				result = si.query(module='Session', storage_function='QueuedKeys', params=[])
+				for v in result.value:
+					if(v[0] == f'{collator}'):
+						return True
+			except StorageFunctionNotFound:
+				return False
 		return False
 
-	# Check collator on Shiden/Shibuya
 	def isCollating(self):
 		collator = self.conf.getOrDefault('chain.collatorAddress')
 		if collator:
 			si = self.getSubstrateInterface()
-			result = si.query(module='CollatorSelection', storage_function='Candidates', params=[])
-			for c in result.value:
-				if c['who'] == f'{collator}':
-					return True
+			try:
+				# Check collator on Shiden/Shibuya
+				result = si.query(module='CollatorSelection', storage_function='Candidates', params=[])
+				for c in result.value:
+					if c['who'] == f'{collator}':
+						return True
+			except StorageFunctionNotFound:
+				# Check collator on Moonbase/Moonriver, Mangata
+				result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
+				for c in result.value:
+					if c == collator:
+						return True
 		return False
 
 	def latestBlockProduced(self):
 		collator = self.conf.getOrDefault('chain.collatorAddress')
 		if collator:
-			si = self.getSubstrateInterface()
-			result = si.query(module='CollatorSelection', storage_function='LastAuthoredBlock', params=[collator])
-			return result.value
-		return False
+			try:
+				# Check last block produced on Shiden/Shibuya
+				si = self.getSubstrateInterface()
+				result = si.query(module='CollatorSelection', storage_function='LastAuthoredBlock', params=[collator])
+				return result.value
+			except StorageFunctionNotFound:
+				return -1
+		return 0
+
+	def getExpectedBlocks(self):
+		blocks = Bash("grep -Eo 'Prepared block for proposing at [0-9]+' /var/log/syslog | sed 's/[^0-9]'//g").value().split("\n")
+		return blocks
+
+	def getBlockAuthor(self, block):
+		return self.rpcCall('eth_getBlockByNumber', [hex(block), 'true'])['author']
+
