@@ -94,7 +94,7 @@ class TaskBlockProductionReport(Task):
 
 	def run(self):
 		s = self.chain.getSession()
-		session = s['current'] if 'current' in s else s
+		session = s['current'] if isinstance(s, dict) and 'current' in s else s
 
 		if self.prev is None:
 			self.prev = session
@@ -126,7 +126,7 @@ class TaskBlockProductionReport(Task):
 			report = ''
 			if self.oc > 0:
 				prevOc = self.oc
-				report = f'{self.oc} block produced last {"round" if "current" in s else "session"} {Emoji.BlockProd}'
+				report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"} {Emoji.BlockProd}'
 				self.oc = 0
 			if self.chain.isValidator():
 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
@@ -215,12 +215,12 @@ class Substrate (Chain):
 	def getSession(self):
 		si = self.getSubstrateInterface()
 		try:
-			# Check session on Shiden/Shibuya, Mangata
-			result = si.query(module='Session', storage_function='CurrentIndex', params=[])
+			# Check session on Moonbase/Moonriver, Mangata
+			result = si.query(module='ParachainStaking', storage_function='Round', params=[])
 			return result.value
 		except StorageFunctionNotFound:
-			# Check session on Moonbase/Moonriver
-			result = si.query(module='ParachainStaking', storage_function='Round', params=[])
+			# Check session on Shiden/Shibuya
+			result = si.query(module='Session', storage_function='CurrentIndex', params=[])
 			return result.value
 
 	def isValidator(self):
@@ -273,5 +273,21 @@ class Substrate (Chain):
 		return blocks
 
 	def getBlockAuthor(self, block):
-		return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
+		try:
+			return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
+		except:
+			# Check block author Mangata
+			return self.checkAuthoredBlock(block)
 
+	def getSeals(self, block):		
+		seals = Bash("grep -Eo 'Pre-sealed block for proposal at {block}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
+		print(seals)
+		return seals
+	
+	def checkAuthoredBlock(self, block):
+		bh = self.rpcCall('eth_getBlockByNumber', [block])
+		seals = self.getSeals(block)
+		for b in seals:
+			if b == bh:
+				return self.conf.getOrDefault('chain.collatorAddress')
+		return "0x0"
