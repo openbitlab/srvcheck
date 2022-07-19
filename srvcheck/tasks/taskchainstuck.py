@@ -14,7 +14,7 @@ def elapsedToString(since):
 
 class TaskChainStuck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
+		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, chain.BLOCKTIME * 2)
 		self.prev = None
 		self.since = None
 		self.oc = 0
@@ -34,8 +34,10 @@ class TaskChainStuck(Task):
 
 		if self.oc > 0:
 			elapsed = elapsedToString(self.since)
-			self.notify(f'chain come back in sync after {elapsed} ({self.oc}) {Emoji.SyncOk}')
-			self.notification.flush()
+			prevOc = self.oc
+			self.oc = 0
+			self.prev = bh
+			return self.notify(f'chain come back in sync after {elapsed} ({prevOc}) {Emoji.SyncOk}')
 
 		if self.prev is None:
 			self.prev = bh
