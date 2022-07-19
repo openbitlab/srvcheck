@@ -109,13 +109,14 @@ class TaskBlockProductionReport(Task):
 
 		if self.prev != session:
 			self.prev = session
+			report = ''
 			if self.oc > 0:
-				report = f' {self.oc} block produced last session {Emoji.BlockProd}'
+				report = f'{self.oc} block produced last session {Emoji.BlockProd}'
 				self.oc = 0
 			if self.chain.isValidator():
-				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n\t{report}')
+				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
 			else:
-				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n\t{report}')
+				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 		return False
 
 class Substrate (Chain):
