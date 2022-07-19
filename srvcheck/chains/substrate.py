@@ -85,6 +85,7 @@ class TaskBlockProductionReport(Task):
 		self.prev = None
 		self.prevBlock = None
 		self.lastBlockChecked = None
+		self.totalBlockChecked = 0
 		self.oc = 0
 
 	@staticmethod
@@ -112,16 +113,19 @@ class TaskBlockProductionReport(Task):
 			elif block == -1:
 				startingRoundBlock = s['first']
 				currentBlock = self.chain.getHeight()
-				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and b > self.lastBlockChecked and b >= startingRoundBlock]
+				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
 					if a == self.conf.getOrDefault('chain.collatorAddress'):
 						self.oc += 1
+					self.lastBlockChecked = b
+					self.totalBlockChecked += 1
 
 		if self.prev != session:
 			self.prev = session
 			report = ''
 			if self.oc > 0:
+				prevOc = self.oc
 				report = f'{self.oc} block produced last {"round" if "current" in s else "session"} {Emoji.BlockProd}'
 				self.oc = 0
 			if self.chain.isValidator():
@@ -129,6 +133,8 @@ class TaskBlockProductionReport(Task):
 			elif block != -1:
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 			else:
+				report = f'{report} out of {self.totalBlockChecked} ({prevOc/self.totalBlockChecked * 100}%)'
+				self.totalBlockChecked = 0
 				return self.notify(report)
 		return False
 
@@ -263,8 +269,9 @@ class Substrate (Chain):
 
 	def getExpectedBlocks(self):
 		blocks = Bash("grep -Eo 'Prepared block for proposing at [0-9]+' /var/log/syslog | sed 's/[^0-9]'//g").value().split("\n")
+		blocks = [int(b) for b in blocks]
 		return blocks
 
 	def getBlockAuthor(self, block):
-		return self.rpcCall('eth_getBlockByNumber', [hex(block), 'true'])['author']
+		return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
 
