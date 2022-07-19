@@ -1,7 +1,7 @@
 from ..notification import Emoji
 from . import Task, minutes
 
-MIN_PEERS = 2
+MIN_PEERS = 3
 
 class TaskChainLowPeer(Task):
 	def __init__(self, conf, notification, system, chain):
