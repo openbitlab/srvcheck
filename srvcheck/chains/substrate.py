@@ -116,7 +116,6 @@ class TaskBlockProductionReport(Task):
 				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
-					print(a, self.conf.getOrDefault('chain.collatorAddress'))
 					if a == self.conf.getOrDefault('chain.collatorAddress'):
 						self.oc += 1
 					self.lastBlockChecked = b
@@ -129,6 +128,7 @@ class TaskBlockProductionReport(Task):
 				report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"} {Emoji.BlockProd}'
 				if self.totalBlockChecked > 0:
 					report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+				report = f'{report} {Emoji.BlockProd}'
 				self.oc = 0
 				self.totalBlockChecked = 0
 			if self.chain.isValidator():
