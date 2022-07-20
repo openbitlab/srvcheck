@@ -66,7 +66,7 @@ class Near (Chain):
         return int(self.rpcCall("network_info")["num_active_peers"])
 
     def getHeight(self):
-        return int(self.rpcCall("block", [{ "finality": "final" }])['header']['height'])
+        return int(self.rpcCall("block", { "finality": "final" })['header']['height'])
 
     def isSynching(self):
         return self.rpcCall('status')['sync_info']['syncing']
