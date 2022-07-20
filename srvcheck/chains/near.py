@@ -52,7 +52,7 @@ class Near (Chain):
     NAME = ""
     BLOCKTIME = 60
     EP = "http://localhost:3030/"
-    CUSTOM_TASKS = [ ]
+    CUSTOM_TASKS = [ TaskNearBlockMissed, TaskNearChunksMissed]
 
     @staticmethod
     def detect(conf):
