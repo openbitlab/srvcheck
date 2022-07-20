@@ -100,6 +100,7 @@ class TaskBlockProductionReport(Task):
 			self.prev = session
 
 		block = -1
+		print(self.chain.isCollating())
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
 			if block > 0:
@@ -233,7 +234,7 @@ class Substrate (Chain):
 				si = self.getSubstrateInterface()
 				result = si.query(module='Session', storage_function='QueuedKeys', params=[])
 				for v in result.value:
-					if(v[0] == f'{collator}'):
+					if(v[0].lower() == f'{collator}'.lower()):
 						return True
 			except StorageFunctionNotFound:
 				return False
@@ -247,13 +248,13 @@ class Substrate (Chain):
 				# Check collator on Shiden/Shibuya
 				result = si.query(module='CollatorSelection', storage_function='Candidates', params=[])
 				for c in result.value:
-					if c['who'] == f'{collator}':
+					if c['who'].lower() == f'{collator}'.lower():
 						return True
 			except StorageFunctionNotFound:
 				# Check collator on Moonbase/Moonriver, Mangata
 				result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
 				for c in result.value:
-					if c == collator:
+					if c.lower() == collator.lower():
 						return True
 		return False
 
