@@ -100,7 +100,6 @@ class TaskBlockProductionReport(Task):
 			self.prev = session
 
 		block = -1
-		print(self.chain.isCollating())
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
 			if block > 0:
@@ -118,7 +117,7 @@ class TaskBlockProductionReport(Task):
 				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
-					if a == self.conf.getOrDefault('chain.collatorAddress'):
+					if a.lower() == self.conf.getOrDefault('chain.collatorAddress').lower():
 						self.oc += 1
 					self.lastBlockChecked = b
 					self.totalBlockChecked += 1
@@ -274,7 +273,7 @@ class Substrate (Chain):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
 			blocks = Bash(f"journalctl -u {serv} --no-pager --since '60 min ago' | grep -Eo 'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g").value().split("\n")
-			blocks = [int(b) for b in blocks]
+			blocks = [int(b) for b in blocks if b != '']
 			return blocks
 		return []
 
