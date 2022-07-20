@@ -63,22 +63,22 @@ class Near (Chain):
             return False
 
     def getPeerCount(self):
-        return int(self.rpcCall("network_info")["result"]["num_active_peers"])
+        return int(self.rpcCall("network_info")["num_active_peers"])
 
     def getHeight(self):
         return int(self.rpcCall("block", [{ "finality": "final" }])['header']['height'])
 
     def isSynching(self):
-        return self.rpcCall('status')['result']['sync_info']['syncing']
+        return self.rpcCall('status')['sync_info']['syncing']
 
     def getVersion(self):
-        return self.rpcCall('status')['result']['version']['build']
+        return self.rpcCall('status')['version']['build']
 
     def getPoolId(self):
-        return self.rpcCall('status')['result']['validator_account_id']
+        return self.rpcCall('status')['validator_account_id']
 
     def getProductionReport(self):
-        validators = self.rpcCall('validators')['result']['current_validators']
+        validators = self.rpcCall('validators')['current_validators']
         for v in validators:
             if v['account_id'] == self.getPoolId():
                 return v
