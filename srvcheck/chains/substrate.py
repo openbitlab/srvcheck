@@ -99,6 +99,7 @@ class TaskBlockProductionReport(Task):
 		if self.prev is None:
 			self.prev = session
 
+		block = -1
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
 			if block > 0:
@@ -125,7 +126,7 @@ class TaskBlockProductionReport(Task):
 			self.prev = session
 			report = ''
 			if self.oc > 0:
-				report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"} {Emoji.BlockProd}'
+				report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"}'
 				if self.totalBlockChecked > 0:
 					report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
 				report = f'{report} {Emoji.BlockProd}'
