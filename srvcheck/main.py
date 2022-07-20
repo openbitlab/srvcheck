@@ -51,7 +51,6 @@ def main():
 	parser = argparse.ArgumentParser(description='Srvcheck helps you to monitor blockchain nodes.')
 	parser.add_argument('--config', type=str, default=cf, help='srvcheck config file')
 	args = parser.parse_args()
-	print(args.config)
 	cf = args.config
 
 	# Parse configuration
