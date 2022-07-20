@@ -4,8 +4,8 @@ import time
 import configparser
 import traceback
 import argparse
-import srvcheck
 from functools import reduce
+import srvcheck
 
 from .notification import Emoji, Notification, NOTIFICATION_SERVICES
 from .tasks import TASKS

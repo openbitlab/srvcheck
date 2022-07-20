@@ -269,9 +269,12 @@ class Substrate (Chain):
 		return 0
 
 	def getExpectedBlocks(self):
-		blocks = Bash("grep -Eo 'Prepared block for proposing at [0-9]+' /var/log/syslog | sed 's/[^0-9]'//g").value().split("\n")
-		blocks = [int(b) for b in blocks]
-		return blocks
+		serv = self.conf.getOrDefault('chain.service')
+		if serv:
+			blocks = Bash(f"journalctl -u {serv} --no-pager --since '60 min ago' | grep -Eo 'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g").value().split("\n")
+			blocks = [int(b) for b in blocks]
+			return blocks
+		return []
 
 	def getBlockAuthor(self, block):
 		try:
