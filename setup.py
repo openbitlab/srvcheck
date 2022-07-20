@@ -23,5 +23,5 @@ setup(name='srvcheck',
 		],
 	},
     zip_safe=False,
-	install_requires=['requests', 'substrate-interface'],
+	install_requires=['requests', 'substrate-interface', 'packaging'],
 )

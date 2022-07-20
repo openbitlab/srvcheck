@@ -1,20 +1,12 @@
 import re
+from packaging import version
 from ..notification import Emoji
 from . import Task, minutes, hours
 
-def versionCompare(current, latest):
-	c_ver = "".join(re.findall(r'(\d+[.]\d+[.]\d+)', current)[0].split('.'))
-	l_ver = "".join(re.findall(r'(\d+[.]\d+[.]\d+)', latest)[0].split('.'))
 
-	if len(c_ver) < len(l_ver):
-		c_ver = int(c_ver.ljust(len(l_ver), "0"))
-		l_ver = int(l_ver)
-	elif len(l_ver) < len(c_ver):
-		l_ver = int(l_ver.ljust(len(l_ver), "0"))
-		c_ver = int(c_ver)
-	else:
-		c_ver = int(c_ver)
-		l_ver = int(l_ver)
+def versionCompare(current, latest):
+	c_ver = version.parse(current)
+	l_ver = version.parse(latest)
 
 	if c_ver < l_ver:
 		return -1
