@@ -6,5 +6,6 @@ from .lisk import Lisk
 from .tezos import Tezos
 from .solana import Solana
 from .aptos import Aptos
+from .near import Near
 
-CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos]
+CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near]
