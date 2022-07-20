@@ -116,6 +116,7 @@ class TaskBlockProductionReport(Task):
 				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
+					print(a, self.conf.getOrDefault('chain.collatorAddress'))
 					if a == self.conf.getOrDefault('chain.collatorAddress'):
 						self.oc += 1
 					self.lastBlockChecked = b
@@ -123,19 +124,18 @@ class TaskBlockProductionReport(Task):
 
 		if self.prev != session:
 			self.prev = session
-			prevOc = 0
 			report = ''
 			if self.oc > 0:
-				prevOc = self.oc
 				report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"} {Emoji.BlockProd}'
+				if self.totalBlockChecked > 0:
+					report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
 				self.oc = 0
+				self.totalBlockChecked = 0
 			if self.chain.isValidator():
 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
 			elif block != -1:
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 			else:
-				report = f'{report} out of {self.totalBlockChecked} ({prevOc/self.totalBlockChecked * 100:.2f} %)'
-				self.totalBlockChecked = 0
 				return self.notify(report)
 		return False
 
@@ -285,7 +285,7 @@ class Substrate (Chain):
 		return seals
 	
 	def checkAuthoredBlock(self, block):
-		bh = self.rpcCall('eth_getBlockByNumber', [block])
+		bh = self.rpcCall('chain_getBlockHash', [block])
 		seals = self.getSeals(block)
 		for b in seals:
 			if b == bh:
