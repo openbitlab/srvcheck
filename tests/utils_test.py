@@ -14,19 +14,22 @@ class TestUtilsSystem(unittest.TestCase):
 		# self.assertEqual(System().getIP().count('.'), 3)
 
 	def test_getUsage(self):
-		c = {
+		C = {
 			'chain': {
+				'name': 'test',
+				'endpoint': 'http://localhost:8080',
+				'blockTime': 10,
 				'mountPoint': '/'
 			}
 		}
 
-		confRaw = configparser.ConfigParser()
-		confRaw.optionxform=str
-		confRaw.read_dict(c)
+		confRawUsage = configparser.ConfigParser()
+		confRawUsage.optionxform=str
+		confRawUsage.read_dict(C)
 
-		conf = ConfSet(confRaw)
+		confUsage = ConfSet(confRawUsage)
 		ConfSet.addItem(ConfItem('chain.mountPoint', '/', str))
-		us = System(conf).getUsage()
+		us = System(confUsage).getUsage()
 		self.assertNotEqual(us.uptime, '')
 		self.assertNotEqual(us.diskSize, 0)
 		self.assertNotEqual(us.diskUsed, 0)
