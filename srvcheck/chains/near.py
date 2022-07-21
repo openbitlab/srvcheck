@@ -1,7 +1,7 @@
 import json
 from typing import Literal
 from ..notification import Emoji
-from .chain import Chain
+from .chain import Chain, rpcCall
 from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
 
@@ -76,7 +76,7 @@ class Near (Chain):
 	NAME = ""
 	BLOCKTIME = 1.5
 	EP = "http://localhost:3030/"
-	EPOCHTIME = Chain.rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * BLOCKTIME
+	EPOCHTIME = rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * BLOCKTIME
 	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal]
 
 	@staticmethod
