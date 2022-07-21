@@ -76,7 +76,7 @@ class Near (Chain):
 	NAME = ""
 	BLOCKTIME = 1.5
 	EP = "http://localhost:3030/"
-	EPOCHTIME = rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * BLOCKTIME
+	EPOCHTIME = rpcCall(EP, "EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * BLOCKTIME
 	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal]
 
 	@staticmethod
