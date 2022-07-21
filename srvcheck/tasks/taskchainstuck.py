@@ -43,7 +43,7 @@ class TaskChainStuck(Task):
 			return self.notify(f'chain is stuck at block {bh} since {elapsed} ({self.oc}) {Emoji.Stuck}')
 
 
-		if self.oc > 0:
+		if self.oc > 1:
 			elapsed = elapsedToString(self.since)
 			self.notify (f'chain come back in sync after {elapsed} ({self.oc}) {Emoji.SyncOk}')
 
