@@ -124,14 +124,12 @@ class TaskBlockProductionReport(Task):
 
 		if self.prev != session:
 			self.prev = session
-			report = ''
-			if self.oc > 0:
-				report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"}'
-				if self.totalBlockChecked > 0:
-					report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
-				report = f'{report} {Emoji.BlockProd}'
-				self.oc = 0
+			report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"}'
+			if self.totalBlockChecked > 0:
+				report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
 				self.totalBlockChecked = 0
+			report = f'{report} {Emoji.BlockProd}'
+			self.oc = 0
 			if self.chain.isValidator():
 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
 			elif block != -1:
