@@ -11,6 +11,7 @@ It supports these ecosystems:
 - Tezos
 - Solana
 - Aptos
+- Near
 
 It supports these notification outputs:
 - stdout
@@ -49,6 +50,11 @@ Tendermint specific tasks
 
 Substrate specific tasks:
 - TaskSubstrateNewReferenda
+
+Near specific tasks:
+- TaskNearBlockMissed
+- TaskNearChunksMissed
+- TaskCheckProposal
 
 We suggest adding the binary of the node to the PATH in order to benefit from all the monitor features' 
 
