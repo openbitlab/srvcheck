@@ -48,6 +48,8 @@ Tendermint specific tasks
 
 Substrate specific tasks:
 - TaskSubstrateNewReferenda
+- TaskBlockProductionCheck
+- TaskBlockProductionReport
 
 We suggest adding the binary of the node to the PATH in order to benefit from all the monitor features' 
 

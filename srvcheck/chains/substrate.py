@@ -231,7 +231,7 @@ class Substrate (Chain):
 				si = self.getSubstrateInterface()
 				result = si.query(module='Session', storage_function='QueuedKeys', params=[])
 				for v in result.value:
-					if(v[0].lower() == f'{collator}'.lower()):
+					if v[0].lower() == f'{collator}'.lower():
 						return True
 			except StorageFunctionNotFound:
 				return False
@@ -282,10 +282,10 @@ class Substrate (Chain):
 			# Check block author Mangata
 			return self.checkAuthoredBlock(block)
 
-	def getSeals(self, block):	
+	def getSeals(self, block):
 		seals = Bash("grep -Eo 'Pre-sealed block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
 		return seals
-	
+
 	def checkAuthoredBlock(self, block):
 		bh = self.rpcCall('chain_getBlockHash', [block])
 		seals = self.getSeals(block)
