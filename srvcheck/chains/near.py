@@ -76,13 +76,14 @@ class Near (Chain):
 	NAME = ""
 	BLOCKTIME = 1.5
 	EP = "http://localhost:3030/"
-	EPOCHTIME = rpcCall(EP, "EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * BLOCKTIME
+	EPOCHTIME = ""
 	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal]
 
 	@staticmethod
 	def detect(conf):
 		try:
 			Near(conf).getVersion()
+			Near.EPOCHTIME = rpcCall(Near.EP, "EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * Near.BLOCKTIME
 			return True
 		except:
 			return False
