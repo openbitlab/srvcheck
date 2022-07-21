@@ -99,7 +99,7 @@ class TaskBlockProductionReport(Task):
 		if self.prev is None:
 			self.prev = session
 
-		block = -1
+		block = 0
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
 			if block > 0:
