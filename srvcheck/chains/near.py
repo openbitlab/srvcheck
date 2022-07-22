@@ -55,7 +55,7 @@ class TaskCheckProposal (Task):
 		self.prev_epoch = None
 	
 	@staticmethod
-	def isPuggable(conf, chain):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
