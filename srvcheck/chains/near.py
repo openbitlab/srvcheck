@@ -55,7 +55,7 @@ class TaskCheckProposal (Task):
 		self.prev_epoch = None
 	
 	@staticmethod
-	def isPuggable(conf, chain):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -114,7 +114,7 @@ class Near (Chain):
 		raise Exception('Node is not in the current validators!')
 
 	def getEpoch(self):
-		return int(self.rpcCall("block", { "finality": "final" })['header']['epoch_id'])
+		return self.rpcCall("block", { "finality": "final" })['header']['epoch_id']
 
 	def getProposal(self):
 		return Bash(f"near proposals | grep {self.getPoolId()}").value()
