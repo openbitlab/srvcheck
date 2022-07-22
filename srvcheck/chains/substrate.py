@@ -140,7 +140,7 @@ class TaskBlockProductionReport(Task):
 				if orb is None:
 					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoLeader}\n{report}')
 				else:
-					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.NoLeader}\n{report}')
+					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Leader}\n{report}')
 			else:
 				return self.notify(report)
 		return False
