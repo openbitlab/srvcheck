@@ -50,11 +50,8 @@ class TaskNearChunksMissed (Task):
 
 
 class TaskCheckProposal (Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = None, notifyEvery = None):
-		checkEvery = seconds(chain.EPOCHTIME)
-		print(chain.EPOCHTIME)
-		notifyEvery = seconds(chain.EPOCHTIME/2)
-		super().__init__("TaskCheckProposal", conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, conf, notification, system, chain):
+		super().__init__("TaskCheckProposal", conf, notification, system, chain, checkEvery=seconds(chain.EPOCHTIME), notifyEvery=seconds(chain.EPOCHTIME/2))
 		self.prev_epoch = None
 	
 	@staticmethod
@@ -73,7 +70,7 @@ class TaskCheckProposal (Task):
 				return self.notify(f'proposal has been rejected {Emoji.LowBal}')
 		return False   
 
-	
+
 class Near (Chain):
 	TYPE = "near"
 	NAME = ""
