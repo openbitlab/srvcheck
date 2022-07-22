@@ -48,7 +48,7 @@ class TaskNearChunksMissed (Task):
 			return False
 		return False
 
-
+"""
 class TaskCheckProposal (Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = None, notifyEvery = None):
 		super().__init__("TaskCheckProposal", conf, notification, system, chain, checkEvery=seconds(chain.EPOCHTIME), notifyEvery=seconds(chain.EPOCHTIME/2))
@@ -69,7 +69,7 @@ class TaskCheckProposal (Task):
 			elif "Declined" in p:
 				return self.notify(f'proposal has been rejected {Emoji.LowBal}')
 		return False   
-
+"""
 
 class Near (Chain):
 	TYPE = "near"
@@ -77,7 +77,7 @@ class Near (Chain):
 	BLOCKTIME = 1.5
 	EP = "http://localhost:3030/"
 	EPOCHTIME = ""
-	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal]
+	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed]
 
 	@staticmethod
 	def detect(conf):
