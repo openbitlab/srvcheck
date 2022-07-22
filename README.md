@@ -39,6 +39,7 @@ Solana specific tasks:
 Aptos specific tasks:
 - TaskAptosHealthError
 - TaskAptosValidatorProposalCheck
+- TaskAptosCurrentConsensusStuck
 
 Tendermint specific tasks
 - TaskTendermintBlockMissed
