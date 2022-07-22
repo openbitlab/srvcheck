@@ -1,17 +1,19 @@
 import requests
 import srvcheck
+from packaging import version
 from . import Task, minutes, hours
 from ..utils import Bash
 
 def versionCompare(v1, v2):
-	v1 = v1.split('.')
-	v2 = v2.split('.')
-	for i in range(min(len(v1), len(v2))):
-		if int(v1[i]) > int(v2[i]):
-			return 1
-		elif int(v1[i]) < int(v2[i]):
-			return -1
-	return 0
+	v1 = version.parse(v1)
+	v2 = version.parse(v2)
+
+	if v1 < v2:
+		return -1
+	elif v1 > v2:
+		return 1
+	else:
+		return 0
 
 class TaskAutoUpdater(Task):
 	def __init__(self, conf, notification, system, chain):

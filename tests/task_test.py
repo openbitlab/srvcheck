@@ -126,6 +126,8 @@ class TestTaskNewRelease(unittest.TestCase):
 		self.assertEqual(versionCompare('v1.0.0', 'v1.0.0'), 0)
 		self.assertEqual(versionCompare('v1.0.0', 'v1.0.1'), -1)
 		self.assertEqual(versionCompare('v1.2.0', 'v1.0.1'), 1)
+		self.assertEqual(versionCompare('v1.1.0-rc.2', 'v1.1.0-rc.3'), -1)
+		self.assertEqual(versionCompare('v1.1.0', 'v1.1.0-rc.3'), 1)
 
 	def test_noalert(self):
 		c, n, t, s = buildTaskEnv(TaskNewRelease)
