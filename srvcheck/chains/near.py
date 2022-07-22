@@ -80,9 +80,9 @@ class Near (Chain):
 	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal]
 
 	def __init__(self, conf):
-		super.__init__(conf)
+		super().__init__(conf)
 		Near.EPOCHTIME = rpcCall(Near.EP, "EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * Near.BLOCKTIME
-		
+
 	@staticmethod
 	def detect(conf):
 		try:
