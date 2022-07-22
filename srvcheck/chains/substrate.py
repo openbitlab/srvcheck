@@ -138,9 +138,9 @@ class TaskBlockProductionReport(Task):
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 			elif orb != '0x0':
 				if orb is None:
-					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoLeader}\n{report}')
+					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoLeader}{Emoji.Orbiter}\n{report}')
 				else:
-					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Leader}\n{report}')
+					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Leader}{Emoji.Orbiter}\n{report}')
 			else:
 				return self.notify(report)
 		return False
