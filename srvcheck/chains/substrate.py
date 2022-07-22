@@ -118,7 +118,7 @@ class TaskBlockProductionReport(Task):
 				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
-					collator = orb if orb != '0x0' else self.conf.getOrDefault('chain.collatorAddress')
+					collator = orb if orb != '0x0' and orb is not None else self.conf.getOrDefault('chain.collatorAddress')
 					if a.lower() == collator.lower():
 						self.oc += 1
 					self.lastBlockChecked = b
@@ -257,7 +257,7 @@ class Substrate (Chain):
 			except StorageFunctionNotFound:
 				# Check collator on Moonbase/Moonriver, Mangata
 				c = self.moonbeamAssignedOrbiter()
-				if c != '0x0':
+				if c != '0x0' and c is not None:
 					collator = c
 				result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
 				for c in result.value:
