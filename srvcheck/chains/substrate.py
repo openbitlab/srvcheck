@@ -22,7 +22,7 @@ class TaskSubstrateNewReferenda(Task):
 		si = self.chain.getSubstrateInterface()
 		result = si.query(
 			module='Referenda',
-			storage_function='referendumCount',
+			storage_function='ReferendumCount',
 			params=[]
 		)
 
@@ -59,7 +59,7 @@ class Substrate (Chain):
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck] #[TaskSubstrateNewReferenda]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda]
 
 	def __init__(self, conf):
 		super().__init__(conf)
