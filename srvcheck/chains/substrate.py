@@ -100,6 +100,7 @@ class TaskBlockProductionReport(Task):
 			self.prev = session
 
 		block = 0
+		orb = self.chain.moonbeamAssignedOrbiter()
 		if self.chain.isCollating():
 			block = self.chain.latestBlockProduced()
 			if block > 0:
@@ -117,7 +118,8 @@ class TaskBlockProductionReport(Task):
 				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
-					if a.lower() == self.conf.getOrDefault('chain.collatorAddress').lower():
+					collator = orb if orb != '0x0' else self.conf.getOrDefault('chain.collatorAddress')
+					if a.lower() == collator.lower():
 						self.oc += 1
 					self.lastBlockChecked = b
 					self.totalBlockChecked += 1
@@ -134,6 +136,11 @@ class TaskBlockProductionReport(Task):
 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
 			elif block != -1:
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
+			elif orb != '0x0':
+				if orb is None:
+					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoLeader}\n{report}')
+				else:
+					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.NoLeader}\n{report}')
 			else:
 				return self.notify(report)
 		return False
@@ -249,6 +256,9 @@ class Substrate (Chain):
 						return True
 			except StorageFunctionNotFound:
 				# Check collator on Moonbase/Moonriver, Mangata
+				c = self.moonbeamAssignedOrbiter()
+				if c != '0x0':
+					collator = c
 				result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
 				for c in result.value:
 					if c.lower() == collator.lower():
@@ -281,6 +291,17 @@ class Substrate (Chain):
 		except:
 			# Check block author Mangata
 			return self.checkAuthoredBlock(block)
+
+	def moonbeamAssignedOrbiter(self):
+		collator = self.conf.getOrDefault('chain.collatorAddress')
+		if collator:
+			try:
+				si = self.getSubstrateInterface()
+				result = si.query(module='MoonbeamOrbiters', storage_function='AccountLookupOverride', params=[collator])
+				return result.value
+			except StorageFunctionNotFound:
+				return "0x0"
+		return "0x0"
 
 	def getSeals(self, block):
 		seals = Bash("grep -Eo 'Pre-sealed block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
