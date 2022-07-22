@@ -81,7 +81,7 @@ class Near (Chain):
 
 	def __init__(self, conf):
 		super().__init__(conf)
-		self.EPOCHTIME = int(super().rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"]) * Near.BLOCKTIME
+		self.EPOCHTIME = int(super().rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"]) * self.BLOCKTIME
 
 	@staticmethod
 	def detect(conf):
