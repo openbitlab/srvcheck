@@ -52,6 +52,7 @@ class TaskNearChunksMissed (Task):
 class TaskCheckProposal (Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = None, notifyEvery = None):
 		checkEvery = seconds(chain.EPOCHTIME)
+		print(chain.EPOCHTIME)
 		notifyEvery = seconds(chain.EPOCHTIME/2)
 		super().__init__("TaskCheckProposal", conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev_epoch = None
