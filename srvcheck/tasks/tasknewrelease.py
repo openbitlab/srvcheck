@@ -5,8 +5,8 @@ from . import Task, minutes, hours
 
 
 def versionCompare(current, latest):
-	c_ver = version.parse(current)
-	l_ver = version.parse(latest)
+	c_ver = version.parse(current.split('-')[0])
+	l_ver = version.parse(latest.split('-')[0])
 
 	if c_ver < l_ver:
 		return -1
