@@ -254,6 +254,10 @@ class Substrate (Chain):
 				for c in result.value:
 					if c['who'].lower() == f'{collator}'.lower():
 						return True
+				result = si.query(module='CollatorSelection', storage_function='Invulnerables', params=[])
+				for c in result.value:
+					if c.lower() == f'{collator}'.lower():
+						return True
 			except StorageFunctionNotFound:
 				# Check collator on Moonbase/Moonriver, Mangata
 				c = self.moonbeamAssignedOrbiter()
