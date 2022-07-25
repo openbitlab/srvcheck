@@ -58,7 +58,7 @@ class TaskRelayChainStuck(Task):
 		return False
 
 class TaskBlockProductionCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=minutes(10)):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(20), notifyEvery=minutes(20)):
 		super().__init__('TaskBlockProductionCheck',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
@@ -74,7 +74,7 @@ class TaskBlockProductionCheck(Task):
 				if self.prev is None:
 					self.prev = block
 				elif self.prev == block:
-					return self.notify(f'no block produced in the latest 10 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
+					return self.notify(f'no block produced in the latest 20 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
 				self.prev = block
 		return False
 
