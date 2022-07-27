@@ -68,7 +68,32 @@ class TaskCheckProposal (Task):
 				return self.notify(f'failed to send proposal {Emoji.Health}')
 			elif "Declined" in p:
 				return self.notify(f'proposal has been rejected {Emoji.LowBal}')
-		return False   
+		return False
+
+
+class TaskCheckKicked (Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1)):
+		super().__init__("TaskCheckKicked", conf, notification, system, chain, checkEvery=checkEvery, notifyEvery=seconds(chain.EPOCHTIME/3))
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return True
+
+	def run(self):
+		kicked_set = self.chain.getKickedout()
+		pool_id = self.chain.getPoolId()
+		for v in kicked_set:
+			if v["account_id"] == pool_id:
+				reason = v["reason"]
+				if "NotEnoughChunks" in reason:
+					produced = reason["NotEnoughChunks"]["produced"]
+					expected = reason["NotEnoughChunks"]["expected"]
+					return self.notify(f'kicked out for not producing enough chunks, produced only {produced} / {expected} chunks {Emoji.BlockMiss}')
+				else:
+					produced = reason["NotEnoughBlocks"]["produced"]
+					expected = reason["NotEnoughBlocks"]["expected"]
+					return self.notify(f'kicked out for not producing enough blocks, produced only {produced} / {expected} chunks {Emoji.BlockMiss}')
+		return False
 
 
 class Near (Chain):
@@ -77,7 +102,7 @@ class Near (Chain):
 	BLOCKTIME = 1.5
 	EP = "http://localhost:3030/"
 	EPOCHTIME = ""
-	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal]
+	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal, TaskCheckKicked]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -118,3 +143,6 @@ class Near (Chain):
 
 	def getProposal(self):
 		return Bash(f"near proposals | grep {self.getPoolId()}").value()
+
+	def getKickedout(self):
+		return self.rpcCall('validators')['prev_epoch_kickout']
