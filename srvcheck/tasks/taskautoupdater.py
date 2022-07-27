@@ -5,8 +5,8 @@ from . import Task, minutes, hours
 from ..utils import Bash
 
 def versionCompare(v1, v2):
-	v1 = version.parse(current)
-	v2 = version.parse(latest)
+	v1 = version.parse(v1.split('-')[0]) if isinstance(version.parse(v1), version.LegacyVersion) is True else version.parse(v1)
+	v2 = version.parse(v2.split('-')[0]) if isinstance(version.parse(v2), version.LegacyVersion) is True else version.parse(v2)
 
 	if v1 < v2:
 		return -1

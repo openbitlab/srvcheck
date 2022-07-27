@@ -1,3 +1,5 @@
+import urllib.parse
+
 class NotificationProvider:
 	LOG_LEVEL = 0
 
@@ -18,10 +20,10 @@ class NotificationProvider:
 		self.notifies.append(s)
 
 	def format(self, name, string):
-		return name + ' ' + string
+		return urllib.parse.quote('#' + name + ' ' + string)
 
 	def flush(self):
 		if len(self.notifies) > 0:
 			st = '\n'.join(self.notifies)
-			self.send(st)
+			self.send(self.format(st, ""))
 			self.notifies = []

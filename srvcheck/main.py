@@ -3,6 +3,7 @@ import sys
 import time
 import configparser
 import traceback
+import argparse
 from functools import reduce
 import srvcheck
 
@@ -47,6 +48,10 @@ def defaultConf():
 
 def main():
 	cf = '/etc/srvcheck.conf'
+	parser = argparse.ArgumentParser(description='Srvcheck helps you to monitor blockchain nodes.')
+	parser.add_argument('--config', type=str, default=cf, help='srvcheck config file')
+	args = parser.parse_args()
+	cf = args.config
 
 	# Parse configuration
 	confRaw = configparser.ConfigParser()
