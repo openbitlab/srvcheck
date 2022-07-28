@@ -80,6 +80,7 @@ class MockChainTendermint(MockChain):
 
 
 class MockChainNear(MockChain):
+    EPOCHTIME = 10000
     kicked_set = [{
         "account_id": "yuriinear.factory.shardnet.near",
         "reason": {
