@@ -89,10 +89,21 @@ class TaskCheckKicked (Task):
 					produced = reason["NotEnoughChunks"]["produced"]
 					expected = reason["NotEnoughChunks"]["expected"]
 					return self.notify(f'kicked out for not producing enough chunks, produced only {produced} / {expected} chunks {Emoji.BlockMiss}')
-				else:
+				elif "NotEnoughBlocks" in reason:
 					produced = reason["NotEnoughBlocks"]["produced"]
 					expected = reason["NotEnoughBlocks"]["expected"]
 					return self.notify(f'kicked out for not producing enough blocks, produced only {produced} / {expected} chunks {Emoji.BlockMiss}')
+				elif "NotEnoughStake" in reason:
+					stake = int(reason["NotEnoughStake"]["stake_u128"][:-24])
+					threshold = int(reason["NotEnoughStake"]["threshold_u128"][:-24])
+					missing = threshold - stake
+					return self.notify(f'kicked out, missing {missing} Near to stake threshold  {Emoji.LowBal}')
+				elif "Slashed" in reason:
+					return self.notify(f'kicked out: slashed  {Emoji.Health}')
+				elif "Unstaked" in reason:
+					return self.notify(f'kicked out: unstaked {Emoji.ActStake}')
+				elif "DidNotGetASeat" in reason:
+					return self.notify(f'kicked out: sufficient stake but failed to get a seat {Emoji.Health}')
 		return False
 
 
