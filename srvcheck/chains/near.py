@@ -97,7 +97,7 @@ class TaskCheckKicked (Task):
 					stake = int(reason["NotEnoughStake"]["stake_u128"][:-24])
 					threshold = int(reason["NotEnoughStake"]["threshold_u128"][:-24])
 					missing = threshold - stake
-					return self.notify(f'kicked out, missing {missing} Near to stake threshold  {Emoji.LowBal}')
+					return self.notify(f'kicked out, missing {missing} Near to stake threshold {Emoji.LowBal}')
 				elif "Slashed" in reason:
 					return self.notify(f'kicked out: slashed  {Emoji.Health}')
 				elif "Unstaked" in reason:
