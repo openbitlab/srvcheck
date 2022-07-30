@@ -92,7 +92,7 @@ class TaskCheckKicked (Task):
 				elif "NotEnoughBlocks" in reason:
 					produced = reason["NotEnoughBlocks"]["produced"]
 					expected = reason["NotEnoughBlocks"]["expected"]
-					return self.notify(f'kicked out for not producing enough blocks, produced only {produced} / {expected} chunks {Emoji.BlockMiss}')
+					return self.notify(f'kicked out for not producing enough blocks, produced only {produced} / {expected} blocks {Emoji.BlockMiss}')
 				elif "NotEnoughStake" in reason:
 					stake = int(reason["NotEnoughStake"]["stake_u128"][:-24])
 					threshold = int(reason["NotEnoughStake"]["threshold_u128"][:-24])
