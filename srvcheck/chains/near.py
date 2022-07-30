@@ -143,7 +143,7 @@ class Near (Chain):
 		return self.rpcCall('status')['validator_account_id']
 
 	def getProductionReport(self):
-		validators = self.rpcCall('validators', {None})['current_validators']
+		validators = self.rpcCall('validators', [None])['current_validators']
 		for v in validators:
 			if v['account_id'] == self.getPoolId():
 				return v
@@ -156,4 +156,4 @@ class Near (Chain):
 		return Bash(f"near proposals | grep {self.getPoolId()}").value()
 
 	def getKickedout(self):
-		return self.rpcCall('validators', {None})['prev_epoch_kickout']
+		return self.rpcCall('validators', [None])['prev_epoch_kickout']
