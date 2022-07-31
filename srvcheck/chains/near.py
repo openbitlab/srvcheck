@@ -1,13 +1,10 @@
-import json
-from typing import Literal
 from ..notification import Emoji
 from .chain import Chain, rpcCall
 from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
 
-
-class TaskNearBlockMissed (Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(2), notifyEvery=minutes(5)):
+class TaskNearBlockMissed(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(6)):
 		super().__init__("TaskNearBlockMissed", conf, notification, system, chain, checkEvery, notifyEvery)
 		self.THRESHOLD_RATIO = 0.5
 
@@ -26,9 +23,8 @@ class TaskNearBlockMissed (Task):
 			return False
 		return False
 
-
-class TaskNearChunksMissed (Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(3)):
+class TaskNearChunksMissed(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(6)):
 		super().__init__("TaskNearChunksMissed", conf, notification, system, chain, checkEvery, notifyEvery)
 
 		self.THRESHOLD_RATIO = 0.6
@@ -48,12 +44,11 @@ class TaskNearChunksMissed (Task):
 			return False
 		return False
 
-
-class TaskCheckProposal (Task):
+class TaskCheckProposal(Task):
 	def __init__(self, conf, notification, system, chain):
 		super().__init__("TaskCheckProposal", conf, notification, system, chain, checkEvery=seconds(chain.EPOCHTIME), notifyEvery=seconds(chain.EPOCHTIME/2))
 		self.prev_epoch = None
-	
+
 	@staticmethod
 	def isPuggable(conf, chain):
 		return True
@@ -68,8 +63,7 @@ class TaskCheckProposal (Task):
 				return self.notify(f'failed to send proposal {Emoji.Health}')
 			elif "Declined" in p:
 				return self.notify(f'proposal has been rejected {Emoji.LowBal}')
-		return False   
-
+		return False
 
 class Near (Chain):
 	TYPE = "near"
@@ -92,7 +86,7 @@ class Near (Chain):
 		return int(self.rpcCall("network_info")["num_active_peers"])
 
 	def getHeight(self):
-		return int(self.rpcCall("block", { "finality": "final" })['header']['height'])
+		return int(self.rpcCall('status')['sync_info']['latest_block_height'])
 
 	def isSynching(self):
 		return self.rpcCall('status')['sync_info']['syncing']
