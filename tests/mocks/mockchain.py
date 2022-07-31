@@ -110,6 +110,7 @@ class MockChainNear(MockChain):
         }
     ]
     pool_id = "openbitlab.factory.shardnet.near"
+    epoch = 12
 
     def getKickedout(self):
         return self.kicked_set
@@ -117,6 +118,8 @@ class MockChainNear(MockChain):
     def getPoolId(self):
         return self.pool_id
 
+    def getEpoch(self):
+        return self.epoch
 
 class MockChainNoBlockHash(MockChain):
     def getBlockHash(self):
