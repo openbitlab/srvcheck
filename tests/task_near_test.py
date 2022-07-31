@@ -1,4 +1,5 @@
 import unittest
+import urllib.parse
 
 from srvcheck.notification.notification import Emoji
 from srvcheck.chains.near import TaskCheckKicked
@@ -43,7 +44,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'kicked out for not producing enough chunks, produced only 0 / 1 chunks ' + Emoji.BlockMiss)
+        self.assertEqual(n.events[0], urllib.parse.quote('#kicked out for not producing enough chunks, produced only 0 / 1 chunks ' + Emoji.BlockMiss + ' '))
 
     def test_blocks(self):
         c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
@@ -81,7 +82,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'kicked out for not producing enough blocks, produced only 0 / 1 chunks ' + Emoji.BlockMiss)
+        self.assertEqual(n.events[0], urllib.parse.quote('#kicked out for not producing enough blocks, produced only 0 / 1 chunks ' + Emoji.BlockMiss + ' '))
 
     def test_notenoughstake(self):
         c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
@@ -119,7 +120,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], 'kicked out, missing 17 Near to stake threshold ' + Emoji.LowBal)
+        self.assertEqual(n.events[0], urllib.parse.quote('#kicked out, missing 17 Near to stake threshold ' + Emoji.LowBal + ' '))
 
     def test_no_kick(self):
         c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
