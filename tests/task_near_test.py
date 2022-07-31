@@ -37,6 +37,7 @@ class TestTaskNearKickedout(unittest.TestCase):
                 }
             }
         ]
+        c.epoch = 18
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
@@ -72,6 +73,7 @@ class TestTaskNearKickedout(unittest.TestCase):
                 }
             }
         ]
+        c.epoch = 21
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
@@ -107,6 +109,7 @@ class TestTaskNearKickedout(unittest.TestCase):
                 }
             }
         ]
+        c.epoch = 30
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
