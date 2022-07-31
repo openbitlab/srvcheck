@@ -50,7 +50,7 @@ class TaskCheckProposal(Task):
 		self.prev_epoch = None
 
 	@staticmethod
-	def isPuggable(conf, chain):
+	def isPluggable(conf, chain):
 		return True
 
 	def run(self):
@@ -65,19 +65,62 @@ class TaskCheckProposal(Task):
 				return self.notify(f'proposal has been rejected {Emoji.LowBal}')
 		return False
 
+class TaskCheckKicked (Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1)):
+		super().__init__("TaskCheckKicked", conf, notification, system, chain, checkEvery=checkEvery, notifyEvery=seconds(chain.EPOCHTIME/3))
+		self.prev_epoch = None
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return True
+
+	def run(self):
+		kicked_set = self.chain.getKickedout()
+		pool_id = self.chain.getPoolId()
+		if self.prev_epoch is None:
+			self.prev_epoch = self.chain.getEpoch()
+		elif self.prev_epoch != self.chain.getEpoch():
+			self.prev_epoch = self.chain.getEpoch()
+			for v in kicked_set:
+				if v["account_id"] == pool_id:
+					reason = v["reason"]
+					if "NotEnoughChunks" in reason:
+						produced = reason["NotEnoughChunks"]["produced"]
+						expected = reason["NotEnoughChunks"]["expected"]
+						return self.notify(f'kicked out for not producing enough chunks, produced only {produced} / {expected} chunks {Emoji.BlockMiss}')
+					elif "NotEnoughBlocks" in reason:
+						produced = reason["NotEnoughBlocks"]["produced"]
+						expected = reason["NotEnoughBlocks"]["expected"]
+						return self.notify(f'kicked out for not producing enough blocks, produced only {produced} / {expected} blocks {Emoji.BlockMiss}')
+					elif "NotEnoughStake" in reason:
+						stake = int(reason["NotEnoughStake"]["stake_u128"][:-24])
+						threshold = int(reason["NotEnoughStake"]["threshold_u128"][:-24])
+						missing = threshold - stake
+						return self.notify(f'kicked out, missing {missing} Near to stake threshold {Emoji.LowBal}')
+					elif "Slashed" in reason:
+						return self.notify(f'kicked out: slashed  {Emoji.Health}')
+					elif "Unstaked" in reason:
+						return self.notify(f'kicked out: unstaked {Emoji.ActStake}')
+					elif "DidNotGetASeat" in reason:
+						return self.notify(f'kicked out: sufficient stake but failed to get a seat {Emoji.Health}')
+		return False
+
 class Near (Chain):
 	TYPE = "near"
 	NAME = ""
 	BLOCKTIME = 1.5
 	EP = "http://localhost:3030/"
 	EPOCHTIME = ""
-	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal]
+	CUSTOM_TASKS = [TaskNearBlockMissed, TaskNearChunksMissed, TaskCheckProposal, TaskCheckKicked]
+
+	def __init__(self, conf):
+		super().__init__(conf)
+		self.EPOCHTIME = int(super().rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"]) * self.BLOCKTIME
 
 	@staticmethod
 	def detect(conf):
 		try:
 			Near(conf).getVersion()
-			Near.EPOCHTIME = rpcCall(Near.EP, "EXPERIMENTAL_protocol_config", {"finality": "final"})["epoch_length"] * Near.BLOCKTIME
 			return True
 		except:
 			return False
@@ -98,14 +141,17 @@ class Near (Chain):
 		return self.rpcCall('status')['validator_account_id']
 
 	def getProductionReport(self):
-		validators = self.rpcCall('validators')['current_validators']
+		validators = self.rpcCall('validators', [None])['current_validators']
 		for v in validators:
 			if v['account_id'] == self.getPoolId():
 				return v
 		raise Exception('Node is not in the current validators!')
 
 	def getEpoch(self):
-		return int(self.rpcCall("block", { "finality": "final" })['header']['epoch_id'])
+		return self.rpcCall("block", { "finality": "final" })['header']['epoch_id']
 
 	def getProposal(self):
 		return Bash(f"near proposals | grep {self.getPoolId()}").value()
+
+	def getKickedout(self):
+		return self.rpcCall('validators', [None])['prev_epoch_kickout']
