@@ -20,11 +20,13 @@ def getCall(url, data):
 class Chain:
 	NAME = ""
 	BLOCKTIME = 10
+	EP = ""
 
 	def __init__(self, conf):
 		self.conf = conf
-		ConfSet.setDefaultValue('chain.endpoint', self.EP)
-		ConfSet.setDefaultValue('chain.name', self.NAME)
+		if self.conf.getOrDefault('chain.endpoint') is not None:
+			self.EP = self.conf.getOrDefault('chain.endpoint')
+		self.NAME = self.conf.getOrDefault('chain.name')
 
 	def rpcCall(self, method, params=[]):
 		""" Calls the RPC method with the given parameters """

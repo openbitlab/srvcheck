@@ -1,4 +1,5 @@
 import unittest
+import urllib.parse
 
 from srvcheck.notification.notification import Emoji
 from srvcheck.chains.tendermint import TaskTendermintHealthError, TaskTendermintNewProposal
@@ -20,7 +21,7 @@ class TestTaskTendermintHealthError(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'health error! 🚨')
+		self.assertEqual(n.events[0], urllib.parse.quote('#health error! 🚨 '))
 
 class TestTaskTendermintNewProposal(unittest.TestCase):
 	def test_noalert(self):
@@ -30,7 +31,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
 		n.flush()
 		print(n.events)
 		self.assertEqual(len(n.events), 0)
-	
+
 	def test_alert(self):
 		c, n, t, s = buildTaskEnv(TaskTendermintNewProposal, MockChainTendermint)
 		t.prev = {"id":"2","content":{"@type":"/ibc.core.client.v1.ClientUpdateProposal","title":"upgrade client","description":"upgrade light client","subject_client_id":"07-tendermint-0","substitute_client_id":"07-tendermint-2"},
@@ -39,5 +40,4 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], 'got new proposal: Increase Signed Blocks Window Parameter to 2880 '+ Emoji.Proposal)
-
+		self.assertEqual(n.events[0], urllib.parse.quote('#got new proposal: Increase Signed Blocks Window Parameter to 2880 '+ Emoji.Proposal + ' '))

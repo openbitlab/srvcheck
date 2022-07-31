@@ -50,6 +50,8 @@ Tendermint specific tasks
 
 Substrate specific tasks:
 - TaskSubstrateNewReferenda
+- TaskBlockProductionCheck
+- TaskBlockProductionReport
 
 Near specific tasks:
 - TaskNearBlockMissed
@@ -72,9 +74,11 @@ install --help
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+ -c  --collator <address> enable checks on block production and collation (parachain)
      --git <git_api> git api to query the latest realease version installed
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+     --mount <mount_point> mount point where the node is installed
  -n  --name <name> monitor name [default is the server hostname]
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
@@ -116,6 +120,10 @@ blockWindow =
 ghRepository = 
 ; software version
 localVersion = 
+; parachain collator address
+collatorAddress = 
+; mount point
+mountPoint = 
 
 ; task specific settings
 [tasks]

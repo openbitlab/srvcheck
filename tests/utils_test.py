@@ -1,7 +1,7 @@
 import unittest
+import configparser
 from srvcheck.utils import Bash, System, ConfSet
 from srvcheck.utils.confset import ConfItem
-import configparser
 
 class TestUtilsBash(unittest.TestCase):
 	def test_echo(self):
@@ -14,7 +14,22 @@ class TestUtilsSystem(unittest.TestCase):
 		# self.assertEqual(System().getIP().count('.'), 3)
 
 	def test_getUsage(self):
-		us = System({}).getUsage()
+		C = {
+			'chain': {
+				'name': 'test',
+				'endpoint': 'http://localhost:8080',
+				'blockTime': 10,
+				'mountPoint': '/'
+			}
+		}
+
+		confRawUsage = configparser.ConfigParser()
+		confRawUsage.optionxform=str
+		confRawUsage.read_dict(C)
+
+		confUsage = ConfSet(confRawUsage)
+		ConfSet.addItem(ConfItem('chain.mountPoint', '/', str))
+		us = System(confUsage).getUsage()
 		self.assertNotEqual(us.uptime, '')
 		self.assertNotEqual(us.diskSize, 0)
 		self.assertNotEqual(us.diskUsed, 0)
@@ -47,7 +62,7 @@ class TestUtilConfSet(unittest.TestCase):
 	ConfSet.addItem(ConfItem('chain.endpoint', None, str))
 	ConfSet.addItem(ConfItem('chain.blockTime', None, int))
 	ConfSet.addItem(ConfItem('chain.service', None, str))
-	
+
 	def test_getFromConfExistingString(self):
 		self.assertEqual(self.conf.getOrDefault('chain.endpoint'), 'http://localhost:8080')
 

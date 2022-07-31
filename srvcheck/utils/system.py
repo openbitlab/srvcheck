@@ -1,4 +1,7 @@
 from .bash import Bash
+from .confset import ConfItem, ConfSet
+
+ConfSet.addItem(ConfItem('chain.mountPoint', defaultValue="/", description='Mount point'))
 
 def toGB(size):
 	return size / 1024 / 1024
@@ -44,15 +47,16 @@ class System:
 	def getUsage(self):
 		""" Returns an usage object """
 		u = SystemUsage()
+		mp =  self.conf.getOrDefault('chain.mountPoint')
 		u.uptime = Bash('uptime').value().split('up ')[1].split(',')[0]
-		u.diskSize = int(Bash('df /').value().split('\n')[1].split()[1])
-		u.diskUsed = int(Bash('df /').value().split('\n')[1].split()[2])
-		u.diskPercentageUsed = float(Bash('df /').value().split('\n')[1].split()[4].replace('%', ''))
+		u.diskSize = int(Bash(f'df {mp}').value().split('\n')[1].split()[1])
+		u.diskUsed = int(Bash(f'df {mp}').value().split('\n')[1].split()[2])
+		u.diskPercentageUsed = float(Bash(f'df {mp}').value().split('\n')[1].split()[4].replace('%', ''))
 		u.diskUsedByLog = int(Bash('du /var/log').value().rsplit('\n', 1)[-1].split()[0])
 
 		u.ramSize = int(Bash('free').value().split('\n')[1].split()[1])
 		u.ramUsed = int(Bash('free').value().split('\n')[1].split()[2])
 		u.ramFree = int(Bash('free').value().split('\n')[1].split()[4])
 
-		u.cpuUsage = float(Bash('top -b -n 1 | grep Cpu').value().split()[1])
+		u.cpuUsage = float(Bash('top -b -n 1 | grep Cpu').value().split()[1].replace(',', '.'))
 		return u
