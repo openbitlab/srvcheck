@@ -9,6 +9,8 @@ from .task_test import buildTaskEnv
 class TestTaskNearKickedout(unittest.TestCase):
     def test_chunk(self):
         c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c.epoch = 18
+        t.run()
         c.kicked_set = [{
             "account_id": "openbitlab.factory.shardnet.near",
             "reason": {
@@ -37,7 +39,7 @@ class TestTaskNearKickedout(unittest.TestCase):
                 }
             }
         ]
-        c.epoch = 18
+        c.epoch = 21
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
@@ -45,6 +47,8 @@ class TestTaskNearKickedout(unittest.TestCase):
 
     def test_blocks(self):
         c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c.epoch = 18
+        t.run()
         c.kicked_set = [{
             "account_id": "openbitlab.factory.shardnet.near",
             "reason": {
@@ -81,6 +85,8 @@ class TestTaskNearKickedout(unittest.TestCase):
 
     def test_notenoughstake(self):
         c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c.epoch = 21
+        t.run()
         c.kicked_set = [{
             "account_id": "openbitlab.factory.shardnet.near",
             "reason": {
