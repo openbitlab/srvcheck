@@ -82,7 +82,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], urllib.parse.quote('#kicked out for not producing enough blocks, produced only 0 / 1 chunks ' + Emoji.BlockMiss + ' '))
+        self.assertEqual(n.events[0], urllib.parse.quote('#kicked out for not producing enough blocks, produced only 0 / 1 blocks ' + Emoji.BlockMiss + ' '))
 
     def test_notenoughstake(self):
         c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
