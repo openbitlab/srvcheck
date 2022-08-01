@@ -14,7 +14,7 @@ def elapsedToString(since):
 
 class TaskChainStuck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskChainStuck', conf, notification, system, chain, chain.BLOCKTIME * 2, minutes(5))
+		super().__init__('TaskChainStuck', conf, notification, system, chain, minutes(5), minutes(5))
 		self.prev = None
 		self.since = None
 		self.oc = 0

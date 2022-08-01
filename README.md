@@ -11,6 +11,7 @@ It supports these ecosystems:
 - Tezos
 - Solana
 - Aptos
+- Near
 
 It supports these notification outputs:
 - stdout
@@ -51,6 +52,11 @@ Substrate specific tasks:
 - TaskSubstrateNewReferenda
 - TaskBlockProductionCheck
 - TaskBlockProductionReport
+
+Near specific tasks:
+- TaskNearBlockMissed
+- TaskNearChunksMissed
+- TaskCheckProposal
 
 We suggest adding the binary of the node to the PATH in order to benefit from all the monitor features' 
 
