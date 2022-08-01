@@ -26,7 +26,9 @@ class Emoji:
 	ActStake    = "\U0001F37B"
 	Leader      = "\U0001F7E2"
 	NoLeader    = "\U0001F534"
-	BlockProd   = "\U0001F528"
+	Orbiter     = "\U0001F6F8"
+	NoOrbiter   = "\U00002B55"
+	BlockProd   = "\U000026CF"
 	Slow	    = "\U0001f40c"
 	Unreachable = "\U0001f50c"
 
