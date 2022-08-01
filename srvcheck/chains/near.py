@@ -6,7 +6,7 @@ from ..utils import Bash
 class TaskNearBlockMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(6)):
 		super().__init__("TaskNearBlockMissed", conf, notification, system, chain, checkEvery, notifyEvery)
-		self.THRESHOLD_RATIO = 0.5
+		self.THRESHOLD_RATIO = self.chain.getKickOutThresholds()[0]
 
 	@staticmethod
 	def isPluggable(conf, chain):
@@ -27,7 +27,7 @@ class TaskNearChunksMissed(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(6)):
 		super().__init__("TaskNearChunksMissed", conf, notification, system, chain, checkEvery, notifyEvery)
 
-		self.THRESHOLD_RATIO = 0.6
+		self.THRESHOLD_RATIO = self.chain.getKickOutThresholds()[1]
 
 	@staticmethod
 	def isPluggable(conf, chain):
@@ -155,3 +155,8 @@ class Near (Chain):
 
 	def getKickedout(self):
 		return self.rpcCall('validators', [None])['prev_epoch_kickout']
+
+	def getKickOutThresholds(self):
+		block = int(self.rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["block_producer_kickout_threshold"])/100
+		chunk = int(self.rpcCall("EXPERIMENTAL_protocol_config", {"finality": "final"})["chunk_producer_kickout_threshold"])/100
+		return block, chunk
