@@ -1,4 +1,5 @@
 import re
+import argparse
 from packaging import version
 from ..notification import Emoji
 from . import Task, minutes, hours
@@ -20,7 +21,11 @@ class TaskNewRelease(Task):
 	def __init__(self, conf, notification, system, chain):
 		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(15), hours(2))
 		self.conf = conf
-		self.config_file = "/etc/srvcheck.conf"
+		parser = argparse.ArgumentParser(description='Srvcheck helps you to monitor blockchain nodes.')
+		self.cf = "/etc/srvcheck.conf"
+		parser.add_argument('--config', type=str, default=self.cf, help='srvcheck config file')
+		args = parser.parse_args()
+		self.cf = args.config
 
 	@staticmethod
 	def isPluggable(conf, chain):
@@ -39,10 +44,10 @@ class TaskNewRelease(Task):
 			return self.notify(output)
 
 		if self.conf.getOrDefault('chain.localVersion') is None:
-			return Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current.split("-")[0]}/" {self.config_file}').value()
+			return Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current.split("-")[0]}/" {self.cf}').value()
 
 		if versionCompare(current, self.conf.getOrDefault('chain.localVersion')) > 0:
-			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.config_file}').value()
+			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}').value()
 			return self.notify(f'is now running latest version: {current.split("-")[0]}')
 		
 		return False
