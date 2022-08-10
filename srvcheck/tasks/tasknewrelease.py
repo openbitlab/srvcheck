@@ -1,6 +1,5 @@
 import re
 from packaging import version
-from srvcheck.main import main
 from ..notification import Emoji
 from . import Task, minutes, hours
 from ..utils import Bash
