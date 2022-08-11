@@ -44,7 +44,7 @@ class TaskNewRelease(Task):
 			return self.notify(output)
 
 		if self.conf.getOrDefault('chain.localVersion') is None:
-			return Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current.split("-")[0]}/" {self.cf}').value()
+			return Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}').value()
 
 		if versionCompare(current, self.conf.getOrDefault('chain.localVersion')) > 0:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}').value()
