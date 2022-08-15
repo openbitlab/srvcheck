@@ -74,7 +74,6 @@ class TaskTendermintNewProposal(Task):
 				self.notify(f'got new proposal: {self.getProposalTitle(nProposal[c])} {Emoji.Proposal}')
 				c -= 1
 			self.prev = nProposal
-			self.notification.flush()
 			return True
 		elif "proposal_id" in self.prev and self.prev[0]["proposal_id"] < nProposal[0]["proposal_id"]:
 			c = nProposal[0]["proposal_id"] - self.prev[0]["proposal_id"]
@@ -82,7 +81,6 @@ class TaskTendermintNewProposal(Task):
 				self.notify(f'got new proposal: {self.getProposalTitle(nProposal[c])} {Emoji.Proposal}')
 				c -= 1
 			self.prev = nProposal
-			self.notification.flush()
 			return True
 		return False
 
