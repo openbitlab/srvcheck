@@ -68,16 +68,16 @@ class TaskTendermintNewProposal(Task):
 			self.prev = nProposal
 			if len(self.prev) > 0:
 				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal[0])} {Emoji.Proposal}')
-		elif "id" in self.prev and self.prev[0]["id"] < nProposal[0]["id"]:
-			c = nProposal[0]["id"] - self.prev[0]["id"]
-			while(c == 0):
+		elif "id" in self.prev[0] and int(self.prev[0]["id"]) < int(nProposal[0]["id"]):
+			c = int(nProposal[0]["id"]) - int(self.prev[0]["id"])
+			while(c >= 0):
 				self.notify(f'got new proposal: {self.getProposalTitle(nProposal[c])} {Emoji.Proposal}')
 				c -= 1
 			self.prev = nProposal
 			return True
-		elif "proposal_id" in self.prev and self.prev[0]["proposal_id"] < nProposal[0]["proposal_id"]:
-			c = nProposal[0]["proposal_id"] - self.prev[0]["proposal_id"]
-			while(c == 0):
+		elif "proposal_id" in self.prev[0] and int(self.prev[0]["proposal_id"]) < int(nProposal[0]["proposal_id"]):
+			c = int(nProposal[0]["proposal_id"]) - int(self.prev[0]["proposal_id"])
+			while(c >= 0):
 				self.notify(f'got new proposal: {self.getProposalTitle(nProposal[c])} {Emoji.Proposal}')
 				c -= 1
 			self.prev = nProposal
