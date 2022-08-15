@@ -40,4 +40,4 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], urllib.parse.quote('#got new proposal: Increase Signed Blocks Window Parameter to 2880 '+ Emoji.Proposal + ' '))
+		self.assertEqual(n.events[0], urllib.parse.quote('#got new proposal: Increase Signed Blocks Window Parameter to 2880 ' + Emoji.Proposal + ' '))

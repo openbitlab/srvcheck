@@ -63,17 +63,27 @@ class TaskTendermintNewProposal(Task):
 			return proposal["content"]["title"]
 
 	def run(self):
-		nProposal = self.chain.getLatestProposal()
+		nProposal = self.chain.getLatestProposals()
 		if not self.prev:
 			self.prev = nProposal
-			if nProposal["status"] == "PROPOSAL_STATUS_VOTING_PERIOD":
-				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
-		elif "id" in self.prev and self.prev["id"] != nProposal["id"]:
+			if len(self.prev) > 0:
+				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal[0])} {Emoji.Proposal}')
+		elif "id" in self.prev and self.prev[0]["id"] < nProposal[0]["id"]:
+			c = nProposal[0]["id"] - self.prev[0]["id"]
+			while(c == 0):
+				self.notify(f'got new proposal: {self.getProposalTitle(nProposal[c])} {Emoji.Proposal}')
+				c -= 1
 			self.prev = nProposal
-			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
-		elif "proposal_id" in self.prev and self.prev["proposal_id"] != nProposal["proposal_id"]:
+			self.notification.flush()
+			return True
+		elif "proposal_id" in self.prev and self.prev[0]["proposal_id"] < nProposal[0]["proposal_id"]:
+			c = nProposal[0]["proposal_id"] - self.prev[0]["proposal_id"]
+			while(c == 0):
+				self.notify(f'got new proposal: {self.getProposalTitle(nProposal[c])} {Emoji.Proposal}')
+				c -= 1
 			self.prev = nProposal
-			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
+			self.notification.flush()
+			return True
 		return False
 
 class TaskTendermintPositionChanged(Task):
@@ -197,11 +207,12 @@ class Tendermint (Chain):
 	def isSynching(self):
 		return self.rpcCall('status')['sync_info']['catching_up']
 
-	def getLatestProposal(self):
+	def getLatestProposals(self):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
 			c = configparser.ConfigParser()
 			c.read(f"/etc/systemd/system/{serv}")
 			cmd = re.split(' ', c["Service"]["ExecStart"])[0]
-			return json.loads(Bash(cmd + " q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
+			proposals = json.loads(Bash(cmd + " q gov proposals --reverse --output json").value())["proposals"]
+			return [p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
 		raise Exception('No service file name specified!')
