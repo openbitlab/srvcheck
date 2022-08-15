@@ -58,7 +58,7 @@ class MockChain(Chain):
 
 
 class MockChainTendermint(MockChain):
-    latestProposal = {"id": "1", "messages": [{"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
+    latestProposals = [{"id": "1", "messages": [{"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
                                                "content": {"@type": "/cosmos.params.v1beta1.ParameterChangeProposal",
                                                            "title": "Increase Signed Blocks Window Parameter to 2880",
                                                            "description": "Mamaki Testnet initially started with very strict slashing conditions. This proposal changes the signed_blocks_window to about 24 hours.",
@@ -73,10 +73,10 @@ class MockChainTendermint(MockChain):
                       "deposit_end_time": "2022-06-12T13:43:02.649255900Z",
                       "total_deposit": [{"denom": "utia", "amount": "100100000"}],
                       "voting_start_time": "2022-06-10T13:49:16.069169911Z",
-                      "voting_end_time": "2022-06-12T13:49:16.069169911Z", "metadata": ""}
+                      "voting_end_time": "2022-06-12T13:49:16.069169911Z", "metadata": ""}]
 
-    def getLatestProposal(self):
-        return self.latestProposal
+    def getLatestProposals(self):
+        return self.latestProposals
 
 
 class MockChainNear(MockChain):
