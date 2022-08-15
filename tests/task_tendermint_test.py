@@ -3,7 +3,7 @@ import urllib.parse
 
 from srvcheck.notification.notification import Emoji
 from srvcheck.chains.tendermint import TaskTendermintHealthError, TaskTendermintNewProposal
-from tests.mocks.mockchain import MockChainTendermint, MockChainTendermint1
+from tests.mocks.mockchain import MockChainTendermint, MockChainTendermint1, MockChainTendermint2, MockChainTendermint3
 from .task_test import buildTaskEnv
 
 class TestTaskTendermintHealthError(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
 		self.assertEqual(len(n.events), 0)
 
 	def test_alert(self):
-		c, n, t, s = buildTaskEnv(TaskTendermintNewProposal, MockChainTendermint)
+		c, n, t, s = buildTaskEnv(TaskTendermintNewProposal, MockChainTendermint1)
 		t.prev = [{"proposal_id":"1","content":{"@type":"/ibc.core.client.v1.ClientUpdateProposal","title":"upgrade client","description":"upgrade light client","subject_client_id":"07-tendermint-0","substitute_client_id":"07-tendermint-2"},
 		"status":"PROPOSAL_STATUS_FAILED","final_tally_result":{"yes":"103022468704","abstain":"56100000","no":"115992000","no_with_veto":"90000000"},"submit_time":"2022-04-25T06:22:25.564973762Z","deposit_end_time":"2022-05-09T06:22:25.564973762Z","total_deposit":[{"denom":"ufis","amount":"1000000000"}],
 		"voting_start_time":"2022-04-25T06:23:01.163682205Z","voting_end_time":"2022-04-26T06:23:01.163682205Z"}]
@@ -42,12 +42,19 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
 		self.assertEqual(len(n.events), 1)
 		self.assertEqual(n.events[0], urllib.parse.quote('#got new proposal: upgrade client ' + Emoji.Proposal + ' '))
 
-	def test_noalert_no_voting_period(self):
-		c, n, t, s = buildTaskEnv(TaskTendermintNewProposal, MockChainTendermint1)
-		t.prev = [{"proposal_id":"1","content":{"@type":"/ibc.core.client.v1.ClientUpdateProposal","title":"upgrade client","description":"upgrade light client","subject_client_id":"07-tendermint-0","substitute_client_id":"07-tendermint-2"},
-		"status":"PROPOSAL_STATUS_FAILED","final_tally_result":{"yes":"103022468704","abstain":"56100000","no":"115992000","no_with_veto":"90000000"},"submit_time":"2022-04-25T06:22:25.564973762Z","deposit_end_time":"2022-05-09T06:22:25.564973762Z","total_deposit":[{"denom":"ufis","amount":"1000000000"}],
-		"voting_start_time":"2022-04-25T06:23:01.163682205Z","voting_end_time":"2022-04-26T06:23:01.163682205Z"}]		
+	def test_alert_first_run(self):
+		c, n, t, s = buildTaskEnv(TaskTendermintNewProposal, MockChainTendermint2)
 		t.run()
 		n.flush()
-		print(n.events)
-		self.assertEqual(len(n.events), 0)
+		self.assertEqual(len(n.events), 1)
+		self.assertEqual(n.events[0], urllib.parse.quote('#got latest proposal: upgrade client ' + Emoji.Proposal + ' '))
+
+	def test_alert_multiple_proposals(self):
+		c, n, t, s = buildTaskEnv(TaskTendermintNewProposal, MockChainTendermint3)
+		t.prev = [{"proposal_id":"1","content":{"@type":"/ibc.core.client.v1.ClientUpdateProposal","title":"upgrade client","description":"upgrade light client","subject_client_id":"07-tendermint-0","substitute_client_id":"07-tendermint-2"},
+		"status":"PROPOSAL_STATUS_FAILED","final_tally_result":{"yes":"103022468704","abstain":"56100000","no":"115992000","no_with_veto":"90000000"},"submit_time":"2022-04-25T06:22:25.564973762Z","deposit_end_time":"2022-05-09T06:22:25.564973762Z","total_deposit":[{"denom":"ufis","amount":"1000000000"}],
+		"voting_start_time":"2022-04-25T06:23:01.163682205Z","voting_end_time":"2022-04-26T06:23:01.163682205Z"}]
+		t.run()
+		n.flush()
+		self.assertEqual(len(n.events), 1)
+		self.assertEqual(n.events[0], urllib.parse.quote('#got new proposal: upgrade client ' + Emoji.Proposal + ' '))
