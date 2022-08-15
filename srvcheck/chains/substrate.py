@@ -83,6 +83,63 @@ class TaskBlockProductionReport(Task):
 		super().__init__('TaskBlockProductionReport',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
+		self.prevSession = None
+		self.prevTotalSessions = None
+		self.prevValidatedSessions = None
+		self.lastBlockChecked = None
+		self.totalBlockChecked = 0
+		self.oc = 0
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return True
+
+	def run(self):
+		era = self.chain.getEra()
+		session = self.chain.getSession()
+		if self.prev is None:
+			self.prev = era
+		if self.prevSession is None:
+			self.prevSession = session
+			self.prevValidatedSessions = 0
+			self.prevTotalSessions = 0
+
+		if self.chain.isStaking():
+			currentBlock = self.chain.getHeight()
+			blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked)]
+			for b in blocksToCheck:
+				a = self.chain.getBlockAuthor(b)
+				collator = self.conf.getOrDefault('chain.collatorAddress')
+				if a.lower() == collator.lower():
+					self.oc += 1
+				self.lastBlockChecked = b
+				self.totalBlockChecked += 1
+
+		if self.prev != era:
+			self.prev = era
+			report = f'{self.prevValidatedSessions} out of {self.prevTotalSessions} last era'
+			if self.totalBlockChecked > 0:
+				report = f', and produced {report} blocks out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+				self.totalBlockChecked = 0
+			report = f'{report} {Emoji.BlockProd}'
+			self.oc = 0
+			self.prevTotalSessions = 0
+			self.prevValidatedSessions = 0
+			return self.notify(report)
+
+		if self.prevSession != session:
+			if self.chain.isValidator():
+				self.prevValidatedSessions += 1
+			self.prevTotalSessions += 1
+			self.prevSession = session
+			
+		return False
+
+class TaskBlockProductionReportParachain(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(1)):
+		super().__init__('TaskBlockProductionReport',
+			  conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
 		self.prevBlock = None
 		self.lastBlockChecked = None
 		self.totalBlockChecked = 0
@@ -150,7 +207,7 @@ class Substrate (Chain):
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionCheck, TaskBlockProductionReport]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionCheck, TaskBlockProductionReport, TaskBlockProductionReportParachain]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -191,12 +248,18 @@ class Substrate (Chain):
 		return self.rpcCall('system_chain')
 
 	def isStaking(self):
-		c = self.rpcCall('babe_epochAuthorship')
+		'''c = self.rpcCall('babe_epochAuthorship')
 		if len(c.keys()) == 0:
 			return False
 
 		cc = c[c.keys()[0]]
-		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0
+		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0'''
+		si = self.getSubstrateInterface()
+		collator = self.conf.getOrDefault('chain.collatorAddress')
+		era = self.getEra()
+		result = si.query(module='Staking', storage_function='ErasStakers', params=[era, collator])
+		if result.value["total"] > 0:
+			return True
 
 	def isSynching(self):
 		c = self.rpcCall('system_syncState')['currentBlock']
@@ -230,6 +293,15 @@ class Substrate (Chain):
 			# Check session on Shiden/Shibuya
 			result = si.query(module='Session', storage_function='CurrentIndex', params=[])
 			return result.value
+
+	def getEra(self):
+		si = self.getSubstrateInterface()
+		try:
+			# Check session on Polkadot/Kusama, Aleph
+			result = si.query(module='Staking', storage_function='ActiveEra', params=[])
+			return result.value['index']
+		except StorageFunctionNotFound:
+			return -1
 
 	def isValidator(self):
 		collator = self.conf.getOrDefault('chain.collatorAddress')
@@ -294,7 +366,7 @@ class Substrate (Chain):
 		try:
 			return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
 		except:
-			# Check block author Mangata
+			# Check block author Mangata, Polkadot/Kusama and Aleph Zero
 			return self.checkAuthoredBlock(block)
 
 	def moonbeamAssignedOrbiter(self):
