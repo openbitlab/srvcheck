@@ -199,8 +199,9 @@ class Substrate (Chain):
 		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0
 
 	def isSynching(self):
-		c = self.rpcCall('system_syncState')
-		return abs(c['currentBlock'] - c['highestBlock']) > 32
+		c = self.rpcCall('system_syncState')['currentBlock']
+		h = self.getHeight()
+		return abs(c - h) > 32
 
 	def getRelayHeight(self):
 		si = self.getSubstrateInterface()
