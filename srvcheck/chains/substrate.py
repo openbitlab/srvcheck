@@ -119,7 +119,7 @@ class TaskBlockProductionReport(Task):
 			self.prev = era
 			report = f'{self.prevValidatedSessions} out of {self.prevTotalSessions} last era'
 			if self.totalBlockChecked > 0:
-				report = f', and produced {report} blocks out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+				report += f', and produced {self.oc} blocks out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
 				self.totalBlockChecked = 0
 			report = f'{report} {Emoji.BlockProd}'
 			self.oc = 0
