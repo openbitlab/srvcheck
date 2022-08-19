@@ -34,7 +34,10 @@ class TaskNewRelease(Task):
 	def run(self):
 		current = self.chain.getLocalVersion()
 		latest = self.chain.getLatestVersion()
-
+		
+		if self.conf.getOrDefault('chain.localVersion') is None:
+			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
+		
 		if versionCompare(current, latest) < 0:
 			output = f"has new release: {latest} {Emoji.Rel}"
 			if self.chain.TYPE == "solana":
@@ -42,9 +45,6 @@ class TaskNewRelease(Task):
 				output += f"\n\tDelinquent Stake: {d_stake}%"
 				output += "\n\tIt's recommended to upgrade when there's less than 5% delinquent stake"
 			return self.notify(output)
-
-		if self.conf.getOrDefault('chain.localVersion') is None:
-			return Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}').value()
 
 		if versionCompare(current, self.conf.getOrDefault('chain.localVersion')) > 0:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}').value()
