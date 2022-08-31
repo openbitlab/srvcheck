@@ -1,10 +1,10 @@
+import requests
+import re
+import json
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
 from ..utils import Bash
-import requests
-import re
-import json
 
 class TaskAptosHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
@@ -29,7 +29,7 @@ class TaskAptosValidatorProposalCheck(Task):
 
 	@staticmethod
 	def isPluggable(conf, chain):
-		return True
+		return chain.isValidator()
 
 	def run(self):
 		p_count = self.chain.getProposalsCount()
@@ -50,7 +50,7 @@ class TaskAptosCurrentConsensusStuck(Task):
 
 	@staticmethod
 	def isPluggable(conf, chain):
-		return True
+		return chain.isValidator()
 
 	def run(self):
 		cur_round = self.chain.getCurrentConsensus()
@@ -67,12 +67,9 @@ class TaskAptosCurrentConsensusStuck(Task):
 class Aptos (Chain):
 	TYPE = "aptos"
 	NAME = "aptos"
-	BLOCKTIME = 15 
-	EP = ''
-	EP_VAL = 'http://localhost:8080/'
-	EP_FULL = 'http://localhost:8081/'
-	EP_METRICS_VAL = 'http://localhost:9101/metrics'
-	EP_METRICS_FULL = 'http://localhost:9104/metrics'
+	BLOCKTIME = 15
+	EP = 'http://localhost:8080/'
+	EP_METRICS = 'http://localhost:9101/metrics'
 	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosValidatorProposalCheck, TaskAptosCurrentConsensusStuck]
 
 	@staticmethod
@@ -89,12 +86,11 @@ class Aptos (Chain):
 		raise Exception('Abstract getVersion()')
 
 	def getHealth(self):
-		out_val = requests.get(f"{self.EP_VAL}-/healthy")
-		out_full = requests.get(f"{self.EP_FULL}-/healthy")
-		return True if out_val.text == 'aptos-node:ok' and out_full.text == 'aptos-node:ok' else False
-        
+		out = requests.get(f"{self.EP}/v1/-/healthy")
+		return True if out.text == 'aptos-node:ok' else False
+
 	def getHeight(self):
-		out = requests.get(self.EP_FULL)
+		out = requests.get(self.EP)
 		return json.loads(out.text)['ledger_version']
 
 	def getBlockHash(self):
@@ -110,21 +106,24 @@ class Aptos (Chain):
 	def isStaking(self):
 		raise Exception('Abstract isStaking()')
 
+	def isValidator(self):
+		out = requests.get(self.EP_METRICS).text.split("\n")
+		role = [s for s in out if 'aptos_connections' in s and 'validator' in s]
+		return True if len(role) > 0 else False
+
 	def isSynching(self):
-		out_full = requests.get(self.EP_METRICS_FULL).text.split("\n")
-		sync_status_full = [s for s in out_full if 'aptos_state_sync_version{type="synced"}' in s]
-		out_val = requests.get(self.EP_METRICS_VAL).text.split("\n")
-		sync_status_val = [s for s in out_val if 'aptos_state_sync_version{type="synced"}' in s]
-		return True if len(sync_status_full) == 0 or len(sync_status_val) == 0 else False 
+		out = requests.get(self.EP_METRICS).text.split("\n")
+		sync_status = [s for s in out if 'aptos_state_sync_version{type="synced"}' in s]
+		return True if len(sync_status) == 0 else False 
 
 	def getProposalsCount(self):
-		out_val = requests.get(self.EP_METRICS_VAL).text.split("\n")
+		out_val = requests.get(self.EP_METRICS).text.split("\n")
 		proposals_count = [s for s in out_val if 'aptos_consensus_proposals_count' in s and "#" not in s]
 		if len(proposals_count) == 1:
 			return int(proposals_count[0].split(" ")[-1])
 		return -1
 
 	def getCurrentConsensus(self):
-		out = requests.get(self.EP_METRICS_VAL)
+		out = requests.get(self.EP_METRICS)
 		cur_round = re.findall('aptos_consensus_current_round [0-9]+',out.text)[0].split(" ")[1].replace('"', '')
 		return cur_round
