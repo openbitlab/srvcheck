@@ -92,7 +92,11 @@ class Aptos (Chain):
 
 	def getHeight(self):
 		out = requests.get(self.EP)
-		return json.loads(out.text)['ledger_version']
+		return json.loads(out.text)['block_height']
+
+	def getEpoch(self):
+		out = requests.get(self.EP)
+		return json.loads(out.text)['epoch']
 
 	def getBlockHash(self):
 		raise Exception('Abstract getBlockHash()')
@@ -104,13 +108,16 @@ class Aptos (Chain):
 	def getNetwork(self):
 		raise Exception('Abstract getNetwork()')
 
+	def getRole(self):
+		out = requests.get(self.EP)
+		return json.loads(out.text)['node_role']
+
 	def isStaking(self):
 		raise Exception('Abstract isStaking()')
 
 	def isValidator(self):
-		out = requests.get(self.EP_METRICS).text.split("\n")
-		role = [s for s in out if 'aptos_connections' in s and 'validator' in s]
-		return True if len(role) > 0 else False
+		role = self.getRole()
+		return True if role == "validator" else False
 
 	def isSynching(self):
 		out = requests.get(self.EP_METRICS).text.split("\n")
