@@ -105,7 +105,7 @@ class TaskAptosConnectedToAptosNodeCheck(Task):
 		aptosPeerId = 'f326fd30'
 
 		print(f'#Debug TaskAptosConnectedToAptosNodeCheck: {self.chain.isConnectedToPeer(aptosPeerId)}')
-		if self.chain.isConnectedToPeer(aptosPeerId):
+		if self.chain.isConnectedToPeer(aptosPeerId) is False:
 			return self.notify(f'not connected to Aptos node {Emoji.Peers}')
 
 		return False
