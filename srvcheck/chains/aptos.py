@@ -41,7 +41,7 @@ class TaskAptosValidatorProposalCheck(Task):
 		if self.prevEp is None:
 			self.prevEp = ep
 
-		print(f'#Debug TaskAptosValidatorProposalCheck: {self.ep}, {p_count}, {self.prevEpCount}')
+		print(f'#Debug TaskAptosValidatorProposalCheck: {ep}, {p_count}, {self.prevEpCount}')
 		if self.prevEp != ep:
 			self.prevEp = ep
 			if p_count == self.prevEpCount:
@@ -88,7 +88,7 @@ class TaskAptosConnectedToFullNodeCheck(Task):
 		print(f'#Debug TaskAptosConnectedToFullNodeCheck: {conn}')
 		if len(conn) > 0:
 			vfn_in = conn[1].split(" ")[-1]
-			if vfn_in == 0:
+			if vfn_in == "0":
 				return self.notify(f'validator not connected to full node {Emoji.NoLeader}')
 
 		return False
@@ -120,7 +120,7 @@ class TaskAptosStateSyncCheck(Task):
 		return True
 
 	def run(self):
-		sync = self.chain.getAptosStateSyncVersion()
+		sync = int(self.chain.getAptosStateSyncVersion()[0].split(" ")[-1])
 
 		print(f'#Debug TaskAptosStateSyncCheck: {sync}, {self.prev}')
 		if self.prev is None:
@@ -202,8 +202,8 @@ class Aptos (Chain):
 	def getPeerCount(self):
 		conn = self.getConnections()
 		if len(conn) > 1:
-			in_peer = conn[0].split(" ")[-1]
-			out_peer = conn[2].split(" ")[-1]
+			in_peer = int(conn[0].split(" ")[-1])
+			out_peer = int(conn[2].split(" ")[-1])
 			return in_peer + out_peer
 		return 0
 
