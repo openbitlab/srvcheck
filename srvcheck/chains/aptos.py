@@ -24,8 +24,9 @@ class TaskAptosHealthError(Task):
 
 class TaskAptosValidatorProposalCheck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, checkEvery = hours(1), notifyEvery = hours(1))
-		self.prev = None
+		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, checkEvery = minutes(30), notifyEvery = hours(1))
+		self.prevEpCount = None
+		self.prevEp = None
 
 	@staticmethod
 	def isPluggable(conf, chain):
@@ -33,14 +34,21 @@ class TaskAptosValidatorProposalCheck(Task):
 
 	def run(self):
 		p_count = self.chain.getProposalsCount()
+		ep = self.chain.getEpoch()
 
-		if self.prev is None:
-			self.prev = p_count
-			return False 
-		if p_count == self.prev or p_count == -1:
-			return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}')
-		
-		self.prev = p_count
+		if self.prevEpCount is None:
+			self.prevEpCount = p_count
+		if self.prevEp is None:
+			self.prevEp = ep
+
+		if self.prevEp != ep:
+			self.prevEp = ep
+			if p_count == self.prevEpCount:
+				return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}')
+			else:
+				prevC = self.prevEpCount
+				self.prevEpCount = p_count
+				return self.notify(f'proposed {p_count - prevC} new consensus {Emoji.BlockProd}')
 		return False
 	
 class TaskAptosCurrentConsensusStuck(Task):
@@ -64,13 +72,96 @@ class TaskAptosCurrentConsensusStuck(Task):
 		self.prev = cur_round
 		return False
 
+class TaskAptosConnectedToFullNodeCheck(Task):
+	def __init__(self, conf, notification, system, chain):
+		super().__init__('TaskAptosConnectedToFullNodeCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return chain.isValidator()
+
+	def run(self):
+		conn = self.chain.getConnections()
+
+		if len(conn) > 0:
+			vfn_in = conn[1].split(" ")[-1]
+			if vfn_in == 0:
+				return self.notify(f'validator not connected to full node {Emoji.NoLeader}')
+
+		return False
+
+class TaskAptosConnectedToAptosNodeCheck(Task):
+	def __init__(self, conf, notification, system, chain):
+		super().__init__('TaskAptosConnectedToAptosNodeCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return chain.isValidator()
+
+	def run(self):
+		aptosPeerId = 'f326fd30'
+		if self.chain.isConnectedToPeer(aptosPeerId):
+			return self.notify(f'not connected to Aptos node {Emoji.Peers}')
+
+		return False
+
+class TaskAptosStateSyncCheck(Task):
+	def __init__(self, conf, notification, system, chain):
+		super().__init__('TaskAptosStateSyncCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+		self.prev = None
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return True
+
+	def run(self):
+		sync = self.chain.getAptosStateSyncVersion()
+
+		if self.prev is None:
+			self.prev = sync
+		elif sync == self.prev:
+			return self.notify(f'node is not state synching {Emoji.Stuck}')
+		
+		self.prev = sync
+		return False
+
+class TaskStakePoolRewardsCheck(Task):
+	def __init__(self, conf, notification, system, chain):
+		super().__init__('TaskStakePoolRewardsCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+		self.prev = None
+		self.prevEp = None
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return chain.isValidator()
+
+	def run(self):
+		ep = self.chain.getEpoch()
+
+		explorerAit3 = "https://ait3.aptosdev.com/v1/accounts/0xe5207ae13fce7f9cfdf3e388e415d97cbf55de727d0e7dcb97e7ca2f209fff76/resources"
+		res = requests.get(explorerAit3)
+		stakedValue = int(json.loads(res.text)[1]['data']['active']['value'])
+
+		if self.prev is None:
+			self.prev = stakedValue
+		if self.prevEp is None:
+			self.prevEp = ep
+
+		if self.prevEp != ep:
+			self.prevEp = ep
+			if self.prev == stakedValue:
+				return self.notify(f'node is not making staking rewards {Emoji.LowBal}')
+			self.prev = stakedValue
+
+		return False
+
 class Aptos (Chain):
 	TYPE = "aptos"
 	NAME = "aptos"
 	BLOCKTIME = 15
 	EP = 'http://localhost:8080/v1'
 	EP_METRICS = 'http://localhost:9101/metrics'
-	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosValidatorProposalCheck, TaskAptosCurrentConsensusStuck]
+	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosStateSyncCheck, TaskAptosValidatorProposalCheck, TaskAptosCurrentConsensusStuck, TaskAptosConnectedToFullNodeCheck, TaskAptosConnectedToAptosNodeCheck, TaskStakePoolRewardsCheck]
 
 	@staticmethod
 	def detect(conf):
@@ -102,8 +193,17 @@ class Aptos (Chain):
 		raise Exception('Abstract getBlockHash()')
 
 	def getPeerCount(self):
-		# aptos_connections
-		raise Exception('Abstract getPeerCount()')
+		conn = self.getConnections()
+		if len(conn) > 1:
+			in_peer = conn[0].split(" ")[-1]
+			out_peer = conn[2].split(" ")[-1]
+			return in_peer + out_peer
+		return 0
+
+	def getAptosStateSyncVersion(self):
+		out = requests.get(self.EP_METRICS).text.split("\n")
+		state_sync = [s for s in out if 'aptos_state_sync_version' and 'synced' in s]
+		return state_sync
 
 	def getNetwork(self):
 		raise Exception('Abstract getNetwork()')
@@ -111,6 +211,18 @@ class Aptos (Chain):
 	def getRole(self):
 		out = requests.get(self.EP)
 		return json.loads(out.text)['node_role']
+
+	def getConnections(self):
+		out = requests.get(self.EP_METRICS).text.split("\n")
+		connections = [s for s in out if 'aptos_connections' in s]
+		return connections
+
+	def isConnectedToPeer(self, peerId):
+		out = requests.get(self.EP_METRICS).text.split("\n")		
+		conn = [s for s in out if 'aptos_network_peer_connected' in s and peerId in s]
+		if len(conn) > 0:
+			return True
+		return False
 
 	def isStaking(self):
 		raise Exception('Abstract isStaking()')
