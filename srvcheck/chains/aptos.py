@@ -221,7 +221,7 @@ class Aptos (Chain):
 
 	def getConnections(self):
 		out = requests.get(self.EP_METRICS).text.split("\n")
-		connections = [s for s in out if 'aptos_connections' in s]
+		connections = [s for s in out if 'aptos_connections' in s and '#' not in s]
 		return connections
 
 	def isConnectedToPeer(self, peerId):
