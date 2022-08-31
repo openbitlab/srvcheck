@@ -201,11 +201,13 @@ class Aptos (Chain):
 
 	def getPeerCount(self):
 		conn = self.getConnections()
-		if len(conn) > 1:
-			in_peer = int(conn[0].split(" ")[-1])
-			out_peer = int(conn[2].split(" ")[-1])
-			return in_peer + out_peer
-		return 0
+		if self.isValidator():
+			if len(conn) > 1:
+				in_peer = int(conn[0].split(" ")[-1])
+				out_peer = int(conn[2].split(" ")[-1])
+				return in_peer + out_peer
+			return 0
+		raise Exception('Abstract getPeerCount()')
 
 	def getAptosStateSyncVersion(self):
 		out = requests.get(self.EP_METRICS).text.split("\n")
