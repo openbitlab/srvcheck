@@ -211,7 +211,7 @@ class Aptos (Chain):
 
 	def getAptosStateSyncVersion(self):
 		out = requests.get(self.EP_METRICS).text.split("\n")
-		state_sync = [s for s in out if 'aptos_state_sync_version' and 'synced' in s]
+		state_sync = [s for s in out if 'aptos_state_sync_version' in s and 'synced' in s]
 		return state_sync
 
 	def getNetwork(self):
