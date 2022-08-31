@@ -41,6 +41,7 @@ class TaskAptosValidatorProposalCheck(Task):
 		if self.prevEp is None:
 			self.prevEp = ep
 
+		print(f'#Debug TaskAptosValidatorProposalCheck: {self.ep}, {p_count}, {self.prevEpCount}')
 		if self.prevEp != ep:
 			self.prevEp = ep
 			if p_count == self.prevEpCount:
@@ -63,6 +64,7 @@ class TaskAptosCurrentConsensusStuck(Task):
 	def run(self):
 		cur_round = self.chain.getCurrentConsensus()
 
+		print(f'#Debug TaskAptosCurrentConsensusStuck: {self.prev}, {cur_round}')
 		if self.prev is None:
 			self.prev = cur_round
 			return False 
@@ -83,6 +85,7 @@ class TaskAptosConnectedToFullNodeCheck(Task):
 	def run(self):
 		conn = self.chain.getConnections()
 
+		print(f'#Debug TaskAptosConnectedToFullNodeCheck: {conn}')
 		if len(conn) > 0:
 			vfn_in = conn[1].split(" ")[-1]
 			if vfn_in == 0:
@@ -100,6 +103,8 @@ class TaskAptosConnectedToAptosNodeCheck(Task):
 
 	def run(self):
 		aptosPeerId = 'f326fd30'
+
+		print(f'#Debug TaskAptosConnectedToAptosNodeCheck: {self.chain.isConnectedToPeer(aptosPeerId)}')
 		if self.chain.isConnectedToPeer(aptosPeerId):
 			return self.notify(f'not connected to Aptos node {Emoji.Peers}')
 
@@ -117,6 +122,7 @@ class TaskAptosStateSyncCheck(Task):
 	def run(self):
 		sync = self.chain.getAptosStateSyncVersion()
 
+		print(f'#Debug TaskAptosStateSyncCheck: {sync}, {self.prev}')
 		if self.prev is None:
 			self.prev = sync
 		elif sync == self.prev:
@@ -127,7 +133,7 @@ class TaskAptosStateSyncCheck(Task):
 
 class TaskStakePoolRewardsCheck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskStakePoolRewardsCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+		super().__init__('TaskStakePoolRewardsCheck', conf, notification, system, chain, checkEvery = minutes(30), notifyEvery=hours(1))
 		self.prev = None
 		self.prevEp = None
 
@@ -147,6 +153,7 @@ class TaskStakePoolRewardsCheck(Task):
 		if self.prevEp is None:
 			self.prevEp = ep
 
+		print(f'#Debug TaskStakePoolRewardsCheck: {ep}, {self.prev}, {stakedValue}')
 		if self.prevEp != ep:
 			self.prevEp = ep
 			if self.prev == stakedValue:
