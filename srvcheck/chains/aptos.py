@@ -68,7 +68,7 @@ class Aptos (Chain):
 	TYPE = "aptos"
 	NAME = "aptos"
 	BLOCKTIME = 15
-	EP = 'http://localhost:8080/'
+	EP = 'http://localhost:8080'
 	EP_METRICS = 'http://localhost:9101/metrics'
 	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosValidatorProposalCheck, TaskAptosCurrentConsensusStuck]
 
@@ -87,7 +87,8 @@ class Aptos (Chain):
 
 	def getHealth(self):
 		out = requests.get(f"{self.EP}/v1/-/healthy")
-		return True if out.text == 'aptos-node:ok' else False
+		health = json.loads(out.text)['message']
+		return True if health == 'aptos-node:ok' else False
 
 	def getHeight(self):
 		out = requests.get(self.EP)
