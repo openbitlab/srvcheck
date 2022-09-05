@@ -14,9 +14,9 @@ install() {
 print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
+ -a  --validator-address <address> enable checks on block production
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
- -c  --collator <address> enable checks on block production and collation (parachain)
      --git <git_api> git api to query the latest realease version installed
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
@@ -59,13 +59,13 @@ install_monitor () {
     then
         sed -i -e "s/^localVersion =.*/localVersion = $local_version/" $config_file
     fi
-    if [ ! -z "$collatorAddress" ]
+    if [ ! -z "$validatorAddress" ]
     then
-        sed -i -e "s/^collatorAddress =.*/collatorAddress = $collatorAddress/" $config_file
+        sed -i -e "s/^validatorAddress =.*/validatorAddress = $validatorAddress/" $config_file
     fi
     if [ ! -z "$mountPoint" ]
     then
-        sed -i -e "s/^mountPoint =.*/mountPoint = $mountPoint/" $config_file
+        sed -i -e "s,^mountPoint =.*,mountPoint = $mountPoint/" $config_file
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -103,6 +103,17 @@ case $1 in
         shift # past argument
         shift # past value
     ;;
+    -a|--validator-address)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            validatorAddress="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     -b|--block-time)
         if [[ -z $2 ]]
         then
@@ -110,17 +121,6 @@ case $1 in
             exit 1
         else
             block_time="$2"
-        fi
-        shift # past argument
-        shift # past value
-    ;;
-    -c|--collator)
-        if [[ -z $2 ]]
-        then
-            print_help
-            exit 1
-        else
-            collatorAddress="$2"
         fi
         shift # past argument
         shift # past value

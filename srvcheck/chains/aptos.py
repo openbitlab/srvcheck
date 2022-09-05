@@ -1,6 +1,6 @@
-import requests
-import re
 import json
+import re
+import requests
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes

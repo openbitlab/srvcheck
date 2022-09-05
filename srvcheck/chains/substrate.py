@@ -6,7 +6,7 @@ from ..tasks import Task
 from ..notification import Emoji
 from ..utils import ConfItem, ConfSet, Bash
 
-ConfSet.addItem(ConfItem('chain.collatorAddress', description='Collator address'))
+ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
@@ -109,7 +109,7 @@ class TaskBlockProductionReport(Task):
 			blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked)]
 			for b in blocksToCheck:
 				a = self.chain.getBlockAuthor(b)
-				collator = self.conf.getOrDefault('chain.collatorAddress')
+				collator = self.conf.getOrDefault('chain.validatorAddress')
 				if a.lower() == collator.lower():
 					self.oc += 1
 				self.lastBlockChecked = b
@@ -175,7 +175,7 @@ class TaskBlockProductionReportParachain(Task):
 				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
-					collator = orb if orb != '0x0' and orb is not None else self.conf.getOrDefault('chain.collatorAddress')
+					collator = orb if orb != '0x0' and orb is not None else self.conf.getOrDefault('chain.validatorAddress')
 					if a.lower() == collator.lower():
 						self.oc += 1
 					self.lastBlockChecked = b
@@ -255,7 +255,7 @@ class Substrate (Chain):
 		cc = c[c.keys()[0]]
 		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0'''
 		si = self.getSubstrateInterface()
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		era = self.getEra()
 		result = si.query(module='Staking', storage_function='ErasStakers', params=[era, collator])
 		if result.value["total"] > 0:
@@ -304,7 +304,7 @@ class Substrate (Chain):
 			return -1
 
 	def isValidator(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			try:
 				# Check validator on Shiden/Shibuya, Mangata
@@ -318,7 +318,7 @@ class Substrate (Chain):
 		return False
 
 	def isCollating(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			si = self.getSubstrateInterface()
 			try:
@@ -343,7 +343,7 @@ class Substrate (Chain):
 		return False
 
 	def latestBlockProduced(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			try:
 				# Check last block produced on Shiden/Shibuya
@@ -370,7 +370,7 @@ class Substrate (Chain):
 			return self.checkAuthoredBlock(block)
 
 	def moonbeamAssignedOrbiter(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			try:
 				si = self.getSubstrateInterface()
@@ -389,5 +389,5 @@ class Substrate (Chain):
 		seals = self.getSeals(block)
 		for b in seals:
 			if b == bh:
-				return self.conf.getOrDefault('chain.collatorAddress')
+				return self.conf.getOrDefault('chain.validatorAddress')
 		return "0x0"

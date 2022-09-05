@@ -72,9 +72,9 @@ The install script can be customized with these flags:
 ```
 install --help
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
+ -a  --validator-address <address> enable checks on block production
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
- -c  --collator <address> enable checks on block production and collation (parachain)
      --git <git_api> git api to query the latest realease version installed
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
@@ -120,8 +120,8 @@ blockWindow =
 ghRepository = 
 ; software version
 localVersion = 
-; parachain collator address
-collatorAddress = 
+; validator address
+validatorAddress = 
 ; mount point
 mountPoint = 
 
