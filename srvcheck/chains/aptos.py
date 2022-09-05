@@ -42,14 +42,14 @@ class TaskAptosValidatorPerformanceCheck(Task):
 		if self.prevEp != ep:
 			self.prevEp = ep
 			performance = self.chain.getValidatorPerformance()
-			lastEpoch = list(filter(lambda item: item, performance[:1].replace('|', '').split(" ")))
+			lastEpoch = list(filter(lambda item: item, performance[1].replace('|', '').split(" ")))
 			epochBeforeLastEpoch = list(filter(lambda item: item, performance[0].replace('|', '').split(" ")))
 			activeStakeOut = "active stake increased" if int(lastEpoch[7]) > int(epochBeforeLastEpoch[7]) else 'active stake remained the same'
-			activeStakeOut += f"{lastEpoch[7]} active stake {Emoji.ActStake if int(lastEpoch[7]) > int(epochBeforeLastEpoch[7]) else Emoji.LowBal}"
+			activeStakeOut += f", {lastEpoch[7]} active stake {Emoji.ActStake if int(lastEpoch[7]) > int(epochBeforeLastEpoch[7]) else Emoji.LowBal}"
 			print(f'#Debug TaskAptosValidatorPerformanceCheck: {ep}, {lastEpoch[0]} new proposals {int(lastEpoch[3])/int(lastEpoch[0]) * 100}%, {lastEpoch[7]}')
 			if int(lastEpoch[0]) == 0:
 				return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}\n\t{activeStakeOut}')
-			elif int(lastEpoch[3])/int(lastEpoch[0]) > 0.25:
+			elif int(lastEpoch[3])/int(lastEpoch[0]) < 0.25:
 				return self.notify(f'{int(lastEpoch[3])/int(lastEpoch[0]) * 100}% of proposals failed {Emoji.BlockMiss}\n\t{activeStakeOut}')
 			else:
 				return self.notify(f'proposed {lastEpoch[0]} new consensus, {int(lastEpoch[3])/int(lastEpoch[0]) * 100}% succeed {Emoji.BlockProd}\n\t{activeStakeOut}')
@@ -227,4 +227,4 @@ class Aptos (Chain):
 		if validatorAddress[:2] == '0x':
 			validatorAddress = validatorAddress[2:]
 		performance = Bash(f"aptos node analyze-validator-performance --analyze-mode=detailed-epoch-table --url=https://ait3.aptosdev.com/ | grep {validatorAddress}").value().split("\n")
-		return performance[:-1]
+		return performance
