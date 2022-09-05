@@ -42,11 +42,11 @@ class TaskAptosValidatorPerformanceCheck(Task):
 		if self.prevEp != ep:
 			self.prevEp = ep
 			performance = self.chain.getValidatorPerformance()
-			lastEpoch = list(filter(lambda item: item, performance[1].replace('|', '').split(" ")))
-			epochBeforeLastEpoch = list(filter(lambda item: item, performance[0].replace('|', '').split(" ")))
-			activeStakeOut = "active stake increased" if int(lastEpoch[7]) > int(epochBeforeLastEpoch[7]) else 'active stake remained the same'
-			activeStakeOut += f", {lastEpoch[7]} active stake {Emoji.ActStake if int(lastEpoch[7]) > int(epochBeforeLastEpoch[7]) else Emoji.LowBal}"
-			print(f'#Debug TaskAptosValidatorPerformanceCheck: {ep}, {lastEpoch[0]} new proposals {int(lastEpoch[3])/int(lastEpoch[0]) * 100}%, {lastEpoch[7]}')
+			thisEpoch = list(filter(lambda item: item, performance[1].replace('|', '').split(" ")))
+			lastEpoch = list(filter(lambda item: item, performance[0].replace('|', '').split(" ")))
+			activeStakeOut = "active stake increased" if int(thisEpoch[7]) > int(lastEpoch[7]) else 'active stake remained the same'
+			activeStakeOut += f", {thisEpoch[7]} active stake {Emoji.ActStake if int(thisEpoch[7]) > int(lastEpoch[7]) else Emoji.LowBal}"
+			print(f'#Debug TaskAptosValidatorPerformanceCheck: {ep}, {lastEpoch[0]} new proposals {lastEpoch[3]} out of {lastEpoch[0]}, {thisEpoch[7]}')
 			if int(lastEpoch[0]) == 0:
 				return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}\n\t{activeStakeOut}')
 			elif int(lastEpoch[3])/int(lastEpoch[0]) < 0.25:
