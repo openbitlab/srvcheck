@@ -4,7 +4,7 @@ import requests
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
-from ..utils import ConfItem, ConfSet
+from ..utils import ConfItem, ConfSet, Bash
 
 ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
 
@@ -24,10 +24,9 @@ class TaskAptosHealthError(Task):
 		except Exception:
 			return self.notify(f'health error! {Emoji.Health}')
 
-class TaskAptosValidatorProposalCheck(Task):
+class TaskAptosValidatorPerformanceCheck(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosValidatorProposalCheck', conf, notification, system, chain, checkEvery = minutes(30), notifyEvery = hours(1))
-		self.prevEpCount = None
+		super().__init__('TaskAptosValidatorPerformanceCheck', conf, notification, system, chain, checkEvery = minutes(30), notifyEvery = hours(1))
 		self.prevEp = None
 
 	@staticmethod
@@ -35,23 +34,25 @@ class TaskAptosValidatorProposalCheck(Task):
 		return chain.isValidator()
 
 	def run(self):
-		p_count = self.chain.getProposalsCount()
 		ep = self.chain.getEpoch()
 
-		if self.prevEpCount is None:
-			self.prevEpCount = p_count
 		if self.prevEp is None:
 			self.prevEp = ep
 
-		print(f'#Debug TaskAptosValidatorProposalCheck: {ep}, {p_count}, {self.prevEpCount}')
 		if self.prevEp != ep:
 			self.prevEp = ep
-			if p_count == self.prevEpCount:
-				return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}')
+			performance = self.chain.getValidatorPerformance()
+			lastEpoch = list(filter(lambda item: item, performance[:1].replace('|', '').split(" ")))
+			epochBeforeLastEpoch = list(filter(lambda item: item, performance[0].replace('|', '').split(" ")))
+			activeStakeOut = "active stake increased" if int(lastEpoch[7]) > int(epochBeforeLastEpoch[7]) else 'active stake remained the same'
+			activeStakeOut += f"{lastEpoch[7]} active stake {Emoji.ActStake if int(lastEpoch[7]) > int(epochBeforeLastEpoch[7]) else Emoji.LowBal}"
+			print(f'#Debug TaskAptosValidatorPerformanceCheck: {ep}, {lastEpoch[0]} new proposals {int(lastEpoch[3])/int(lastEpoch[0]) * 100}%, {lastEpoch[7]}')
+			if int(lastEpoch[0]) == 0:
+				return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}\n\t{activeStakeOut}')
+			elif int(lastEpoch[3])/int(lastEpoch[0]) > 0.25:
+				return self.notify(f'{int(lastEpoch[3])/int(lastEpoch[0]) * 100}% of proposals failed {Emoji.BlockMiss}\n\t{activeStakeOut}')
 			else:
-				prevC = self.prevEpCount
-				self.prevEpCount = p_count
-				return self.notify(f'proposed {p_count - prevC} new consensus {Emoji.BlockProd}')
+				return self.notify(f'proposed {lastEpoch[0]} new consensus, {int(lastEpoch[3])/int(lastEpoch[0]) * 100}% succeed {Emoji.BlockProd}\n\t{activeStakeOut}')
 		return False
 	
 class TaskAptosCurrentConsensusStuck(Task):
@@ -133,47 +134,13 @@ class TaskAptosStateSyncCheck(Task):
 		self.prev = sync
 		return False
 
-class TaskStakePoolRewardsCheck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskStakePoolRewardsCheck', conf, notification, system, chain, checkEvery = minutes(30), notifyEvery=hours(1))
-		self.prev = None
-		self.prevEp = None
-		self.validatorAddress = conf.getOrDefault('chain.validatorAddress')
-
-	@staticmethod
-	def isPluggable(conf, chain):
-		return chain.isValidator()
-
-	def run(self):
-		ep = self.chain.getEpoch()
-
-		explorerAit3 = f"https://ait3.aptosdev.com/v1/accounts/{self.validatorAddress}/resources"
-		res = requests.get(explorerAit3)
-		stakedValue = int(json.loads(res.text)[1]['data']['active']['value'])
-
-		if self.prev is None:
-			self.prev = stakedValue
-		if self.prevEp is None:
-			self.prevEp = ep
-
-		print(f'#Debug TaskStakePoolRewardsCheck: {ep}, {self.prev}, {stakedValue}')
-		if self.prevEp != ep:
-			self.prevEp = ep
-			if self.prev == stakedValue:
-				return self.notify(f'is not making staking rewards {Emoji.LowBal}')
-			else:
-				diff = stakedValue - self.prev
-				self.prev = stakedValue
-				return self.notify(f'made {diff} staking rewards, new active stake {stakedValue} {Emoji.ActStake}')
-		return False
-
 class Aptos (Chain):
 	TYPE = "aptos"
 	NAME = "aptos"
 	BLOCKTIME = 15
 	EP = 'http://localhost:8080/v1'
 	EP_METRICS = 'http://localhost:9101/metrics'
-	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosStateSyncCheck, TaskAptosValidatorProposalCheck, TaskAptosCurrentConsensusStuck, TaskAptosConnectedToFullNodeCheck, TaskAptosConnectedToAptosNodeCheck, TaskStakePoolRewardsCheck]
+	CUSTOM_TASKS = [TaskAptosHealthError, TaskAptosStateSyncCheck, TaskAptosValidatorPerformanceCheck, TaskAptosCurrentConsensusStuck, TaskAptosConnectedToFullNodeCheck, TaskAptosConnectedToAptosNodeCheck]
 
 	@staticmethod
 	def detect(conf):
@@ -248,16 +215,16 @@ class Aptos (Chain):
 	def isSynching(self):
 		out = requests.get(self.EP_METRICS).text.split("\n")
 		sync_status = [s for s in out if 'aptos_state_sync_version{type="synced"}' in s]
-		return True if len(sync_status) == 0 else False 
-
-	def getProposalsCount(self):
-		out_val = requests.get(self.EP_METRICS).text.split("\n")
-		proposals_count = [s for s in out_val if 'aptos_consensus_proposals_count' in s and "#" not in s]
-		if len(proposals_count) == 1:
-			return int(proposals_count[0].split(" ")[-1])
-		return -1
+		return True if len(sync_status) == 0 else False
 
 	def getCurrentConsensus(self):
 		out = requests.get(self.EP_METRICS)
 		cur_round = re.findall('aptos_consensus_current_round [0-9]+',out.text)[0].split(" ")[1].replace('"', '')
 		return cur_round
+
+	def getValidatorPerformance(self):
+		validatorAddress = self.conf.getOrDefault('chain.validatorAddress')
+		if validatorAddress[:2] == '0x':
+			validatorAddress = validatorAddress[2:]
+		performance = Bash(f"aptos node analyze-validator-performance --analyze-mode=detailed-epoch-table --url=https://ait3.aptosdev.com/ | grep {validatorAddress}").value().split("\n")
+		return performance[:-1]
