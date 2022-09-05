@@ -4,7 +4,9 @@ import requests
 from ..notification import Emoji
 from .chain import Chain
 from ..tasks import Task,  hours, minutes
-from ..utils import Bash
+from ..utils import ConfItem, ConfSet
+
+ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
 
 class TaskAptosHealthError(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
@@ -89,7 +91,7 @@ class TaskAptosConnectedToFullNodeCheck(Task):
 		if len(conn) > 0:
 			vfn_in = conn[1].split(" ")[-1]
 			if vfn_in == "0":
-				return self.notify(f'validator not connected to full node {Emoji.NoLeader}')
+				return self.notify(f'not connected to full node {Emoji.NoLeader}')
 
 		return False
 
@@ -126,7 +128,7 @@ class TaskAptosStateSyncCheck(Task):
 		if self.prev is None:
 			self.prev = sync
 		elif sync == self.prev:
-			return self.notify(f'node is not state synching {Emoji.Stuck}')
+			return self.notify(f'is not state synching {Emoji.Stuck}')
 		
 		self.prev = sync
 		return False
@@ -136,6 +138,7 @@ class TaskStakePoolRewardsCheck(Task):
 		super().__init__('TaskStakePoolRewardsCheck', conf, notification, system, chain, checkEvery = minutes(30), notifyEvery=hours(1))
 		self.prev = None
 		self.prevEp = None
+		self.validatorAddress = conf.getOrDefault('chain.validatorAddress')
 
 	@staticmethod
 	def isPluggable(conf, chain):
@@ -144,7 +147,7 @@ class TaskStakePoolRewardsCheck(Task):
 	def run(self):
 		ep = self.chain.getEpoch()
 
-		explorerAit3 = "https://ait3.aptosdev.com/v1/accounts/0xe5207ae13fce7f9cfdf3e388e415d97cbf55de727d0e7dcb97e7ca2f209fff76/resources"
+		explorerAit3 = f"https://ait3.aptosdev.com/v1/accounts/{self.validatorAddress}/resources"
 		res = requests.get(explorerAit3)
 		stakedValue = int(json.loads(res.text)[1]['data']['active']['value'])
 
@@ -157,9 +160,11 @@ class TaskStakePoolRewardsCheck(Task):
 		if self.prevEp != ep:
 			self.prevEp = ep
 			if self.prev == stakedValue:
-				return self.notify(f'node is not making staking rewards {Emoji.LowBal}')
-			self.prev = stakedValue
-
+				return self.notify(f'is not making staking rewards {Emoji.LowBal}')
+			else:
+				diff = stakedValue - self.prev
+				self.prev = stakedValue
+				return self.notify(f'made {diff} staking rewards, new active stake {stakedValue} {Emoji.ActStake}')
 		return False
 
 class Aptos (Chain):
