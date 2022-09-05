@@ -65,7 +65,7 @@ install_monitor () {
     fi
     if [ ! -z "$mountPoint" ]
     then
-        sed -i -e "s,^mountPoint =.*,mountPoint = $mountPoint/" $config_file
+        sed -i -e "s,^mountPoint =.*,mountPoint = $mountPoint,g" $config_file
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
