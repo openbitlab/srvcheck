@@ -48,11 +48,11 @@ class TaskAptosValidatorPerformanceCheck(Task):
 			activeStakeOut += f", {thisEpoch[7]} active stake {Emoji.ActStake if int(thisEpoch[7]) > int(lastEpoch[7]) else Emoji.LowBal}"
 			print(f'#Debug TaskAptosValidatorPerformanceCheck: {ep}, {lastEpoch[0]} new proposals {lastEpoch[3]} out of {lastEpoch[0]}, {thisEpoch[7]}')
 			if int(lastEpoch[0]) == 0:
-				return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}\n\t{activeStakeOut}')
+				return self.notify(f'is not proposing new consensus {Emoji.BlockMiss}\n{activeStakeOut}')
 			elif int(lastEpoch[3])/int(lastEpoch[0]) < 0.25:
-				return self.notify(f'{int(lastEpoch[3])/int(lastEpoch[0]) * 100}% of proposals failed {Emoji.BlockMiss}\n\t{activeStakeOut}')
+				return self.notify(f'{int(lastEpoch[3])/int(lastEpoch[0]) * 100:.2f}% of proposals failed {Emoji.BlockMiss}\n{activeStakeOut}')
 			else:
-				return self.notify(f'proposed {lastEpoch[0]} new consensus, {int(lastEpoch[3])/int(lastEpoch[0]) * 100}% succeed {Emoji.BlockProd}\n\t{activeStakeOut}')
+				return self.notify(f'proposed {lastEpoch[0]} new consensus, {int(lastEpoch[3])/int(lastEpoch[0]) * 100:.2f}% succeed {Emoji.BlockProd}\n{activeStakeOut}')
 		return False
 	
 class TaskAptosCurrentConsensusStuck(Task):
