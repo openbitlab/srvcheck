@@ -23,6 +23,8 @@ class TaskNewRelease(Task):
 		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(3), hours(2))
 		self.conf = conf
 		self.cf = conf.getOrDefault('configFile')
+		if self.conf.getOrDefault('chain.localVersion') is None:
+			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {self.chain.getLocalVersion()}/" {self.cf}')
 
 	@staticmethod
 	def isPluggable(conf, chain):
