@@ -20,7 +20,7 @@ def versionCompare(current, latest):
 
 class TaskNewRelease(Task):
 	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(15), hours(2))
+		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(3), hours(2))
 		self.conf = conf
 		self.cf = conf.getOrDefault('configFile')
 
@@ -32,6 +32,7 @@ class TaskNewRelease(Task):
 		current = self.chain.getLocalVersion()
 		latest = self.chain.getLatestVersion()
 
+		print('local', self.conf.getOrDefault('chain.localVersion'))
 		if self.conf.getOrDefault('chain.localVersion') is None:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
 			return False
