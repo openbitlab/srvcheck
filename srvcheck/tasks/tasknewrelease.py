@@ -1,7 +1,8 @@
+import configparser
 from packaging import version
 from ..notification import Emoji
 from . import Task, minutes, hours
-from ..utils import Bash
+from ..utils import Bash, ConfSet, ConfItem
 
 def versionCompare(current, latest):
 	print(current, current.split('-'))
@@ -23,14 +24,17 @@ class TaskNewRelease(Task):
 		super().__init__('TaskNewRelease', conf, notification, system, chain, minutes(3), hours(2))
 		self.conf = conf
 		self.cf = conf.getOrDefault('configFile')
-		if self.conf.getOrDefault('chain.localVersion') is None:
-			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {self.chain.getLocalVersion()}/" {self.cf}')
 
 	@staticmethod
 	def isPluggable(conf, chain):
 		return True if conf.getOrDefault('chain.ghRepository') else False
 
 	def run(self):
+		confRaw = configparser.ConfigParser()
+		confRaw.optionxform=str
+		confRaw.read(self.cf)
+		self.conf = ConfSet(confRaw)
+		
 		current = self.chain.getLocalVersion()
 		latest = self.chain.getLatestVersion()
 
