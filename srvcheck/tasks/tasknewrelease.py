@@ -5,6 +5,10 @@ from . import Task, minutes, hours
 from ..utils import Bash
 
 def versionCompare(current, latest):
+	print(current, current.split('-'))
+	print(latest, latest.split('-'))
+	print(version.parse(current))
+	print(version.parse(latest))
 	c_ver = version.parse(current.split('-')[0]) if isinstance(version.parse(current), version.LegacyVersion) is True else version.parse(current)
 	l_ver = version.parse(latest.split('-')[0]) if isinstance(version.parse(latest), version.LegacyVersion) is True else version.parse(latest)
 
@@ -32,6 +36,8 @@ class TaskNewRelease(Task):
 		if self.conf.getOrDefault('chain.localVersion') is None:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
 		
+		print(current, latest)
+		print(versionCompare(current, latest))
 		if versionCompare(current, latest) < 0:
 			output = f"has new release: {latest} {Emoji.Rel}"
 			if self.chain.TYPE == "solana":
@@ -40,6 +46,8 @@ class TaskNewRelease(Task):
 				output += "\n\tIt's recommended to upgrade when there's less than 5% delinquent stake"
 			return self.notify(output)
 
+		print(current, self.conf.getOrDefault('chain.localVersion'))
+		print(versionCompare(current, self.conf.getOrDefault('chain.localVersion')))
 		if versionCompare(current, self.conf.getOrDefault('chain.localVersion')) > 0:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
 			return self.notify(f'is now running latest version: {current.split("-")[0]} {Emoji.Updated}')
