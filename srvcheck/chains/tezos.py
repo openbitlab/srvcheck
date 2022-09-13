@@ -23,7 +23,13 @@ class Tezos (Chain):
 		return f'v%s.%s.0' % (a['major'], a['minor'])
 
 	def getLocalVersion(self):
-		return self.getVersion()
+		try:
+			return self.getVersion()
+		except Exception as e:
+			ver = self.conf.getOrDefault('chain.localVersion')
+			if ver is None:
+				raise Exception('No local version of the software specified!') from e
+			return ver
 
 	def getHeight(self):
 		return self.getCall('chains/main/blocks/head/helpers/current_level')['level']

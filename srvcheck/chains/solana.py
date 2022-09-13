@@ -178,7 +178,13 @@ class Solana (Chain):
 		return self.rpcCall('getVersion')["solana-core"]
 
 	def getLocalVersion(self):
-		return self.getVersion()
+		try:
+			return self.getVersion()
+		except Exception as e:
+			ver = self.conf.getOrDefault('chain.localVersion')
+			if ver is None:
+				raise Exception('No local version of the software specified!') from e
+			return ver
 
 	def getHeight(self):
 		return self.rpcCall('getBlockHeight')

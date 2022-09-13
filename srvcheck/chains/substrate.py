@@ -176,7 +176,13 @@ class Substrate (Chain):
 		return self.rpcCall('system_version')
 
 	def getLocalVersion(self):
-		return self.getVersion()
+		try:
+			return self.getVersion()
+		except Exception as e:
+			ver = self.conf.getOrDefault('chain.localVersion')
+			if ver is None:
+				raise Exception('No local version of the software specified!') from e
+			return ver
 
 	def getHeight(self):
 		return int(self.rpcCall('chain_getHeader', [self.getBlockHash()])['number'], 16)

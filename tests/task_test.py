@@ -131,6 +131,7 @@ class TestTaskNewRelease(unittest.TestCase):
 
 	def test_noalert(self):
 		c, n, t, s = buildTaskEnv(TaskNewRelease)
+		
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 0)

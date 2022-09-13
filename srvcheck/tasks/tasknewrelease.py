@@ -40,7 +40,7 @@ class TaskNewRelease(Task):
 				output += "\n\tIt's recommended to upgrade when there's less than 5% delinquent stake"
 			return self.notify(output)
 
-		if versionCompare(current, self.conf.getOrDefault('chain.localVersion')) > 0:
+		if versionCompare(current, latest) > 0:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
 			return self.notify(f'is now running latest version: {current.split("-")[0]} {Emoji.Updated}')
 		
