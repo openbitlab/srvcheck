@@ -1,4 +1,3 @@
-import argparse
 from packaging import version
 from ..notification import Emoji
 from . import Task, minutes, hours
@@ -35,9 +34,9 @@ class TaskNewRelease(Task):
 
 		if self.conf.getOrDefault('chain.localVersion') is None:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
+			return False
 		
 		print(current, latest)
-		print(versionCompare(current, latest))
 		if versionCompare(current, latest) < 0:
 			output = f"has new release: {latest} {Emoji.Rel}"
 			if self.chain.TYPE == "solana":
@@ -46,7 +45,7 @@ class TaskNewRelease(Task):
 				output += "\n\tIt's recommended to upgrade when there's less than 5% delinquent stake"
 			return self.notify(output)
 
-		print(current, self.conf.getOrDefault('chain.localVersion'))
+		print('current, chain.localVersion', current, self.conf.getOrDefault('chain.localVersion'))
 		print(versionCompare(current, self.conf.getOrDefault('chain.localVersion')))
 		if versionCompare(current, self.conf.getOrDefault('chain.localVersion')) > 0:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
