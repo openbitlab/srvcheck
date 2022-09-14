@@ -140,6 +140,8 @@ class TestTaskNewRelease(unittest.TestCase):
 	confRaw.read_dict(CONF)
 
 	conf = ConfSet(confRaw)
+	cf = '/etc/srvcheck.conf'
+	conf.addItem(ConfItem('configFile', cf, str))
 
 	def test_VersionCompare(self):
 		self.assertEqual(versionCompare('v1.0.0', 'v1.0.0'), 0)
