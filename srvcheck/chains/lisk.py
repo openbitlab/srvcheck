@@ -26,15 +26,6 @@ class Lisk (Chain):
 	def getLatestVersion(self):
 		raise Exception('Abstract getLatestVersion()')
 
-	def getLocalVersion(self):
-		try:
-			return self.getVersion()
-		except Exception as e:
-			ver = self.conf.getOrDefault('chain.localVersion')
-			if ver is None:
-				raise Exception('No local version of the software specified!') from e
-			return ver
-
 	def getVersion(self):
 		return self._nodeInfo()['version']
 

@@ -54,6 +54,15 @@ class Chain:
 			return c['tag_name']
 		raise Exception('No github repo specified!')
 
+	def getLocalVersion(self):
+		try:
+			return self.getVersion()
+		except Exception as e:
+			ver = self.conf.getOrDefault('chain.localVersion')
+			if ver is None:
+				raise Exception('No local version of the software specified!') from e
+			return ver
+
 	def getHeight(self):
 		""" Returns the block height """
 		raise Exception('Abstract getHeight()')
