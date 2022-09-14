@@ -40,7 +40,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], urllib.parse.quote('#got new proposal: upgrade client ' + Emoji.Proposal + ' '))
+		self.assertEqual(n.events[0], urllib.parse.quote('#got 1 new proposal: upgrade client ' + Emoji.Proposal + ' '))
 
 	def test_alert_first_run(self):
 		c, n, t, s = buildTaskEnv(TaskTendermintNewProposal, MockChainTendermint2)
@@ -57,4 +57,4 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
-		self.assertEqual(n.events[0], urllib.parse.quote('#got new proposal: upgrade client ' + Emoji.Proposal + ' '))
+		self.assertEqual(n.events[0], urllib.parse.quote('#got 2 new proposal: Increase Signed Blocks Window Parameter to 2880' + '\n' + 'upgrade client ' + Emoji.Proposal + ' '))
