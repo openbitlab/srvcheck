@@ -142,6 +142,7 @@ class TestTaskNewRelease(unittest.TestCase):
 	conf = ConfSet(confRaw)
 	cf = '/etc/srvcheck.conf'
 	conf.addItem(ConfItem('configFile', cf, str))
+	conf.addItem(ConfItem('chain.localVersion', 'v0.0.1', str))
 
 	def test_VersionCompare(self):
 		self.assertEqual(versionCompare('v1.0.0', 'v1.0.0'), 0)
@@ -159,7 +160,8 @@ class TestTaskNewRelease(unittest.TestCase):
 
 	def test_alert(self):
 		c, n, t, s = buildTaskEnv(TaskNewRelease)
-		c.latestVersion = 'v0.0.1'
+		t.conf = self.conf
+		c.latestVersion = 'v1.1.1'
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)
