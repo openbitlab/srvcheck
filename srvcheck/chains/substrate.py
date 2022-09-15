@@ -6,7 +6,7 @@ from ..tasks import Task
 from ..notification import Emoji
 from ..utils import ConfItem, ConfSet, Bash
 
-ConfSet.addItem(ConfItem('chain.collatorAddress', description='Collator address'))
+ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=60*10*60):
@@ -83,6 +83,63 @@ class TaskBlockProductionReport(Task):
 		super().__init__('TaskBlockProductionReport',
 			  conf, notification, system, chain, checkEvery, notifyEvery)
 		self.prev = None
+		self.prevSession = None
+		self.prevTotalSessions = None
+		self.prevValidatedSessions = None
+		self.lastBlockChecked = None
+		self.totalBlockChecked = 0
+		self.oc = 0
+
+	@staticmethod
+	def isPluggable(conf, chain):
+		return True
+
+	def run(self):
+		era = self.chain.getEra()
+		session = self.chain.getSession()
+		if self.prev is None:
+			self.prev = era
+		if self.prevSession is None:
+			self.prevSession = session
+			self.prevValidatedSessions = 0
+			self.prevTotalSessions = 0
+
+		if self.chain.isStaking():
+			currentBlock = self.chain.getHeight()
+			blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked)]
+			for b in blocksToCheck:
+				a = self.chain.getBlockAuthor(b)
+				collator = self.conf.getOrDefault('chain.validatorAddress')
+				if a.lower() == collator.lower():
+					self.oc += 1
+				self.lastBlockChecked = b
+				self.totalBlockChecked += 1
+
+		if self.prev != era:
+			self.prev = era
+			report = f'validated in {self.prevValidatedSessions} active sessions out of {self.prevTotalSessions} in the last era {Emoji.Leader if self.prevValidatedSessions > 0 else Emoji.NoLeader}\n'
+			self.prevTotalSessions = 0
+			if self.totalBlockChecked > 0:
+				report += f'produced {self.oc} blocks out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+				self.totalBlockChecked = 0
+				report = f'{report} {Emoji.BlockProd}'
+				self.oc = 0
+				self.prevValidatedSessions = 0
+				return self.notify(report)
+
+		if self.prevSession != session:
+			if self.chain.isValidator():
+				self.prevValidatedSessions += 1
+			self.prevTotalSessions += 1
+			self.prevSession = session
+			
+		return False
+
+class TaskBlockProductionReportParachain(Task):
+	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(1)):
+		super().__init__('TaskBlockProductionReport',
+			  conf, notification, system, chain, checkEvery, notifyEvery)
+		self.prev = None
 		self.prevBlock = None
 		self.lastBlockChecked = None
 		self.totalBlockChecked = 0
@@ -118,7 +175,7 @@ class TaskBlockProductionReport(Task):
 				blocksToCheck = [b for b in self.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 				for b in blocksToCheck:
 					a = self.chain.getBlockAuthor(b)
-					collator = orb if orb != '0x0' and orb is not None else self.conf.getOrDefault('chain.collatorAddress')
+					collator = orb if orb != '0x0' and orb is not None else self.conf.getOrDefault('chain.validatorAddress')
 					if a.lower() == collator.lower():
 						self.oc += 1
 					self.lastBlockChecked = b
@@ -150,7 +207,7 @@ class Substrate (Chain):
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionCheck, TaskBlockProductionReport]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionCheck, TaskBlockProductionReport, TaskBlockProductionReportParachain]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -188,16 +245,23 @@ class Substrate (Chain):
 		return self.rpcCall('system_chain')
 
 	def isStaking(self):
-		c = self.rpcCall('babe_epochAuthorship')
+		'''c = self.rpcCall('babe_epochAuthorship')
 		if len(c.keys()) == 0:
 			return False
 
 		cc = c[c.keys()[0]]
-		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0
+		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0'''
+		si = self.getSubstrateInterface()
+		collator = self.conf.getOrDefault('chain.validatorAddress')
+		era = self.getEra()
+		result = si.query(module='Staking', storage_function='ErasStakers', params=[era, collator])
+		if result.value["total"] > 0:
+			return True
 
 	def isSynching(self):
-		c = self.rpcCall('system_syncState')
-		return abs(c['currentBlock'] - c['highestBlock']) > 32
+		c = self.rpcCall('system_syncState')['currentBlock']
+		h = self.getHeight()
+		return abs(c - h) > 32
 
 	def getRelayHeight(self):
 		si = self.getSubstrateInterface()
@@ -227,8 +291,17 @@ class Substrate (Chain):
 			result = si.query(module='Session', storage_function='CurrentIndex', params=[])
 			return result.value
 
+	def getEra(self):
+		si = self.getSubstrateInterface()
+		try:
+			# Check session on Polkadot/Kusama, Aleph
+			result = si.query(module='Staking', storage_function='ActiveEra', params=[])
+			return result.value['index']
+		except StorageFunctionNotFound:
+			return -1
+
 	def isValidator(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			try:
 				# Check validator on Shiden/Shibuya, Mangata
@@ -242,7 +315,7 @@ class Substrate (Chain):
 		return False
 
 	def isCollating(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			si = self.getSubstrateInterface()
 			try:
@@ -267,7 +340,7 @@ class Substrate (Chain):
 		return False
 
 	def latestBlockProduced(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			try:
 				# Check last block produced on Shiden/Shibuya
@@ -290,11 +363,11 @@ class Substrate (Chain):
 		try:
 			return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
 		except:
-			# Check block author Mangata
+			# Check block author Mangata, Polkadot/Kusama and Aleph Zero
 			return self.checkAuthoredBlock(block)
 
 	def moonbeamAssignedOrbiter(self):
-		collator = self.conf.getOrDefault('chain.collatorAddress')
+		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			try:
 				si = self.getSubstrateInterface()
@@ -313,5 +386,5 @@ class Substrate (Chain):
 		seals = self.getSeals(block)
 		for b in seals:
 			if b == bh:
-				return self.conf.getOrDefault('chain.collatorAddress')
+				return self.conf.getOrDefault('chain.validatorAddress')
 		return "0x0"

@@ -62,18 +62,28 @@ class TaskTendermintNewProposal(Task):
 		elif "proposal_id" in proposal:
 			return proposal["content"]["title"]
 
+	def notifyAboutLatestProposals(self, proposals, key):
+		nProposalUnread = [prop for prop in proposals if int(self.prev[0][key]) < int(prop[key])]
+		c = len(nProposalUnread)
+		if c > 0:
+			out = f'got {c} new proposal: '
+			for i, p in enumerate(nProposalUnread):
+				if i > 0 and i < len(nProposalUnread):
+					out += '\n'
+				out += f'{self.getProposalTitle(p)}{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
+			self.prev = proposals
+			return self.notify(out)
+
 	def run(self):
-		nProposal = self.chain.getLatestProposal()
+		nProposal = self.chain.getLatestProposals()
 		if not self.prev:
 			self.prev = nProposal
-			if nProposal["status"] == "PROPOSAL_STATUS_VOTING_PERIOD":
-				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
-		elif "id" in self.prev and self.prev["id"] != nProposal["id"]:
-			self.prev = nProposal
-			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
-		elif "proposal_id" in self.prev and self.prev["proposal_id"] != nProposal["proposal_id"]:
-			self.prev = nProposal
-			return self.notify(f'got new proposal: {self.getProposalTitle(nProposal)} {Emoji.Proposal}')
+			if len(self.prev) > 0:
+				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal[0])} {Emoji.Proposal}')
+		elif "id" in self.prev[0]:
+			self.notifyAboutLatestProposals(nProposal, "id")
+		elif "proposal_id" in self.prev[0] and int(self.prev[0]["proposal_id"]) < int(nProposal[0]["proposal_id"]):
+			self.notifyAboutLatestProposals(nProposal, "proposal_id")
 		return False
 
 class TaskTendermintPositionChanged(Task):
@@ -197,11 +207,12 @@ class Tendermint (Chain):
 	def isSynching(self):
 		return self.rpcCall('status')['sync_info']['catching_up']
 
-	def getLatestProposal(self):
+	def getLatestProposals(self):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
 			c = configparser.ConfigParser()
 			c.read(f"/etc/systemd/system/{serv}")
 			cmd = re.split(' ', c["Service"]["ExecStart"])[0]
-			return json.loads(Bash(cmd + " q gov proposals --reverse --limit 1 --output json").value())["proposals"][0]
+			proposals = json.loads(Bash(cmd + " q gov proposals --reverse --output json").value())["proposals"]
+			return [p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
 		raise Exception('No service file name specified!')

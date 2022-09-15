@@ -32,11 +32,6 @@ class TaskChainStuck(Task):
 	def run(self):
 		bh = self.method()
 
-		if self.oc > 0:
-			elapsed = elapsedToString(self.since)
-			self.notify(f'chain come back in sync after {elapsed} ({self.oc}) {Emoji.SyncOk}')
-			self.notification.flush()
-
 		if self.prev is None:
 			self.prev = bh
 			self.since = time.time()
