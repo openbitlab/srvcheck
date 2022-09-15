@@ -175,9 +175,6 @@ class Substrate (Chain):
 	def getVersion(self):
 		return self.rpcCall('system_version')
 
-	def getLocalVersion(self):
-		return self.getVersion()
-
 	def getHeight(self):
 		return int(self.rpcCall('chain_getHeader', [self.getBlockHash()])['number'], 16)
 

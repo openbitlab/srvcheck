@@ -22,9 +22,6 @@ class Tezos (Chain):
 		a = self.getCall('version')
 		return f'v%s.%s.0' % (a['major'], a['minor'])
 
-	def getLocalVersion(self):
-		return self.getVersion()
-
 	def getHeight(self):
 		return self.getCall('chains/main/blocks/head/helpers/current_level')['level']
 

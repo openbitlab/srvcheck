@@ -59,6 +59,7 @@ def main():
 	confRaw.read(cf)
 
 	conf = ConfSet(confRaw)
+	conf.addItem(ConfItem('configFile', cf, str))
 
 	# Get version
 	version = srvcheck.__version__

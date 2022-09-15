@@ -1,8 +1,9 @@
 import unittest
+import configparser
 import urllib.parse
 
 from srvcheck.tasks.tasknewrelease import TaskNewRelease, versionCompare
-from srvcheck.utils.confset import ConfSet
+from srvcheck.utils.confset import ConfItem, ConfSet
 from srvcheck.tasks import TaskChainLowPeer, TaskChainStuck, TaskSystemCpuAlert, TaskSystemDiskAlert, minutes, hours
 from srvcheck.notification.notification import Emoji
 from .mocks import MockNotification, MockChain, MockSystem, MockChainNoBlockHash
@@ -122,6 +123,27 @@ class TestTaskChainStuck(unittest.TestCase):
 
 
 class TestTaskNewRelease(unittest.TestCase):
+	CONF = {
+		'chain': {
+			'name': 'test',
+			'endpoint': 'http://localhost:8080',
+			'type': '',
+			'blockTime': 10,
+			'service': '',
+			'activeSet': '',
+			'localVersion': 'v0.0.1'
+		}
+	}
+
+	confRaw = configparser.ConfigParser()
+	confRaw.optionxform=str
+	confRaw.read_dict(CONF)
+
+	conf = ConfSet(confRaw)
+	cf = '/etc/srvcheck.conf'
+	conf.addItem(ConfItem('configFile', cf, str))
+	conf.addItem(ConfItem('chain.localVersion', 'v0.0.1', str))
+
 	def test_VersionCompare(self):
 		self.assertEqual(versionCompare('v1.0.0', 'v1.0.0'), 0)
 		self.assertEqual(versionCompare('v1.0.0', 'v1.0.1'), -1)
@@ -131,13 +153,15 @@ class TestTaskNewRelease(unittest.TestCase):
 
 	def test_noalert(self):
 		c, n, t, s = buildTaskEnv(TaskNewRelease)
+		t.conf = self.conf
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 0)
 
 	def test_alert(self):
 		c, n, t, s = buildTaskEnv(TaskNewRelease)
-		c.latestVersion = 'v0.0.1'
+		t.conf = self.conf
+		c.latestVersion = 'v1.1.1'
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 1)

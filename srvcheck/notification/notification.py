@@ -31,6 +31,7 @@ class Emoji:
 	BlockProd   = "\U000026CF"
 	Slow	    = "\U0001f40c"
 	Unreachable = "\U0001f50c"
+	Updated     = "\U0001F4E2"
 
 class Notification:
 	def __init__(self, name):

@@ -26,9 +26,6 @@ class Lisk (Chain):
 	def getLatestVersion(self):
 		raise Exception('Abstract getLatestVersion()')
 
-	def getLocalVersion(self):
-		return self.getVersion()
-
 	def getVersion(self):
 		return self._nodeInfo()['version']
 
