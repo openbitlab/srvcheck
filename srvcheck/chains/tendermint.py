@@ -62,6 +62,18 @@ class TaskTendermintNewProposal(Task):
 		elif "proposal_id" in proposal:
 			return proposal["content"]["title"]
 
+	def notifyAboutLatestProposals(self, proposals, key):
+		nProposalUnread = [prop for prop in proposals if int(self.prev[0][key]) < int(prop[key])]
+		c = len(nProposalUnread)
+		if c > 0:
+			out = f'got {c} new proposal: '
+			for i, p in enumerate(nProposalUnread):
+				if i > 0 and i < len(nProposalUnread):
+					out += '\n'
+				out += f'{self.getProposalTitle(p)}{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
+			self.prev = proposals
+			return self.notify(out)
+
 	def run(self):
 		nProposal = self.chain.getLatestProposals()
 		if not self.prev:
@@ -69,25 +81,9 @@ class TaskTendermintNewProposal(Task):
 			if len(self.prev) > 0:
 				return self.notify(f'got latest proposal: {self.getProposalTitle(nProposal[0])} {Emoji.Proposal}')
 		elif "id" in self.prev[0]:
-			nProposalUnread = [prop for prop in nProposal if int(self.prev[0]["id"]) < int(prop["id"])]
-			c = len(nProposalUnread)
-			out = f'got {c} new proposal: '
-			for i, p in enumerate(nProposalUnread):
-				if i > 0 and i < len(nProposalUnread):
-					out += '\n'
-				out += f'{self.getProposalTitle(p)}{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
-			self.prev = nProposal
-			return self.notify(out)
+			self.notifyAboutLatestProposals(nProposal, "id")
 		elif "proposal_id" in self.prev[0] and int(self.prev[0]["proposal_id"]) < int(nProposal[0]["proposal_id"]):
-			nProposalUnread = [prop for prop in nProposal if int(self.prev[0]["proposal_id"]) < int(prop["proposal_id"])]
-			c = len(nProposalUnread)
-			out = f'got {c} new proposal: '
-			for i, p in enumerate(nProposalUnread):
-				if i > 0 and i < len(nProposalUnread):
-					out += '\n'
-				out += f'{self.getProposalTitle(p)}{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
-			self.prev = nProposal
-			return self.notify(out)
+			self.notifyAboutLatestProposals(nProposal, "proposal_id")
 		return False
 
 class TaskTendermintPositionChanged(Task):
