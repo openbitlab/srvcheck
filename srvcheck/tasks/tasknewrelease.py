@@ -48,6 +48,7 @@ class TaskNewRelease(Task):
 
 		if versionCompare(current, self.conf.getOrDefault('chain.localVersion')) > 0:
 			Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
-			return self.notify(f'is now running latest version: {current.split("-")[0]} {Emoji.Updated}')
+			self.notify(f'is now running latest version: {current.split("-")[0]} {Emoji.Updated}')
+			self.notification.flush()
 		
 		return False
