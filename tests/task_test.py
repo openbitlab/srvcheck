@@ -1,6 +1,7 @@
 import unittest
 import configparser
 import urllib.parse
+from srvcheck.main import Services
 
 from srvcheck.tasks.tasknewrelease import TaskNewRelease, versionCompare
 from srvcheck.utils.confset import ConfItem, ConfSet
@@ -20,8 +21,10 @@ def buildTaskEnv(tt, chainClass=MockChain):
 	c = chainClass(CONF)
 	n = MockNotification(CONF)
 	s = MockSystem(CONF)
-	t = tt(CONF, n, s, c)
-	return (c, n, t, s)
+	p = None
+	services = Services(CONF, n, s, c, p)
+	t = tt(services)
+	return (c, n, t, s, p)
 
 class TestTimingUtilities(unittest.TestCase):
 	def test_minutes(self):
@@ -33,14 +36,14 @@ class TestTimingUtilities(unittest.TestCase):
 
 class TestTaskSystemCpuAlert(unittest.TestCase):
 	def test_noalert(self):
-		c, n, t, s = buildTaskEnv(TaskSystemCpuAlert)
+		c, n, t, s, p = buildTaskEnv(TaskSystemCpuAlert)
 		s.usage.cpuUsage = 10
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 0)
 
 	def test_alert(self):
-		c, n, t, s = buildTaskEnv(TaskSystemCpuAlert)
+		c, n, t, s, p = buildTaskEnv(TaskSystemCpuAlert)
 		s.usage.cpuUsage = 99
 		t.run()
 		n.flush()
@@ -50,14 +53,14 @@ class TestTaskSystemCpuAlert(unittest.TestCase):
 
 class TestTaskSystemDiskAlert(unittest.TestCase):
 	def test_noalert(self):
-		c, n, t, s = buildTaskEnv(TaskSystemDiskAlert)
+		c, n, t, s, p = buildTaskEnv(TaskSystemDiskAlert)
 		s.usage.diskPercentageUsed = 10
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 0)
 
 	def test_alert(self):
-		c, n, t, s = buildTaskEnv(TaskSystemDiskAlert)
+		c, n, t, s, p = buildTaskEnv(TaskSystemDiskAlert)
 		s.usage.diskPercentageUsed = 99
 		t.run()
 		n.flush()
@@ -67,14 +70,14 @@ class TestTaskSystemDiskAlert(unittest.TestCase):
 
 class TestTaskChainLowPeer(unittest.TestCase):
 	def test_noalert(self):
-		c, n, t, s = buildTaskEnv(TaskChainLowPeer)
+		c, n, t, s, p = buildTaskEnv(TaskChainLowPeer)
 		c.peers = 12
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 0)
 
 	def test_alert(self):
-		c, n, t, s = buildTaskEnv(TaskChainLowPeer)
+		c, n, t, s, p = buildTaskEnv(TaskChainLowPeer)
 		c.peers = 0
 		t.run()
 		n.flush()
@@ -85,7 +88,7 @@ class TestTaskChainLowPeer(unittest.TestCase):
 
 class TestTaskChainStuck(unittest.TestCase):
 	def test_noalert(self):
-		c, n, t, s = buildTaskEnv(TaskChainStuck)
+		c, n, t, s, p = buildTaskEnv(TaskChainStuck)
 		c.hash = '0x1234567890'
 		t.run()
 		c.hash = '0x1234567891'
@@ -94,7 +97,7 @@ class TestTaskChainStuck(unittest.TestCase):
 		self.assertEqual(len(n.events), 0)
 
 	def test_alert(self):
-		c, n, t, s = buildTaskEnv(TaskChainStuck)
+		c, n, t, s, p = buildTaskEnv(TaskChainStuck)
 		c.hash = '0x1234567890'
 		t.run()
 		t.run()
@@ -104,7 +107,7 @@ class TestTaskChainStuck(unittest.TestCase):
 
 
 	def test_noblockhash(self):
-		c, n, t, s = buildTaskEnv(TaskChainStuck, MockChainNoBlockHash)
+		c, n, t, s, p = buildTaskEnv(TaskChainStuck, MockChainNoBlockHash)
 		c.height = 0
 		t.run()
 		c.height = 1
@@ -113,7 +116,7 @@ class TestTaskChainStuck(unittest.TestCase):
 		self.assertEqual(len(n.events), 0)
 
 	def test_noblockhash_alert(self):
-		c, n, t, s = buildTaskEnv(TaskChainStuck, MockChainNoBlockHash)
+		c, n, t, s, p = buildTaskEnv(TaskChainStuck, MockChainNoBlockHash)
 		c.height = 1
 		t.run()
 		t.run()
@@ -152,14 +155,14 @@ class TestTaskNewRelease(unittest.TestCase):
 		self.assertEqual(versionCompare('v1.1.0', 'v1.1.0-rc.3'), 1)
 
 	def test_noalert(self):
-		c, n, t, s = buildTaskEnv(TaskNewRelease)
+		c, n, t, s, p = buildTaskEnv(TaskNewRelease)
 		t.conf = self.conf
 		t.run()
 		n.flush()
 		self.assertEqual(len(n.events), 0)
 
 	def test_alert(self):
-		c, n, t, s = buildTaskEnv(TaskNewRelease)
+		c, n, t, s, p = buildTaskEnv(TaskNewRelease)
 		t.conf = self.conf
 		c.latestVersion = 'v1.1.1'
 		t.run()

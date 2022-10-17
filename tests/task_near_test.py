@@ -9,7 +9,7 @@ from .task_test import buildTaskEnv
 
 class TestTaskNearKickedout(unittest.TestCase):
     def test_chunk(self):
-        c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
         c.epoch = 18
         t.run()
         c.kicked_set = [{
@@ -47,7 +47,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         self.assertEqual(n.events[0], urllib.parse.quote('#kicked out for not producing enough chunks, produced only 0 / 1 chunks ' + Emoji.BlockMiss + ' '))
 
     def test_blocks(self):
-        c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
         c.epoch = 18
         t.run()
         c.kicked_set = [{
@@ -85,7 +85,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         self.assertEqual(n.events[0], urllib.parse.quote('#kicked out for not producing enough blocks, produced only 0 / 1 blocks ' + Emoji.BlockMiss + ' '))
 
     def test_notenoughstake(self):
-        c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
         c.epoch = 21
         t.run()
         c.kicked_set = [{
@@ -123,7 +123,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         self.assertEqual(n.events[0], urllib.parse.quote('#kicked out, missing 17 Near to stake threshold ' + Emoji.LowBal + ' '))
 
     def test_no_kick(self):
-        c, n, t, s = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
         t.run()
         n.flush()
         print(n.events)

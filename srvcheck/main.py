@@ -52,7 +52,7 @@ def defaultConf():
 class Services:
 	def __init__(self, conf, notification, system, chain, persistent):
 		self.conf = conf
-		self.notificaiton = notification
+		self.notification = notification
 		self.system = system
 		self.chain = chain
 		self.persistent = persistent
