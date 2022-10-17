@@ -2,18 +2,34 @@ import dateutil.parser
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-def savePlot(name, data, label, f, dataMod: lambda y: y):
+class PlotConf:
+	name = ""
+	data = []
+	label = ""
+	data_mod = lambda y: y
+
+	data2 = None
+	label2 = ""
+	data_mod2 = lambda y: y
+
+	fpath = ""
+
+def savePlot(c):
 	plt.clf()
 	fig, ax1 = plt.subplots()
 
-	#ax2 = ax1.twinx()
-	ax1.title.set_text(name)
-	ax1.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), data)), list(map(lambda l: dataMod(l[1]), data)), 'g-')
-	# ax2.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), data)), list(map(lambda l: l['s'] if 's' in l else 0, self.borderHistory)), 'b-')
+	ax2 = None
+	if c.data2:
+		ax2 = ax1.twinx()
+	ax1.title.set_text(c.name)
+	ax1.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), c.data)), list(map(lambda l: c.data_mod(l[1]), c.data)), 'g-')
+	if c.data2:
+		ax2.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), c.data2)), list(map(lambda l: c.data_mod2(l[1]), c.data2)), 'b-')
 	plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
 	plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
 	ax1.set_xlabel('Date')
-	ax1.set_ylabel(label, color='g')
-	#ax2.set_ylabel('102/101 diff (LSK)', color='b')
+	ax1.set_ylabel(c.label, color='g')
+	if c.data2:
+		ax2.set_ylabel(c.label2, color='b')
 
-	plt.savefig(f, bbox_inches="tight")
+	plt.savefig(c.fpath, bbox_inches="tight")

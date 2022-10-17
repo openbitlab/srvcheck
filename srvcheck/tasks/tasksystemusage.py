@@ -1,5 +1,5 @@
 from . import Task, hours
-from ..utils import savePlot
+from ..utils import savePlot, PlotConf
 
 class TaskSystemUsage(Task):
 	def __init__(self, services):
@@ -24,7 +24,19 @@ class TaskSystemUsage(Task):
 		# savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
 		# self.s.notification.sendPhoto('/tmp/t.png')
 
-		savePlot(self.s.conf.getOrDefault('chain.name') + " - Disk Used", self.s.persistent.get(self.name + '_diskUsed'), 'Used (GB)', '/tmp/t.png', lambda y: y/1024/1024)
+		pc = PlotConf ()
+		pc.name = self.s.conf.getOrDefault('chain.name') + " - Disk"
+		pc.data = self.s.persistent.get(self.name + '_diskUsed')
+		pc.label = 'Used (GB)'
+		pc.data_mod = lambda y: y/1024/1024
+
+		pc.data2 = self.s.persistent.get(self.name + '_diskUsedByLog')
+		pc.label = 'Used by log (GB)'
+		pc.data_mod2 = lambda y: y/1024/1024
+
+		pc.fpath = '/tmp/t.png'
+
+		savePlot(pc)
 		self.s.notification.sendPhoto('/tmp/t.png')
 
 		return False
