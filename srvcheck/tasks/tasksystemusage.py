@@ -16,10 +16,13 @@ class TaskSystemUsage(Task):
 
 		for x in ['diskUsed', 'diskPercentageUsed', 'diskUsedByLog', 'ramUsed']:
 			if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_' + x, 23):
-				self.s.persistent.timedAdd(self.name + '_' + x, usage[x])
+				self.s.persistent.timedAdd(self.name + '_' + x, usage[x].replace('G', ''))
 
 
-		savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
+		# savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
+		# self.s.notification.sendPhoto('/tmp/t.png')
+
+		savePlot("Disk Used", self.s.persistent.get(self.name + '_' + 'diskUsed'), 'used (GB)', '/tmp/t.png')
 		self.s.notification.sendPhoto('/tmp/t.png')
 
 		return False
