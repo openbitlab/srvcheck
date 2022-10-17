@@ -16,11 +16,11 @@ def versionCompare(v1, v2):
 		return 0
 
 class TaskAutoUpdater(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAutoUpdater', conf, notification, system, chain, minutes(60), hours(2))
+	def __init__(self, services):
+		super().__init__('TaskAutoUpdater', services, minutes(60), hours(2))
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
@@ -28,6 +28,6 @@ class TaskAutoUpdater(Task):
 
 		if versionCompare(nTag, srvcheck.__version__) > 0:
 			self.notify(f'New monitor version detected: v{nTag}')
-			self.notification.flush()
+			self.s.notification.flush()
 			Bash(f'pip install --force-reinstall git+https://github.com/openbitlab/srvcheck@v{nTag}')
 			Bash('systemctl restart node-monitor.service')

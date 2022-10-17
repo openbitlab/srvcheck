@@ -1,5 +1,6 @@
 import time
 
+
 def seconds(m):
 	return m
 
@@ -9,23 +10,21 @@ def minutes(m):
 def hours(h):
 	return h * 60 * 60
 
-class Task:
-	def __init__(self, name, conf, notification, system, chain, checkEvery = minutes(15), notifyEvery = minutes(15), recoverEvery = hours(2)):
+
+class Task():
+	def __init__(self, name, services, checkEvery = minutes(15), notifyEvery = minutes(15), recoverEvery = hours(2)):
 		self.name = name
-		self.conf = conf
-		self.system = system
-		self.chain = chain
+		self.s = self.services = services
 		self.checkEvery = checkEvery
 		self.notifyEvery = notifyEvery
 		self.recoverEvery = recoverEvery
-		self.notification = notification
 
 		self.lastCheck = 0
 		self.lastNotify = 0
 		self.lastRecover = 0
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		""" Returns true if the task can be plugged in """
 		raise Exception('Abstract isPluggable()')
 
@@ -41,7 +40,7 @@ class Task:
 	def notify(self, nstr, noCheck = False):
 		if self.shouldBeNotified() or noCheck:
 			self.lastNotify = time.time()
-			self.notification.append(nstr)
+			self.s.notification.append(nstr)
 			return True
 		return False
 
@@ -59,3 +58,4 @@ class Task:
 
 	def markRecovered(self):
 		self.lastRecover = time.time()
+

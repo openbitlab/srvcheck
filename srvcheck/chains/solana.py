@@ -6,64 +6,64 @@ from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
 
 class TaskSolanaHealthError(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
-		super().__init__('TaskSolanaHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaHealthError', services, checkEvery, notifyEvery)
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
 		try:
-			self.chain.getHealth()
+			self.s.chain.getHealth()
 			return False
 		except Exception as _:
 			return self.notify(f'health error! {Emoji.Health}')
 
 class TaskSolanaDelinquentCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
-		super().__init__('TaskSolanaDelinquentCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaDelinquentCheck', services, checkEvery, notifyEvery)
 		self.prev = None 
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		if self.chain.isDelinquent():
+		if self.s.chain.isDelinquent():
 			return self.notify(f'validator is delinquent {Emoji.Delinq}')
 		else:
 			return False
 
 class TaskSolanaBalanceCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
-		super().__init__('TaskSolanaBalanceCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskSolanaBalanceCheck', services, checkEvery, notifyEvery)
 		self.prev = None 
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		balance = self.chain.getValidatorBalance()
+		balance = self.s.chain.getValidatorBalance()
 		if balance < 1.0:
 			return self.notify(f'validator balance is too low, {balance} SOL left {Emoji.LowBal}')
 		else:
 			return False
 
 class TaskSolanaLastVoteCheck(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = seconds(30), notifyEvery=minutes(5)):
-		super().__init__('TaskSolanaLastVoteCheck', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = seconds(30), notifyEvery=minutes(5)):
+		super().__init__('TaskSolanaLastVoteCheck', services, checkEvery, notifyEvery)
 		self.prev = None 
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		lastVote = self.chain.getLastVote()
-		md = self.chain.getMedianLastVote()
+		lastVote = self.s.chain.getLastVote()
+		md = self.s.chain.getMedianLastVote()
 		if self.prev is None:
 			self.prev = lastVote
 		elif self.prev == lastVote and md > lastVote:
@@ -72,18 +72,18 @@ class TaskSolanaLastVoteCheck(Task):
 		return False
 
 class TaskSolanaEpochActiveStake(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(24)):
-		super().__init__('TaskSolanaEpochActiveStake', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(1), notifyEvery=hours(24)):
+		super().__init__('TaskSolanaEpochActiveStake', services, checkEvery, notifyEvery)
 		self.prev = None
 		self.prevEpoch = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		ep = self.chain.getEpoch()
-		act_stake = self.chain.getActiveStake()
+		ep = self.s.chain.getEpoch()
+		act_stake = self.s.chain.getActiveStake()
 
 		if self.prev is None:
 			self.prev = act_stake
@@ -97,23 +97,23 @@ class TaskSolanaEpochActiveStake(Task):
 		return False
 
 class TaskSolanaLeaderSchedule(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(24)):
-		super().__init__('TaskSolanaLeaderSchedule', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(1), notifyEvery=hours(24)):
+		super().__init__('TaskSolanaLeaderSchedule', services, checkEvery, notifyEvery)
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		ep = self.chain.getEpoch()
+		ep = self.s.chain.getEpoch()
 
 		if self.prev is None:
 			self.prev = ep
 
 		try:
 			if self.prev != ep:
-				schedule = self.chain.getLeaderSchedule()
+				schedule = self.s.chain.getLeaderSchedule()
 				self.prev = ep
 				return self.notify(f'{len(schedule)} leader slot assigned for the epoch {ep} {Emoji.Leader}')
 			return False
@@ -121,24 +121,24 @@ class TaskSolanaLeaderSchedule(Task):
 			return self.notify(f'no leader slot assigned for the epoch {ep} {Emoji.NoLeader}')
 
 class TaskSolanaSkippedSlots(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(6), notifyEvery=hours(6)):
-		super().__init__('TaskSolanaSkippedSlots', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(6), notifyEvery=hours(6)):
+		super().__init__('TaskSolanaSkippedSlots', services, checkEvery, notifyEvery)
 		self.prev = None
 		self.prevBP = 0
 		self.prevM = 0
 		self.THRESHOLD_SKIPPED_SLOT = 0.25 # 25 %
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		ep = self.chain.getEpoch()
+		ep = self.s.chain.getEpoch()
 
 		if self.prev is None:
 			self.prev = ep
 
-		bp_info = self.chain.getBlockProduction()
+		bp_info = self.s.chain.getBlockProduction()
 		if bp_info[0] != 0:
 			skipped_perc = (bp_info[0] - bp_info[1]) / bp_info[0]
 			if self.prev == ep:

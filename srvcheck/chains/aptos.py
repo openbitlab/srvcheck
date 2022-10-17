@@ -9,39 +9,39 @@ from ..utils import ConfItem, ConfSet, Bash
 ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
 
 class TaskAptosHealthError(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
-		super().__init__('TaskAptosHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskAptosHealthError', services, checkEvery, notifyEvery)
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
 		try:
-			self.chain.getHealth()
+			self.s.chain.getHealth()
 			return False
 		except Exception:
 			return self.notify(f'health error! {Emoji.Health}')
 
 class TaskAptosValidatorPerformanceCheck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosValidatorPerformanceCheck', conf, notification, system, chain, checkEvery = minutes(30), notifyEvery = hours(1))
+	def __init__(self, services):
+		super().__init__('TaskAptosValidatorPerformanceCheck', services, checkEvery = minutes(30), notifyEvery = hours(1))
 		self.prevEp = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
-		return chain.isValidator()
+	def isPluggable(services):
+		return services.chain.isValidator()
 
 	def run(self):
-		ep = self.chain.getEpoch()
+		ep = self.s.chain.getEpoch()
 
 		if self.prevEp is None:
 			self.prevEp = ep
 
 		if self.prevEp != ep:
 			self.prevEp = ep
-			performance = self.chain.getValidatorPerformance()
+			performance = self.s.chain.getValidatorPerformance()
 			thisEpoch = list(filter(lambda item: item, performance[1].replace('|', '').split(" ")))
 			lastEpoch = list(filter(lambda item: item, performance[0].replace('|', '').split(" ")))
 			activeStakeOut = "active stake increased" if int(thisEpoch[7]) > int(lastEpoch[7]) else 'active stake remained the same'
@@ -56,16 +56,16 @@ class TaskAptosValidatorPerformanceCheck(Task):
 		return False
 	
 class TaskAptosCurrentConsensusStuck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosCurrentConsensusStuck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+	def __init__(self, services):
+		super().__init__('TaskAptosCurrentConsensusStuck', services, checkEvery = minutes(5), notifyEvery=hours(1))
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
-		return chain.isValidator()
+	def isPluggable(services):
+		return services.chain.isValidator()
 
 	def run(self):
-		cur_round = self.chain.getCurrentConsensus()
+		cur_round = self.s.chain.getCurrentConsensus()
 
 		print(f'#Debug TaskAptosCurrentConsensusStuck: {self.prev}, {cur_round}')
 		if self.prev is None:
@@ -78,15 +78,15 @@ class TaskAptosCurrentConsensusStuck(Task):
 		return False
 
 class TaskAptosConnectedToFullNodeCheck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosConnectedToFullNodeCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+	def __init__(self, services):
+		super().__init__('TaskAptosConnectedToFullNodeCheck', services, checkEvery = minutes(5), notifyEvery=hours(1))
 
 	@staticmethod
-	def isPluggable(conf, chain):
-		return chain.isValidator()
+	def isPluggable(services):
+		return services.chain.isValidator()
 
 	def run(self):
-		conn = self.chain.getConnections()
+		conn = self.s.chain.getConnections()
 
 		print(f'#Debug TaskAptosConnectedToFullNodeCheck: {conn}')
 		if len(conn) > 0:
@@ -97,33 +97,33 @@ class TaskAptosConnectedToFullNodeCheck(Task):
 		return False
 
 class TaskAptosConnectedToAptosNodeCheck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosConnectedToAptosNodeCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+	def __init__(self, services):
+		super().__init__('TaskAptosConnectedToAptosNodeCheck', services, checkEvery = minutes(5), notifyEvery=hours(1))
 
 	@staticmethod
-	def isPluggable(conf, chain):
-		return chain.isValidator()
+	def isPluggable(services):
+		return services.chain.isValidator()
 
 	def run(self):
 		aptosPeerId = 'f326fd30'
 
-		print(f'#Debug TaskAptosConnectedToAptosNodeCheck: {self.chain.isConnectedToPeer(aptosPeerId)}')
-		if self.chain.isConnectedToPeer(aptosPeerId) is False:
+		print(f'#Debug TaskAptosConnectedToAptosNodeCheck: {self.s.chain.isConnectedToPeer(aptosPeerId)}')
+		if self.s.chain.isConnectedToPeer(aptosPeerId) is False:
 			return self.notify(f'not connected to Aptos node {Emoji.Peers}')
 
 		return False
 
 class TaskAptosStateSyncCheck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskAptosStateSyncCheck', conf, notification, system, chain, checkEvery = minutes(5), notifyEvery=hours(1))
+	def __init__(self, services):
+		super().__init__('TaskAptosStateSyncCheck', services, checkEvery = minutes(5), notifyEvery=hours(1))
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		sync = int(self.chain.getAptosStateSyncVersion()[0].split(" ")[-1])
+		sync = int(self.s.chain.getAptosStateSyncVersion()[0].split(" ")[-1])
 
 		print(f'#Debug TaskAptosStateSyncCheck: {sync}, {self.prev}')
 		if self.prev is None:
