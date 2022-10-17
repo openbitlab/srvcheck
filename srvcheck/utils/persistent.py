@@ -1,5 +1,6 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+import dateutil.parser
 
 
 class Persistent:
@@ -26,9 +27,17 @@ class Persistent:
 		return None
 
 	def timedAdd(self, k, v):
-		if k in self.data:
+		if k not in self.data:
 			self.data[k] = []
 
 		self.data[k].append([datetime.now().isoformat(), v])
 		self.save()
 
+	def lastTime(self, k):
+		if k not in self.data:
+			return datetime.now() - timedelta(days=1)
+		else:
+			return dateutil.parser.isoparse(self.data[k][-1][0])
+
+	def hasPassedNHoursSinceLast(self, k, n):
+		return datetime.now() > (self.lastTime(k) + timedelta(hours=n))
