@@ -24,7 +24,7 @@ class TaskSystemUsage(Task):
 		# savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
 		# self.s.notification.sendPhoto('/tmp/t.png')
 
-		savePlot("Disk Used", self.s.persistent.get(self.name + '_diskUsed'), 'used (GB)', '/tmp/t.png', lambda y: y/1024/1024)
+		savePlot(self.s.conf.getOrDefault('chain.name') + " - Disk Used", self.s.persistent.get(self.name + '_diskUsed'), 'Used (GB)', '/tmp/t.png', lambda y: y/1024/1024)
 		self.s.notification.sendPhoto('/tmp/t.png')
 
 		return False
