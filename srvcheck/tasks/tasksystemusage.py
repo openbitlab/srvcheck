@@ -12,4 +12,8 @@ class TaskSystemUsage(Task):
 		usage = self.s.system.getUsage()
 		serviceUptime = self.s.system.getServiceUptime()
 		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
+
+		for x in ['diskUsed', 'diskPercentageUsed', 'diskUsedByLog', 'ramUsed']:
+			self.s.persistent.timedAdd(self.name + '_' + x, usage[x])
+
 		return False

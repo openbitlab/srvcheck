@@ -31,3 +31,4 @@ class Persistent:
 
 		self.data[k].append([datetime.now().isoformat(), v])
 		self.save()
+
