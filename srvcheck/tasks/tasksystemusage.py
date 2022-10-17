@@ -15,16 +15,16 @@ class TaskSystemUsage(Task):
 		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
 
 		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_diskUsed', 23):
-			self.s.persistent.timedAdd(self.name + '_diskUsed', usage.diskUsed.replace('G', ''))
-			self.s.persistent.timedAdd(self.name + '_diskPercentageUsed', usage.diskPercentageUsed.replace('G', ''))
-			self.s.persistent.timedAdd(self.name + '_diskUsedByLog', usage.diskUsedByLog.replace('G', ''))
-			self.s.persistent.timedAdd(self.name + '_ramUsed', usage.ramUsed.replace('G', ''))
+			self.s.persistent.timedAdd(self.name + '_diskUsed', usage.diskUsed)
+			self.s.persistent.timedAdd(self.name + '_diskPercentageUsed', usage.diskPercentageUsed)
+			self.s.persistent.timedAdd(self.name + '_diskUsedByLog', usage.diskUsedByLog)
+			self.s.persistent.timedAdd(self.name + '_ramUsed', usage.ramUsed)
 
 
 		# savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
 		# self.s.notification.sendPhoto('/tmp/t.png')
 
-		savePlot("Disk Used", self.s.persistent.get(self.name + '_' + 'diskUsed'), 'used (GB)', '/tmp/t.png')
+		savePlot("Disk Used", self.s.persistent.get(self.name + '_diskUsed'), 'used (GB)', '/tmp/t.png')
 		self.s.notification.sendPhoto('/tmp/t.png')
 
 		return False
