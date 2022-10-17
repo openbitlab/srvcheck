@@ -14,9 +14,11 @@ class TaskSystemUsage(Task):
 		serviceUptime = self.s.system.getServiceUptime()
 		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
 
-		for x in ['diskUsed', 'diskPercentageUsed', 'diskUsedByLog', 'ramUsed']:
-			if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_' + x, 23):
-				self.s.persistent.timedAdd(self.name + '_' + x, usage[x].replace('G', ''))
+		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_diskUsed', 23):
+			self.s.persistent.timedAdd(self.name + '_diskUsed', usage[x].replace('G', ''))
+			self.s.persistent.timedAdd(self.name + '_diskPercentageUsed', usage[x].replace('G', ''))
+			self.s.persistent.timedAdd(self.name + '_diskUsedByLog', usage[x].replace('G', ''))
+			self.s.persistent.timedAdd(self.name + '_ramUsed', usage[x].replace('G', ''))
 
 
 		# savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
