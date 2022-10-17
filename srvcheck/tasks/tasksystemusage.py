@@ -31,7 +31,7 @@ class TaskSystemUsage(Task):
 		pc.data_mod = lambda y: y/1024/1024
 
 		pc.data2 = self.s.persistent.get(self.name + '_diskUsedByLog')
-		pc.label = 'Used by log (GB)'
+		pc.label2 = 'Used by log (GB)'
 		pc.data_mod2 = lambda y: y/1024/1024
 
 		pc.fpath = '/tmp/t.png'
