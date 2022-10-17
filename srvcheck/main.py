@@ -115,6 +115,9 @@ def main():
 				except Exception:
 					print (f'Error in task {t.name}: {traceback.format_exc()}')
 
+				# Slows down srvcheck
+				time.sleep(0.2)
+				
 		notification.flush()
 		sys.stdout.flush()
 		time.sleep(TTS)
