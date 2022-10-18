@@ -14,7 +14,7 @@ class TaskSystemUsage(Task):
 		serviceUptime = self.s.system.getServiceUptime()
 		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
 
-		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_diskUsed', 23):
+		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_diskUsed', 3):
 			self.s.persistent.timedAdd(self.name + '_diskUsed', usage.diskUsed)
 			self.s.persistent.timedAdd(self.name + '_diskPercentageUsed', usage.diskPercentageUsed)
 			self.s.persistent.timedAdd(self.name + '_diskUsedByLog', usage.diskUsedByLog)
@@ -30,9 +30,8 @@ class TaskSystemUsage(Task):
 		pc.label = 'Used (GB)'
 		pc.data_mod = lambda y: y/1024/1024
 
-		print (pc.data)
 
-		# pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
+		pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
 		pc.label2 = 'Used (%)'
 		pc.data_mod2 = lambda y: y
 
