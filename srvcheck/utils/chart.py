@@ -22,9 +22,9 @@ def savePlot(c):
 	if c.data2:
 		ax2 = ax1.twinx()
 	ax1.title.set_text(c.name)
-	ax1.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), c.data)), list(map(lambda l: c.data_mod(l[1]), c.data)), 'g-')
+	ax1.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), c.data)), list(map((lambda l: c.data_mod(l[1])), c.data)), 'g-')
 	if c.data2:
-		ax2.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), c.data2)), list(map(lambda l: c.data_mod2(l[1]), c.data2)), 'b-')
+		ax2.plot(list(map(lambda l: dateutil.parser.isoparse(l[0]), c.data2)), list(map((lambda l: c.data_mod2(l[1])), c.data2)), 'b-')
 	plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
 	plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
 	ax1.set_xlabel('Date')
