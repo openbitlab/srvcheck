@@ -32,7 +32,7 @@ class TaskSystemUsage(Task):
 
 		print (pc.data)
 
-		pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
+		# pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
 		pc.label2 = 'Used (%)'
 		pc.data_mod2 = lambda y: y
 
