@@ -30,7 +30,7 @@ class TaskSystemUsage(Task):
 		pc.label = 'Used (GB)'
 		pc.data_mod = lambda y: y/1024/1024
 
-		pc.data2 = self.s.persistent.get(self.name + '_diskUsedByLog')
+		pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
 		pc.label2 = 'Used by log (GB)'
 		pc.data_mod2 = lambda y: y/1024/1024
 
