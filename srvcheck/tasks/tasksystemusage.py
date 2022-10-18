@@ -34,6 +34,7 @@ class TaskSystemUsage(Task):
 
 		pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
 		pc.label2 = 'Used (%)'
+		# pc.data_mod2 = lambda y: y
 
 		pc.fpath = '/tmp/t.png'
 
