@@ -78,7 +78,7 @@ class TaskSystemUsage(Task):
 		pc.subplots.append(sp)
 
 		sp.label2 = 'Ram total (GB)'
-		sp.data2 = [usage.ramSize]
+		sp.data2 = [usage.ramSize] * len(self.s.persistent.get(self.name + '_ramUsed'))
 		sp.data_mod2 = lambda y: toGB(y)
 		sp.color2 = 'r'
 
