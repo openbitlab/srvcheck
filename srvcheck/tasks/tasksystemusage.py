@@ -73,7 +73,7 @@ class TaskSystemUsage(Task):
 
 		pc.fpath = '/tmp/t.png'
 
-		savePlots(pc)
+		savePlots(pc, 2, 2)
 		self.s.notification.sendPhoto('/tmp/t.png')
 
 		return False
