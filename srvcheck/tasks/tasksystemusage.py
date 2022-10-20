@@ -14,11 +14,12 @@ class TaskSystemUsage(Task):
 		serviceUptime = self.s.system.getServiceUptime()
 		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
 
-		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_diskUsed', 23):
+		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_ramSize', 23):
 			self.s.persistent.timedAdd(self.name + '_diskUsed', usage.diskUsed)
 			self.s.persistent.timedAdd(self.name + '_diskPercentageUsed', usage.diskPercentageUsed)
 			self.s.persistent.timedAdd(self.name + '_diskUsedByLog', usage.diskUsedByLog)
 			self.s.persistent.timedAdd(self.name + '_ramUsed', usage.ramUsed)
+			self.s.persistent.timedAdd(self.name + '_ramSize', usage.ramSize)
 
 
 		# savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
@@ -77,8 +78,8 @@ class TaskSystemUsage(Task):
 		sp.color = 'y'
 		pc.subplots.append(sp)
 
-		sp.label2 = 'Ram total (GB)'
-		sp.data2 = [usage.ramSize] * len(self.s.persistent.get(self.name + '_ramUsed'))
+		sp.label2 = 'Ram size (GB)'
+		sp.data2 = self.s.persistent.get(self.name + '_ramSize')
 		sp.data_mod2 = lambda y: toGB(y)
 		sp.color2 = 'r'
 
