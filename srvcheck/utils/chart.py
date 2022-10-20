@@ -43,6 +43,10 @@ class SubPlotConf:
 	label = ""
 	data_mod = lambda y: y
 
+	data2 = None
+	label2 = ""
+	data_mod2 = lambda y: y
+
 class PlotsConf:
 	title = ""
 	subplots = []
@@ -61,8 +65,17 @@ def savePlots(c, s1, s2):
 		sp = c.subplots[i]
 		i += 1
 		ax.title.set_text(sp.name)
+
+		if sp.data2:
+			ax2 = ax.twinx()
+			
 		ax.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data)),
 			list(map(lambda l: (sp.data_mod(l[1])), sp.data)), '-')
+
+		if sp.data2:
+			ax2.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data2)), list(map(lambda l: (sp.data_mod2(l[1])), sp.data2)), 'b-')
+			ax2.set_ylabel(sp.label2)
+
 		ax.set_xlabel('Date')
 		ax.set_ylabel(sp.label)
 

@@ -1,5 +1,5 @@
 from . import Task, hours
-from ..utils import savePlot, PlotConf, PlotsConf, SubPlotConf
+from ..utils import savePlot, savePlots, PlotConf, PlotsConf, SubPlotConf
 
 class TaskSystemUsage(Task):
 	def __init__(self, services):
@@ -43,7 +43,7 @@ class TaskSystemUsage(Task):
 
 
 		pc = PlotsConf ()
-		pc.title = "System usage"
+		pc.title = self.s.conf.getOrDefault('chain.name') + " - System usage"
 
 		sp = SubPlotConf()
 		sp.name = self.s.conf.getOrDefault('chain.name') + " - Disk"
@@ -73,7 +73,7 @@ class TaskSystemUsage(Task):
 
 		pc.fpath = '/tmp/t.png'
 
-		savePlot(pc)
+		savePlots(pc)
 		self.s.notification.sendPhoto('/tmp/t.png')
 
 		return False
