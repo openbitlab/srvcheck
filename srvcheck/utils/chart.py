@@ -81,4 +81,4 @@ def savePlots(c, s1, s2):
 
 	plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
 	plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
-	plt.savefig(c.fpath, bbox_inches="tight")
+	plt.savefig(c.fpath)

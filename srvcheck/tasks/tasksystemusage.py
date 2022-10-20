@@ -1,5 +1,5 @@
 from . import Task, hours
-from ..utils import savePlot, savePlots, PlotConf, PlotsConf, SubPlotConf
+from ..utils import savePlot, savePlots, PlotConf, PlotsConf, SubPlotConf, toGB
 
 class TaskSystemUsage(Task):
 	def __init__(self, services):
@@ -49,7 +49,7 @@ class TaskSystemUsage(Task):
 		sp.name = self.s.conf.getOrDefault('chain.name') + " - Disk"
 		sp.data = self.s.persistent.get(self.name + '_diskUsed')
 		sp.label = 'Used (GB)'
-		sp.data_mod = lambda y: y/1024/1024
+		sp.data_mod = lambda y: toGB(y)
 		pc.subplots.append(sp)
 
 		sp = SubPlotConf()
@@ -61,13 +61,13 @@ class TaskSystemUsage(Task):
 		sp = SubPlotConf()
 		sp.data = self.s.persistent.get(self.name + '_diskUsedByLog')
 		sp.label = 'Used by log (GB)'
-		sp.data_mod = lambda y: y/1024/1024
+		sp.data_mod = lambda y: toGB(y)
 		pc.subplots.append(sp)
 
 		sp = SubPlotConf()
 		sp.data = self.s.persistent.get(self.name + '_ramUsed')
 		sp.label = 'Ram used (GB)'
-		sp.data_mod = lambda y: y/1024/1024
+		sp.data_mod = lambda y: toGB(y)
 		pc.subplots.append(sp)
 
 
