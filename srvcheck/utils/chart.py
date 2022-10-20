@@ -54,6 +54,7 @@ class PlotsConf:
 
 def savePlots(c, s1, s2):
 	plt.clf()
+	plt.figure(figsize=(8, 6))
 	fig, axes = plt.subplots(s1, s2)
 	fig.suptitle(c.title)
 
