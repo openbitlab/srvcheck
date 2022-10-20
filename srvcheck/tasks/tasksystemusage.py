@@ -1,5 +1,5 @@
 from . import Task, hours
-from ..utils import savePlot, PlotConf
+from ..utils import savePlot, PlotConf, PlotsConf, SubPlotConf
 
 class TaskSystemUsage(Task):
 	def __init__(self, services):
@@ -34,6 +34,42 @@ class TaskSystemUsage(Task):
 		pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
 		pc.label2 = 'Used (%)'
 		pc.data_mod2 = lambda y: y
+
+		pc.fpath = '/tmp/t.png'
+
+		savePlot(pc)
+		self.s.notification.sendPhoto('/tmp/t.png')
+
+
+
+		pc = PlotsConf ()
+		pc.title = "System usage"
+
+		sp = SubPlotConf()
+		sp.name = self.s.conf.getOrDefault('chain.name') + " - Disk"
+		sp.data = self.s.persistent.get(self.name + '_diskUsed')
+		sp.label = 'Used (GB)'
+		sp.data_mod = lambda y: y/1024/1024
+		pc.subplots.append(sp)
+
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.get(self.name + '_diskPercentageUsed')
+		sp.label = 'Used (%)'
+		sp.data_mod = lambda y: y
+		pc.subplots.append(sp)
+
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.get(self.name + '_diskUsedByLog')
+		sp.label = 'Used by log (GB)'
+		sp.data_mod = lambda y: y/1024/1024
+		pc.subplots.append(sp)
+
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.get(self.name + '_ramUsed')
+		sp.label = 'Ram used (GB)'
+		sp.data_mod = lambda y: y/1024/1024
+		pc.subplots.append(sp)
+
 
 		pc.fpath = '/tmp/t.png'
 

@@ -2,6 +2,7 @@ import dateutil.parser
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+
 class PlotConf:
 	name = ""
 	data = []
@@ -32,4 +33,39 @@ def savePlot(c):
 	if c.data2:
 		ax2.set_ylabel(c.label2, color='b')
 
+	plt.savefig(c.fpath, bbox_inches="tight")
+
+
+
+class SubPlotConf:
+	name = ""
+	data = []
+	label = ""
+	data_mod = lambda y: y
+
+class PlotsConf:
+	title = ""
+	subplots = []
+	fpath = ""
+
+def savePlots(c, s1, s2):
+	plt.clf()
+	fig, axes = plt.subplots(s1, s2)
+	fig.suptitle(c.title)
+
+	if len(fig.get_axes()) != len(c.subplots):
+		raise Exception("Invalid subplot number")
+
+	i = 0
+	for ax in fig.get_axes():
+		sp = c.subplots[i]
+		i += 1
+		ax.title.set_text(sp.name)
+		ax.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data)),
+			list(map(lambda l: (sp.data_mod(l[1])), sp.data)), '-')
+		ax.set_xlabel('Date')
+		ax.set_ylabel(sp.label)
+
+	plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
+	plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
 	plt.savefig(c.fpath, bbox_inches="tight")
