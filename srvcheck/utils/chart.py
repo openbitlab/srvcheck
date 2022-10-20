@@ -49,6 +49,8 @@ class SubPlotConf:
 	color2 = "g"
 	data_mod2 = lambda y: y
 
+	share_y = False
+
 class PlotsConf:
 	title = ""
 	subplots = []
@@ -68,15 +70,17 @@ def savePlots(c, s1, s2):
 		i += 1
 		ax.title.set_text(sp.name)
 
-		if sp.data2:
+		if sp.data2 and not sp.share_y:
 			ax2 = ax.twinx()
 			
 		ax.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data)),
 			list(map(lambda l: (sp.data_mod(l[1])), sp.data)), '-' + sp.color)
 
-		if sp.data2:
+		if sp.data2 and not sp.share_y:
 			ax2.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data2)), list(map(lambda l: (sp.data_mod2(l[1])), sp.data2)), sp.color2 + '-')
 			ax2.set_ylabel(sp.label2, color=sp.color2)
+		elif sp.data2 and sp.share_y:
+			ax.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data2)), list(map(lambda l: (sp.data_mod2(l[1])), sp.data2)), sp.color2 + '-')
 
 		# ax.set_xlabel('Date')
 		ax.set_ylabel(sp.label, color=sp.color)
