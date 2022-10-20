@@ -77,6 +77,11 @@ class TaskSystemUsage(Task):
 		sp.color = 'y'
 		pc.subplots.append(sp)
 
+		sp.label2 = 'Ram total (GB)'
+		sp.data2 = [usage.ramSize]
+		sp.data_mod2 = lambda y: toGB(y)
+		sp.color2 = 'r'
+
 
 		pc.fpath = '/tmp/t.png'
 
