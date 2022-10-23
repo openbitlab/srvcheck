@@ -62,7 +62,7 @@ def savePlots(c, s1, s2):
 	fig.suptitle(c.title)
 
 	if len(fig.get_axes()) != len(c.subplots):
-		raise Exception("Invalid subplot number")
+		raise Exception(f"Invalid subplot number: expected {fig.get_axes()} got {len(c.subplots)}")
 
 	i = 0
 	for ax in fig.get_axes():
