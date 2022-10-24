@@ -1,9 +1,9 @@
-from . import Task, hours, minutes
-from ..utils import savePlot, savePlots, PlotConf, PlotsConf, SubPlotConf, toGB
+from . import Task, hours
+from ..utils import savePlots, PlotsConf, SubPlotConf, toGB
 
 class TaskSystemUsage(Task):
 	def __init__(self, services):
-		super().__init__('TaskSystemUsage', services, minutes(2), minutes(2))
+		super().__init__('TaskSystemUsage', services, hours(24), hours(24))
 
 	@staticmethod
 	def isPluggable(services):
