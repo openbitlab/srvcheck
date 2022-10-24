@@ -20,7 +20,7 @@ class TaskSubstrateNewReferenda(Task):
 
 	def run(self):
 		n = self.s.chain.getNetwork()
-		if not (n in ['Kusama', 'Polkadot']):
+		if n not in ['Kusama', 'Polkadot']:
 			return False
 
 		si = self.s.chain.getSubstrateInterface()
