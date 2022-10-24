@@ -14,6 +14,7 @@ class TaskSystemUsage(Task):
 		serviceUptime = self.s.system.getServiceUptime()
 		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
 
+		# Saving historical data
 		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_ramSize', 23):
 			self.s.persistent.timedAdd(self.name + '_diskUsed', usage.diskUsed)
 			self.s.persistent.timedAdd(self.name + '_diskPercentageUsed', usage.diskPercentageUsed)
@@ -21,27 +22,7 @@ class TaskSystemUsage(Task):
 			self.s.persistent.timedAdd(self.name + '_ramUsed', usage.ramUsed)
 			self.s.persistent.timedAdd(self.name + '_ramSize', usage.ramSize)
 
-
-		# savePlot("Disk Percentage Used", self.s.persistent.get(self.name + '_' + 'diskPercentageUsed'), '%% used', '/tmp/t.png')
-		# self.s.notification.sendPhoto('/tmp/t.png')
-
-		# pc = PlotConf ()
-		# pc.name = self.s.conf.getOrDefault('chain.name') + " - Disk"
-		# pc.data = self.s.persistent.get(self.name + '_diskUsed')
-		# pc.label = 'Used (GB)'
-		# pc.data_mod = lambda y: y/1024/1024
-
-
-		# pc.data2 = self.s.persistent.get(self.name + '_diskPercentageUsed')
-		# pc.label2 = 'Used (%)'
-		# pc.data_mod2 = lambda y: y
-
-		# pc.fpath = '/tmp/t.png'
-
-		# savePlot(pc)
-		# self.s.notification.sendPhoto('/tmp/t.png')
-
-
+		# Sending a chart
 		pc = PlotsConf ()
 		pc.title = self.s.conf.getOrDefault('chain.name') + " - System usage"
 
@@ -82,8 +63,8 @@ class TaskSystemUsage(Task):
 		sp.data_mod2 = lambda y: toGB(y)
 		sp.color2 = 'r'
 
-		sp.share_y = True 
-		
+		sp.share_y = True
+
 		pc.subplots.append(sp)
 
 		pc.fpath = '/tmp/t.png'

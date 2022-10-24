@@ -4,16 +4,17 @@ import matplotlib.dates as mdates
 
 
 class PlotConf:
-	name = ""
-	data = []
-	label = ""
-	data_mod = lambda y: y
+	def __init__(self):
+		self.name = ""
+		self.data = []
+		self.label = ""
+		self.data_mod = lambda y: y
 
-	data2 = None
-	label2 = ""
-	data_mod2 = lambda y: y
+		self.data2 = None
+		self.label2 = ""
+		self.data_mod2 = lambda y: y
 
-	fpath = ""
+		self.fpath = ""
 
 def savePlot(c):
 	plt.clf()
@@ -37,24 +38,26 @@ def savePlot(c):
 
 
 class SubPlotConf:
-	name = ""
+	def __init__(self):
+		self.name = ""
 
-	data = []
-	label = ""
-	data_mod = lambda y: y
-	color = "b"
+		self.data = []
+		self.label = ""
+		self.data_mod = lambda y: y
+		self.color = "b"
 
-	data2 = None
-	label2 = ""
-	color2 = "g"
-	data_mod2 = lambda y: y
+		self.data2 = None
+		self.label2 = ""
+		self.color2 = "g"
+		self.data_mod2 = lambda y: y
 
-	share_y = False
+		self.share_y = False
 
 class PlotsConf:
-	title = ""
-	subplots = []
-	fpath = ""
+	def __init__(self):
+		self.title = ""
+		self.subplots = []
+		self.fpath = ""
 
 def savePlots(c, s1, s2):
 	plt.clf()
@@ -62,7 +65,7 @@ def savePlots(c, s1, s2):
 	fig.suptitle(c.title)
 
 	if len(fig.get_axes()) != len(c.subplots):
-		raise Exception(f"Invalid subplot number: expected {fig.get_axes()} got {len(c.subplots)}")
+		raise Exception(f"Invalid subplot number: expected {len(fig.get_axes())} got {len(c.subplots)}")
 
 	i = 0
 	for ax in fig.get_axes():
