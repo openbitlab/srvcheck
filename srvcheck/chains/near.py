@@ -4,17 +4,17 @@ from ..tasks import Task, seconds, hours, minutes
 from ..utils import Bash
 
 class TaskNearBlockMissed(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(6)):
-		super().__init__("TaskNearBlockMissed", conf, notification, system, chain, checkEvery, notifyEvery)
-		self.THRESHOLD_RATIO = self.chain.getKickOutThresholds()[0]
+	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(6)):
+		super().__init__("TaskNearBlockMissed", services, checkEvery, notifyEvery)
+		self.THRESHOLD_RATIO = self.s.chain.getKickOutThresholds()[0]
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 		
 	def run(self):
 		try:
-			r = self.chain.getProductionReport()
+			r = self.s.chain.getProductionReport()
 			expected = int(r['num_expected_blocks'])
 			produced = int(r['num_produced_blocks'])
 			if produced/expected < self.THRESHOLD_RATIO:
@@ -24,18 +24,18 @@ class TaskNearBlockMissed(Task):
 		return False
 
 class TaskNearChunksMissed(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(10), notifyEvery=hours(6)):
-		super().__init__("TaskNearChunksMissed", conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(6)):
+		super().__init__("TaskNearChunksMissed", services, checkEvery, notifyEvery)
 
-		self.THRESHOLD_RATIO = self.chain.getKickOutThresholds()[1]
+		self.THRESHOLD_RATIO = self.s.chain.getKickOutThresholds()[1]
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
 		try:
-			r = self.chain.getProductionReport()
+			r = self.s.chain.getProductionReport()
 			expected = int(r['num_expected_chunks'])
 			produced = int(r['num_produced_chunks'])
 			if produced/expected < self.THRESHOLD_RATIO:
@@ -45,20 +45,20 @@ class TaskNearChunksMissed(Task):
 		return False
 
 class TaskCheckProposal(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__("TaskCheckProposal", conf, notification, system, chain, checkEvery=seconds(chain.EPOCHTIME), notifyEvery=seconds(chain.EPOCHTIME/2))
+	def __init__(self, services):
+		super().__init__("TaskCheckProposal", services, checkEvery=seconds(services.chain.EPOCHTIME), notifyEvery=seconds(services.chain.EPOCHTIME/2))
 		self.prev_epoch = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
 		if self.prev_epoch is None:
-			self.prev_epoch = self.chain.getEpoch()
-		elif self.prev_epoch != self.chain.getEpoch():
-			self.prev_epoch = self.chain.getEpoch()
-			p = self.chain.getProposal()
+			self.prev_epoch = self.s.chain.getEpoch()
+		elif self.prev_epoch != self.s.chain.getEpoch():
+			self.prev_epoch = self.s.chain.getEpoch()
+			p = self.s.chain.getProposal()
 			if len(p) == 0:
 				return self.notify(f'failed to send proposal {Emoji.Health}')
 			elif "Declined" in p:
@@ -66,21 +66,21 @@ class TaskCheckProposal(Task):
 		return False
 
 class TaskCheckKicked (Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1)):
-		super().__init__("TaskCheckKicked", conf, notification, system, chain, checkEvery=checkEvery, notifyEvery=seconds(chain.EPOCHTIME/3))
+	def __init__(self, services, checkEvery=minutes(1)):
+		super().__init__("TaskCheckKicked", services, checkEvery=checkEvery, notifyEvery=seconds(services.chain.EPOCHTIME/3))
 		self.prev_epoch = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		kicked_set = self.chain.getKickedout()
-		pool_id = self.chain.getPoolId()
+		kicked_set = self.s.chain.getKickedout()
+		pool_id = self.s.chain.getPoolId()
 		if self.prev_epoch is None:
-			self.prev_epoch = self.chain.getEpoch()
-		elif self.prev_epoch != self.chain.getEpoch():
-			self.prev_epoch = self.chain.getEpoch()
+			self.prev_epoch = self.s.chain.getEpoch()
+		elif self.prev_epoch != self.s.chain.getEpoch():
+			self.prev_epoch = self.s.chain.getEpoch()
 			for v in kicked_set:
 				if v["account_id"] == pool_id:
 					reason = v["reason"]

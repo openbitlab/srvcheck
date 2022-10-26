@@ -1,4 +1,5 @@
 from .bash import Bash
 from .system import System, SystemUsage, toGB
 from .confset import ConfSet, ConfItem
-# from .chart import
+from .persistent import Persistent
+from .chart import savePlot, savePlots, PlotConf, PlotsConf, SubPlotConf

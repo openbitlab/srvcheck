@@ -1,6 +1,8 @@
 import time
+
 from ..notification import Emoji
 from . import Task, minutes
+
 
 def elapsedToString(since):
 	elapsed = (time.time() - since)
@@ -13,20 +15,20 @@ def elapsedToString(since):
 	return elapsed
 
 class TaskChainStuck(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskChainStuck', conf, notification, system, chain, minutes(5), minutes(5))
+	def __init__(self, services):
+		super().__init__('TaskChainStuck', services, minutes(5), minutes(5))
 		self.prev = None
 		self.since = None
 		self.oc = 0
 
 		try:
-			self.chain.getBlockHash()
-			self.method = self.chain.getBlockHash
+			self.s.chain.getBlockHash()
+			self.method = self.s.chain.getBlockHash
 		except:
-			self.method = self.chain.getHeight
+			self.method = self.s.chain.getHeight
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):

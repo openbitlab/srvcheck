@@ -6,21 +6,21 @@ ConfSet.addItem(ConfItem('system.log_size_threshold', 4, int, 'threshold for log
 ConfSet.addItem(ConfItem('system.disk_limit', 90, int, 'threshold for disk usage in %'))
 
 class TaskSystemDiskAlert(Task):
-	def __init__(self, conf, notification, system, chain):
-		super().__init__('TaskSystemDiskAlert', conf, notification, system, chain, minutes(15), hours(2))
+	def __init__(self, services):
+		super().__init__('TaskSystemDiskAlert', services, minutes(15), hours(2))
 		self.prevDiskSize = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		usage = self.system.getUsage()
+		usage = self.s.system.getUsage()
 
 		if self.prevDiskSize is None:
 			self.prevDiskSize = usage.diskSize
 
-		dl = self.conf.getOrDefault('system.disk_limit')
+		dl = self.s.conf.getOrDefault('system.disk_limit')
 		if usage.diskPercentageUsed > dl:
 			return self.notify('disk usage is above %d%% (%d%%) (/var/log: %.1fG, /: %.1fG) %s' % 
 				(dl, usage.diskPercentageUsed, toGB(usage.diskUsedByLog), toGB(usage.diskUsed), Emoji.Disk))
@@ -34,7 +34,7 @@ class TaskSystemDiskAlert(Task):
 		return False
 
 	def canRecover(self):
-		return toGB(self.system.getUsage().diskUsedByLog) > self.conf.getOrDefault('system.log_size_threshold')
+		return toGB(self.s.system.getUsage().diskUsedByLog) > self.s.conf.getOrDefault('system.log_size_threshold')
 
 	def recover(self):
 		Bash('truncate -s 0 /var/log/syslog')

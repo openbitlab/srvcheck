@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 from ..utils.confset import ConfItem, ConfSet
@@ -22,8 +23,8 @@ class TelegramNotification(NotificationProvider):
 			self.chatIds = ""
 
 	def sendPhoto(self, photo):
-		# os.system('curl -F photo=@"./%s" https://api.telegram.org/bot%s/sendPhoto?chat_id=%s' % (file, apiToken, chat_id))
-		pass
+		for ci in self.chatIds:
+			os.system('curl -F photo=@"./%s" https://api.telegram.org/bot%s/sendPhoto?chat_id=%s' % (photo, self.apiToken, ci))
 
 	def send(self, st):
 		print(st.encode('utf-8'))

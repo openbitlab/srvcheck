@@ -1,16 +1,18 @@
 #!/usr/bin/python3
-import sys
-import time
-import configparser
-import traceback
 import argparse
+import configparser
+import sys
+import os
+import time
+import traceback
 from functools import reduce
+
 import srvcheck
 
-from .notification import Emoji, Notification, NOTIFICATION_SERVICES
-from .tasks import TASKS
-from .utils import System, ConfSet, ConfItem
 from .chains import CHAINS
+from .notification import NOTIFICATION_SERVICES, Emoji, Notification
+from .tasks import TASKS
+from .utils import ConfItem, ConfSet, System, Persistent
 
 if sys.version_info[0] < 3:
 	print ('python2 not supported, please use python3')
@@ -30,21 +32,30 @@ ConfSet.addItem(ConfItem('tasks.disabled', '', str, 'comma separated list of dis
 ConfSet.addItem(ConfItem('chain.service', None, str, 'node service name'))
 
 
-def addTasks(chain, notification, system, config):
+def addTasks(services):
 	# Create the list of tasks
 	tasks = []
 
-	for x in TASKS + chain.CUSTOM_TASKS:
-		task = x(config, notification, system, chain)
-		if config.getOrDefault('tasks.disabled').find(task.name) != -1:
+	for x in TASKS + services.chain.CUSTOM_TASKS:
+		task = x(services)
+		if services.conf.getOrDefault('tasks.disabled').find(task.name) != -1:
 			continue
 
-		if task.isPluggable(config, chain):
+		if task.isPluggable(services):
 			tasks.append(task)
 	return tasks
 
 def defaultConf():
 	print (ConfSet.help())
+
+
+class Services:
+	def __init__(self, conf, notification, system, chain, persistent):
+		self.conf = conf
+		self.notification = notification
+		self.system = system
+		self.chain = chain
+		self.persistent = persistent
 
 def main():
 	cf = '/etc/srvcheck.conf'
@@ -74,13 +85,17 @@ def main():
 	system = System(conf)
 	print (system.getUsage())
 
+	persistent = Persistent(os.environ['HOME'] + '/.srvcheck_persistent.json')
+
+
 	# Get the chain by name or by detect
 	chain = None
 	tasks = []
 	for x in CHAINS:
 		if conf.getOrDefault('chain.type') == x.TYPE:
 			chain = x(conf)
-			tasks = addTasks(chain, notification, system, conf)
+			services = Services(conf, notification, system, chain, persistent)
+			tasks = addTasks(services)
 			break
 
 	if not chain:
@@ -88,7 +103,8 @@ def main():
 			if x.detect(conf):
 				chain = x(conf)
 				print ("Detected chain", chain.TYPE)
-				tasks = addTasks(chain, notification, system, conf)
+				services = Services(conf, notification, system, chain, persistent)
+				tasks = addTasks(services)
 				break
 
 	if not chain:

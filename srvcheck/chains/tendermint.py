@@ -12,34 +12,34 @@ ConfSet.addItem(ConfItem('chain.blockWindow', 100, int))
 ConfSet.addItem(ConfItem('chain.thresholdNotsigned', 5, int))
 
 class TaskTendermintBlockMissed(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=minutes(5)):
+	def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
 		super().__init__('TaskTendermintBlockMissed',
-		      conf, notification, system, chain, checkEvery, notifyEvery)
+		      services, checkEvery, notifyEvery)
 
-		self.BLOCK_WINDOW = self.conf.getOrDefault('chain.blockWindow')
-		self.THRESHOLD_NOTSIGNED = self.conf.getOrDefault('chain.thresholdNotsigned')
+		self.BLOCK_WINDOW = self.s.conf.getOrDefault('chain.blockWindow')
+		self.THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault('chain.thresholdNotsigned')
 		self.prev = None
 		self.prevMissed = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
-		nblockh = self.chain.getHeight()
+		nblockh = self.s.chain.getHeight()
 
 		if self.prev is None:
 			self.prev = nblockh
 		missed = 0
 		start = nblockh - self.BLOCK_WINDOW
 		while start < nblockh:
-			if not next((x for x in self.chain.getSignatures(start) if x['validator_address'] == self.chain.getValidatorAddress()), None):
+			if not next((x for x in self.s.chain.getSignatures(start) if x['validator_address'] == self.s.chain.getValidatorAddress()), None):
 				lastMissed = start
 				missed += 1
 
 			start += 1
 
-		if self.chain.isStaking() and missed >= self.THRESHOLD_NOTSIGNED and (self.prevMissed is None or self.prevMissed != lastMissed):
+		if self.s.chain.isStaking() and missed >= self.THRESHOLD_NOTSIGNED and (self.prevMissed is None or self.prevMissed != lastMissed):
 			self.prevMissed = lastMissed
 			self.prev = nblockh
 			return self.notify(f'{missed} not signed blocks in the latest {self.BLOCK_WINDOW} {Emoji.BlockMiss}')
@@ -47,13 +47,13 @@ class TaskTendermintBlockMissed(Task):
 		return False
 
 class TaskTendermintNewProposal(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=minutes(1), notifyEvery=hours(1)):
+	def __init__(self, services, checkEvery=minutes(1), notifyEvery=hours(1)):
 		super().__init__('TaskTendermintNewProposal',
-		      conf, notification, system, chain, checkEvery, notifyEvery)
+		      services, checkEvery, notifyEvery)
 		self.prev=None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def getProposalTitle(self, proposal):
@@ -75,7 +75,7 @@ class TaskTendermintNewProposal(Task):
 			return self.notify(out)
 
 	def run(self):
-		nProposal = self.chain.getLatestProposals()
+		nProposal = self.s.chain.getLatestProposals()
 		if not self.prev:
 			self.prev = nProposal
 			if len(self.prev) > 0:
@@ -87,14 +87,14 @@ class TaskTendermintNewProposal(Task):
 		return False
 
 class TaskTendermintPositionChanged(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery=hours(1), notifyEvery=hours(10)):
+	def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(10)):
 		super().__init__('TaskTendermintPositionChanged',
-		      conf, notification, system, chain, checkEvery, notifyEvery)
-		self.ACTIVE_SET = self.conf.getOrDefault('chain.activeSet')
+		      services, checkEvery, notifyEvery)
+		self.ACTIVE_SET = self.s.conf.getOrDefault('chain.activeSet')
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
@@ -103,7 +103,7 @@ class TaskTendermintPositionChanged(Task):
 		if not self.prev:
 			self.prev = npos
 
-		if not self.chain.isStaking():
+		if not self.s.chain.isStaking():
 			return self.notify(f'out from the active set {Emoji.NoLeader}')
 
 		if npos != self.prev:
@@ -118,37 +118,37 @@ class TaskTendermintPositionChanged(Task):
 		return False
 
 	def getValidatorPosition(self):
-		bh = str(self.chain.getHeight())
+		bh = str(self.s.chain.getHeight())
 		active_vals = []
 		if self.ACTIVE_SET is None:
-			active_s = int(self.chain.rpcCall('validators', [bh, "1", "1"])['total'])
+			active_s = int(self.s.chain.rpcCall('validators', [bh, "1", "1"])['total'])
 		else:
 			active_s = int(self.ACTIVE_SET)
 		if active_s > 100:
 			it = active_s // 100
 			diff = active_s
 			for i in range(it):
-				active_vals += self.chain.rpcCall('validators', [bh, str(i + 1), "100"])['validators']
+				active_vals += self.s.chain.rpcCall('validators', [bh, str(i + 1), "100"])['validators']
 				diff -= 100
 			if diff > 0:
-				active_vals += self.chain.rpcCall('validators', [bh, str(i + 2), "100"])['validators']
+				active_vals += self.s.chain.rpcCall('validators', [bh, str(i + 2), "100"])['validators']
 		else:
-			active_vals += self.chain.rpcCall('validators', [bh, "1", str(active_s)])['validators']
-		p = [i for i, j in enumerate(active_vals) if j['address'] == self.chain.getValidatorAddress()]
+			active_vals += self.s.chain.rpcCall('validators', [bh, "1", str(active_s)])['validators']
+		p = [i for i, j in enumerate(active_vals) if j['address'] == self.s.chain.getValidatorAddress()]
 		return p[0] + 1 if len(p) > 0 else -1
 
 class TaskTendermintHealthError(Task):
-	def __init__(self, conf, notification, system, chain, checkEvery = hours(1), notifyEvery=hours(10)):
-		super().__init__('TaskTendermintHealthError', conf, notification, system, chain, checkEvery, notifyEvery)
+	def __init__(self, services, checkEvery = hours(1), notifyEvery=hours(10)):
+		super().__init__('TaskTendermintHealthError', services, checkEvery, notifyEvery)
 		self.prev = None
 
 	@staticmethod
-	def isPluggable(conf, chain):
+	def isPluggable(services):
 		return True
 
 	def run(self):
 		try:
-			self.chain.getHealth()
+			self.s.chain.getHealth()
 			return False
 		except Exception as _:
 			return self.notify(f'health error! {Emoji.Health}')
