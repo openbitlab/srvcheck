@@ -2,7 +2,6 @@ import json
 from datetime import datetime, timedelta
 import dateutil.parser
 
-
 class Persistent:
 	def __init__(self, fpath):
 		self.fpath = fpath

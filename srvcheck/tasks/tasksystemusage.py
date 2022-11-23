@@ -23,7 +23,7 @@ class TaskSystemUsage(Task):
 			self.s.persistent.timedAdd(self.name + '_ramSize', usage.ramSize)
 
 		# Sending a chart
-		pc = PlotsConf ()
+		pc = PlotsConf()
 		pc.title = self.s.conf.getOrDefault('chain.name') + " - System usage"
 
 		sp = SubPlotConf()
