@@ -25,6 +25,11 @@ class Persistent:
 			return self.data[k]
 		return None
 
+	def getN(self, k, n):
+		if k in self.data:
+			return self.data[k][-n:]
+		return None
+
 	def timedAdd(self, k, v):
 		if k not in self.data:
 			self.data[k] = []
