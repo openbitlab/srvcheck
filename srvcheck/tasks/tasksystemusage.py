@@ -69,7 +69,7 @@ class TaskSystemUsage(Task):
 
 		pc.fpath = '/tmp/t.png'
 
-		if len(self.s.persistent.getN(self.name + '_diskPercentageUsed'), 30) >= 2:
+		if len(self.s.persistent.getN(self.name + '_diskPercentageUsed', 30)) >= 2:
 			savePlots(pc, 2, 2)
 			self.s.notification.sendPhoto('/tmp/t.png')
 
