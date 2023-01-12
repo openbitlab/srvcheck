@@ -28,7 +28,7 @@ class TaskSystemUsage(Task):
 
 		sp = SubPlotConf()
 		# sp.name = self.s.conf.getOrDefault('chain.name') + " - Disk"
-		sp.data = self.s.persistent.get(self.name + '_diskUsed')
+		sp.data = self.s.persistent.getN(self.name + '_diskUsed', 30)
 		sp.label = 'Used (GB)'
 		sp.data_mod = lambda y: toGB(y)
 		sp.color = 'b'
@@ -39,27 +39,27 @@ class TaskSystemUsage(Task):
 		pc.subplots.append(sp)
 
 		sp = SubPlotConf()
-		sp.data = self.s.persistent.get(self.name + '_diskPercentageUsed')
+		sp.data = self.s.persistent.getN(self.name + '_diskPercentageUsed', 30)
 		sp.label = 'Used (%)'
 		sp.data_mod = lambda y: y
 		sp.color = 'r'
 		pc.subplots.append(sp)
 
 		sp = SubPlotConf()
-		sp.data = self.s.persistent.get(self.name + '_diskUsedByLog')
+		sp.data = self.s.persistent.getN(self.name + '_diskUsedByLog', 30)
 		sp.label = 'Used by log (GB)'
 		sp.data_mod = lambda y: toGB(y)
 		sp.color = 'g'
 		pc.subplots.append(sp)
 
 		sp = SubPlotConf()
-		sp.data = self.s.persistent.get(self.name + '_ramUsed')
+		sp.data = self.s.persistent.getN(self.name + '_ramUsed', 30)
 		sp.label = 'Ram used (GB)'
 		sp.data_mod = lambda y: toGB(y)
 		sp.color = 'y'
 
 		sp.label2 = 'Ram size (GB)'
-		sp.data2 = self.s.persistent.get(self.name + '_ramSize')
+		sp.data2 = self.s.persistent.getN(self.name + '_ramSize', 30)
 		sp.data_mod2 = lambda y: toGB(y)
 		sp.color2 = 'r'
 
@@ -69,7 +69,7 @@ class TaskSystemUsage(Task):
 
 		pc.fpath = '/tmp/t.png'
 
-		if len(self.s.persistent.get(self.name + '_diskPercentageUsed')) >= 2:
+		if len(self.s.persistent.getN(self.name + '_diskPercentageUsed'), 30) >= 2:
 			savePlots(pc, 2, 2)
 			self.s.notification.sendPhoto('/tmp/t.png')
 
