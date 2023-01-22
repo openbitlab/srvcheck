@@ -131,6 +131,8 @@ mountPoint =
 disabled = TaskTendermintNewProposal
 ; enable auto recovery
 autoRecover = true 
+; Governance administrator (proposal voting, with @), optional
+govAdmin =
 ```
 
 ## Credits

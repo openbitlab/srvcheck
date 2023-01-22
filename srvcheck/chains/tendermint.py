@@ -51,6 +51,7 @@ class TaskTendermintNewProposal(Task):
 		super().__init__('TaskTendermintNewProposal',
 		      services, checkEvery, notifyEvery)
 		self.prev=None
+		self.admin_gov=self.conf.getOrDefault('tasks.govAdmin')
 
 	@staticmethod
 	def isPluggable(services):
@@ -72,6 +73,7 @@ class TaskTendermintNewProposal(Task):
 					out += '\n'
 				out += f'{self.getProposalTitle(p)}{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
 			self.prev = proposals
+			out += f'{self.admin_gov}'
 			return self.notify(out)
 
 	def run(self):
