@@ -57,26 +57,26 @@ class TaskRelayChainStuck(Task):
 			return self.notify(f'relay is stuck at block {self.prev} {Emoji.Stuck}')
 		return False
 
-class TaskBlockProductionCheck(Task):
-	def __init__(self, services, checkEvery=minutes(20), notifyEvery=minutes(20)):
-		super().__init__('TaskBlockProductionCheck',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
+# class TaskBlockProductionCheck(Task):
+# 	def __init__(self, services, checkEvery=minutes(20), notifyEvery=minutes(20)):
+# 		super().__init__('TaskBlockProductionCheck',
+# 			  services, checkEvery, notifyEvery)
+# 		self.prev = None
 
-	@staticmethod
-	def isPluggable(services):
-		return services.chain.isParachain()
+# 	@staticmethod
+# 	def isPluggable(services):
+# 		return services.chain.isParachain()
 
-	def run(self):
-		if self.s.chain.isCollating():
-			block = self.s.chain.latestBlockProduced()
-			if block > 0:
-				if self.prev is None:
-					self.prev = block
-				elif self.prev == block:
-					return self.notify(f'no block produced in the latest 20 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
-				self.prev = block
-		return False
+# 	def run(self):
+# 		if self.s.chain.isCollating():
+# 			block = self.s.chain.latestBlockProduced()
+# 			if block > 0:
+# 				if self.prev is None:
+# 					self.prev = block
+# 				elif self.prev == block:
+# 					return self.notify(f'no block produced in the latest 20 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
+# 				self.prev = block
+# 		return False
 
 class TaskBlockProductionReport(Task):
 	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
@@ -92,7 +92,7 @@ class TaskBlockProductionReport(Task):
 
 	@staticmethod
 	def isPluggable(services):
-		return True
+		return not services.chain.isParachain()
 
 	def run(self):
 		era = self.s.chain.getEra()
@@ -135,79 +135,79 @@ class TaskBlockProductionReport(Task):
 			
 		return False
 
-class TaskBlockProductionReportParachain(Task):
-	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
-		super().__init__('TaskBlockProductionReport',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
-		self.prevBlock = None
-		self.lastBlockChecked = None
-		self.totalBlockChecked = 0
-		self.oc = 0
+# class TaskBlockProductionReportParachain(Task):
+# 	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
+# 		super().__init__('TaskBlockProductionReport',
+# 			  services, checkEvery, notifyEvery)
+# 		self.prev = None
+# 		self.prevBlock = None
+# 		self.lastBlockChecked = None
+# 		self.totalBlockChecked = 0
+# 		self.oc = 0
 
-	@staticmethod
-	def isPluggable(services):
-		return services.chain.isParachain()
+# 	@staticmethod
+# 	def isPluggable(services):
+# 		return services.chain.isParachain()
 
-	def run(self):
-		s = self.s.chain.getSession()
-		session = s['current'] if isinstance(s, dict) and 'current' in s else s
+# 	def run(self):
+# 		s = self.s.chain.getSession()
+# 		session = s['current'] if isinstance(s, dict) and 'current' in s else s
 
-		if self.prev is None:
-			self.prev = session
+# 		if self.prev is None:
+# 			self.prev = session
 
-		block = 0
-		orb = self.s.chain.moonbeamAssignedOrbiter()
-		if self.s.chain.isCollating():
-			block = self.s.chain.latestBlockProduced()
-			if block > 0:
-				if self.prevBlock is None:
-					self.prevBlock = block
-					self.oc += 1
+# 		block = 0
+# 		orb = self.s.chain.moonbeamAssignedOrbiter()
+# 		if self.s.chain.isCollating():
+# 			block = self.s.chain.latestBlockProduced()
+# 			if block > 0:
+# 				if self.prevBlock is None:
+# 					self.prevBlock = block
+# 					self.oc += 1
 
-				if block != self.prevBlock:
-					self.oc += 1
+# 				if block != self.prevBlock:
+# 					self.oc += 1
 
-				self.prevBlock = block
-			elif block == -1:
-				startingRoundBlock = s['first']
-				currentBlock = self.s.chain.getHeight()
-				blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
-				for b in blocksToCheck:
-					a = self.s.chain.getBlockAuthor(b)
-					collator = orb if orb != '0x0' and orb is not None else self.s.conf.getOrDefault('chain.validatorAddress')
-					if a.lower() == collator.lower():
-						self.oc += 1
-					self.lastBlockChecked = b
-					self.totalBlockChecked += 1
+# 				self.prevBlock = block
+# 			elif block == -1:
+# 				startingRoundBlock = s['first']
+# 				currentBlock = self.s.chain.getHeight()
+# 				blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
+# 				for b in blocksToCheck:
+# 					a = self.s.chain.getBlockAuthor(b)
+# 					collator = orb if orb != '0x0' and orb is not None else self.s.conf.getOrDefault('chain.validatorAddress')
+# 					if a.lower() == collator.lower():
+# 						self.oc += 1
+# 					self.lastBlockChecked = b
+# 					self.totalBlockChecked += 1
 
-		if self.prev != session:
-			self.prev = session
-			report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"}'
-			if self.totalBlockChecked > 0:
-				report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
-				self.totalBlockChecked = 0
-			report = f'{report} {Emoji.BlockProd}'
-			self.oc = 0
-			if self.s.chain.isValidator():
-				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
-			elif orb != '0x0':
-				if orb is None:
-					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoOrbiter}\n{report}')
-				else:
-					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Orbiter}\n{report}')
-			elif block != -1:
-				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
-			else:
-				return self.notify(report)
-		return False
+# 		if self.prev != session:
+# 			self.prev = session
+# 			report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"}'
+# 			if self.totalBlockChecked > 0:
+# 				report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+# 				self.totalBlockChecked = 0
+# 			report = f'{report} {Emoji.BlockProd}'
+# 			self.oc = 0
+# 			if self.s.chain.isValidator():
+# 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
+# 			elif orb != '0x0':
+# 				if orb is None:
+# 					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoOrbiter}\n{report}')
+# 				else:
+# 					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Orbiter}\n{report}')
+# 			elif block != -1:
+# 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
+# 			else:
+# 				return self.notify(report)
+# 		return False
 
-class Substrate (Chain):
+class Substrate(Chain):
 	TYPE = "substrate"
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionCheck, TaskBlockProductionReport, TaskBlockProductionReportParachain]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionReport] #, TaskBlockProductionReportParachain, TaskBlockProductionCheck]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -225,7 +225,7 @@ class Substrate (Chain):
 	def detect(conf):
 		try:
 			Substrate(conf).getVersion()
-			return True
+			return not Substrate(conf).isParachain()
 		except:
 			return False
 

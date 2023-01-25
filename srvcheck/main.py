@@ -106,6 +106,7 @@ def main():
 				print ("Detected chain", chain.TYPE)
 				services = Services(conf, notification, system, chain, persistent)
 				tasks = addTasks(services)
+				print(tasks)
 				break
 
 	if not chain:
