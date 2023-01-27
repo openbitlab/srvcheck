@@ -5,6 +5,47 @@ from .substrate import TaskRelayChainStuck
 from ..notification import Emoji
 from ..utils import savePlots, PlotsConf, SubPlotConf
 
+class TaskBlockProductionReportChartsParachain(Task):
+	def __init__(self, services, checkEvery=hours(6), notifyEvery=hours(6)):
+		super().__init__('TaskBlockProductionReportChartsParachain',
+                    services, checkEvery, notifyEvery)
+
+	@staticmethod
+	def isPluggable(services):
+		return services.chain.isParachain()
+
+	def run(self):
+		pc = PlotsConf()
+		pc.title = self.s.conf.getOrDefault('chain.name') + " - Block production"
+		
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', 30)
+		sp.label = 'Produced'
+		sp.data_mod = lambda y: y
+		sp.color = 'r'
+		
+		sp.label2 = 'Produced'
+		sp.data2 = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', 30)
+		sp.data_mod2 = lambda y: y
+		sp.color2 = 'b'
+		
+		sp.share_y = True
+		pc.subplots.append(sp)
+
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', 30)
+		sp.label = 'Produced (%)'
+		sp.data_mod = lambda y: y
+		sp.color = 'b'
+		pc.subplots.append(sp)
+
+		pc.fpath = '/tmp/p.png'
+
+		lastSessions = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', 30)
+		if lastSessions and len(lastSessions) >= 3:
+			savePlots(pc, 1, 2)
+			self.s.notification.sendPhoto('/tmp/p.png')
+
 class TaskBlockProductionReportParachain(Task):
 	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
 		super().__init__('TaskBlockProductionReportParachain',
@@ -20,37 +61,6 @@ class TaskBlockProductionReportParachain(Task):
 		return services.chain.isParachain()
 
 	def run(self):
-		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_sessionBlocksProduced', 24):
-			pc = PlotsConf()
-			pc.title = self.s.conf.getOrDefault('chain.name') + " - Block production"
-			
-			sp = SubPlotConf()
-			sp.data = self.s.persistent.getN(self.name + '_blocksProduced', 30)
-			sp.label = 'Produced'
-			sp.data_mod = lambda y: y
-			sp.color = 'r'
-            
-			sp.label2 = 'Produced'
-			sp.data2 = self.s.persistent.getN(self.name + '_blocksChecked', 30)
-			sp.data_mod2 = lambda y: y
-			sp.color2 = 'b'
-            
-			sp.share_y = True
-			pc.subplots.append(sp)
-
-			sp = SubPlotConf()
-			sp.data = self.s.persistent.getN(self.name + '_blocksPercentageProduced', 30)
-			sp.label = 'Produced (%)'
-			sp.data_mod = lambda y: y
-			sp.color = 'b'
-			pc.subplots.append(sp)
-
-			pc.fpath = '/tmp/p.png'
-
-			if len(self.s.persistent.getN(self.name + '_sessionBlocksProduced', 30)) >= 2:
-				savePlots(pc, 1, 2)
-				self.s.notification.sendPhoto('/tmp/p.png')
-
 		session = self.s.chain.getSession()
         
 		if self.prev is None:
@@ -72,8 +82,8 @@ class TaskBlockProductionReportParachain(Task):
 					self.totalBlockChecked += 1
 
 		if self.prev != session:
-			self.s.persistent.timedAdd(self.name + '_sessionBlocksProduced', self.prev)
-			self.s.persistent.timedAdd(self.name + '_blocksChecked', self.totalBlockChecked)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = session
 			report = f'{self.oc} block produced last session'
 			perc = 0
@@ -82,8 +92,8 @@ class TaskBlockProductionReportParachain(Task):
 				report = f'{report} out of {self.totalBlockChecked} ({perc:.2f} %)'
 				self.totalBlockChecked = 0
 			report = f'{report} {Emoji.BlockProd}'
-			self.s.persistent.timedAdd(self.name + '_blocksProduced', self.oc)
-			self.s.persistent.timedAdd(self.name + '_blocksPercentageProduced', perc)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 			self.oc = 0
 			if self.s.chain.isValidator():
 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
@@ -95,7 +105,7 @@ class TaskBlockProductionReportParachain(Task):
 
 class Amplitude(Substrate):
 	TYPE = "parachain"
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionReportParachain]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionReportParachain, TaskBlockProductionReportChartsParachain]
 
 	def __init__(self, conf):
 		super().__init__(conf)
