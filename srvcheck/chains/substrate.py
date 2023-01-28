@@ -4,7 +4,7 @@ from srvcheck.tasks.task import hours, minutes
 from .chain import Chain
 from ..tasks import Task
 from ..notification import Emoji
-from ..utils import ConfItem, ConfSet, Bash
+from ..utils import ConfItem, ConfSet, Bash, savePlots, PlotsConf, SubPlotConf
 
 ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
 
@@ -116,13 +116,19 @@ class TaskBlockProductionReport(Task):
 				self.totalBlockChecked += 1
 
 		if self.prev != era:
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = era
 			report = f'validated in {self.prevValidatedSessions} active sessions out of {self.prevTotalSessions} in the last era {Emoji.Leader if self.prevValidatedSessions > 0 else Emoji.NoLeader}\n'
 			self.prevTotalSessions = 0
+			perc = 0
 			if self.totalBlockChecked > 0:
-				report += f'produced {self.oc} blocks out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+				perc = self.oc / self.totalBlockChecked * 100
+				report += f'produced {self.oc} blocks out of {self.totalBlockChecked} ({perc:.2f} %)'
 				self.totalBlockChecked = 0
 				report = f'{report} {Emoji.BlockProd}'
+				self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
+				self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 				self.oc = 0
 				self.prevValidatedSessions = 0
 				return self.notify(report)
@@ -202,12 +208,56 @@ class TaskBlockProductionReport(Task):
 # 				return self.notify(report)
 # 		return False
 
+class TaskBlockProductionReportCharts(Task):
+	def __init__(self, services, checkEvery=hours(24), notifyEvery=hours(24)):
+		super().__init__('TaskBlockProductionReportCharts',
+                    services, checkEvery, notifyEvery)
+
+	@staticmethod
+	def isPluggable(services):
+		return True
+
+	def run(self):
+		pc = PlotsConf()
+		pc.title = self.s.conf.getOrDefault('chain.name') + " - Block production"
+		
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', 30)
+		sp.label = 'Produced'
+		sp.data_mod = lambda y: y
+		sp.color = 'y'
+		
+		sp.label2 = 'Produced'
+		sp.data2 = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', 30)
+		sp.data_mod2 = lambda y: y
+		sp.color2 = 'r'
+		
+		sp.share_y = True
+		sp.set_bottom_y = True
+		pc.subplots.append(sp)
+
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', 30)
+		sp.label = 'Produced (%)'
+		sp.data_mod = lambda y: y
+		sp.color = 'b'
+
+		sp.set_bottom_y = True
+		pc.subplots.append(sp)
+
+		pc.fpath = '/tmp/p.png'
+
+		lastSessions = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', 30)
+		if lastSessions and len(lastSessions) >= 3:
+			savePlots(pc, 1, 2)
+			self.s.notification.sendPhoto('/tmp/p.png')
+
 class Substrate(Chain):
 	TYPE = "substrate"
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionReport] #, TaskBlockProductionReportParachain, TaskBlockProductionCheck]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionReport, TaskBlockProductionReportCharts] #, TaskBlockProductionReportParachain, TaskBlockProductionCheck]
 
 	def __init__(self, conf):
 		super().__init__(conf)
