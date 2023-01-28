@@ -50,6 +50,7 @@ class SubPlotConf:
 		self.data_mod2 = lambda y: y
 
 		self.share_y = False
+		self.set_bottom_y = False
 
 class PlotsConf:
 	def __init__(self):
@@ -85,6 +86,9 @@ def savePlots(c, s1, s2):
 
 		# ax.set_xlabel('Date')
 		ax.set_ylabel(sp.label, color=sp.color)
+
+		if sp.set_bottom_y:
+			ax.set_ylim(bottom=0)
 
 		ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 		ax.xaxis.set_major_locator(mdates.DayLocator(interval=5))

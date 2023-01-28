@@ -22,14 +22,15 @@ class TaskBlockProductionReportChartsParachain(Task):
 		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', 30)
 		sp.label = 'Produced'
 		sp.data_mod = lambda y: y
-		sp.color = 'r'
+		sp.color = 'y'
 		
 		sp.label2 = 'Produced'
 		sp.data2 = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', 30)
 		sp.data_mod2 = lambda y: y
-		sp.color2 = 'b'
+		sp.color2 = 'r'
 		
 		sp.share_y = True
+		sp.set_bottom_y = True
 		pc.subplots.append(sp)
 
 		sp = SubPlotConf()
@@ -37,6 +38,8 @@ class TaskBlockProductionReportChartsParachain(Task):
 		sp.label = 'Produced (%)'
 		sp.data_mod = lambda y: y
 		sp.color = 'b'
+
+		sp.set_bottom_y = True
 		pc.subplots.append(sp)
 
 		pc.fpath = '/tmp/p.png'
