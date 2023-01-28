@@ -1,53 +1,10 @@
 from srvcheck.tasks.task import hours, minutes
 from ..tasks import Task
 from .substrate import Substrate
-from .substrate import TaskRelayChainStuck
+from .substrate import TaskRelayChainStuck, TaskBlockProductionReportCharts
 from ..notification import Emoji
-from ..utils import savePlots, PlotsConf, SubPlotConf
 
-class TaskBlockProductionReportChartsParachain(Task):
-	def __init__(self, services, checkEvery=hours(6), notifyEvery=hours(6)):
-		super().__init__('TaskBlockProductionReportChartsParachain',
-                    services, checkEvery, notifyEvery)
-
-	@staticmethod
-	def isPluggable(services):
-		return services.chain.isParachain()
-
-	def run(self):
-		pc = PlotsConf()
-		pc.title = self.s.conf.getOrDefault('chain.name') + " - Block production"
-		
-		sp = SubPlotConf()
-		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', 30)
-		sp.label = 'Produced'
-		sp.data_mod = lambda y: y
-		sp.color = 'y'
-		
-		sp.label2 = 'Produced'
-		sp.data2 = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', 30)
-		sp.data_mod2 = lambda y: y
-		sp.color2 = 'r'
-		
-		sp.share_y = True
-		sp.set_bottom_y = True
-		pc.subplots.append(sp)
-
-		sp = SubPlotConf()
-		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', 30)
-		sp.label = 'Produced (%)'
-		sp.data_mod = lambda y: y
-		sp.color = 'b'
-
-		sp.set_bottom_y = True
-		pc.subplots.append(sp)
-
-		pc.fpath = '/tmp/p.png'
-
-		lastSessions = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', 30)
-		if lastSessions and len(lastSessions) >= 3:
-			savePlots(pc, 1, 2)
-			self.s.notification.sendPhoto('/tmp/p.png')
+PARACHAIN_ID = 2124
 
 class TaskBlockProductionReportParachain(Task):
 	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
@@ -108,7 +65,7 @@ class TaskBlockProductionReportParachain(Task):
 
 class Amplitude(Substrate):
 	TYPE = "parachain"
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionReportParachain, TaskBlockProductionReportChartsParachain]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionReportParachain, TaskBlockProductionReportCharts]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -117,7 +74,7 @@ class Amplitude(Substrate):
 	def detect(conf):
 		try:
 			Amplitude(conf).getVersion()
-			return Amplitude(conf).isParachain()
+			return Amplitude(conf).isParachain() and Amplitude(conf).getParachainId() == PARACHAIN_ID
 		except:
 			return False
 
