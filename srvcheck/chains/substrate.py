@@ -6,6 +6,7 @@ from ..notification import Emoji
 from ..utils import ConfItem, ConfSet, Bash, savePlots, PlotsConf, SubPlotConf
 
 ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
+ConfSet.addItem(ConfItem('chain.parachainId', description='Parachain Id'))
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, services, checkEvery=hours(1), notifyEvery=60*10*60):
