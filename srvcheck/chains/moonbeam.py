@@ -74,7 +74,7 @@ class Moonbeam(Substrate):
 	def detect(conf):
 		try:
 			Moonbeam(conf).getVersion()
-			return Moonbeam(conf).isParachain() and Moonbeam(conf).getParachainId() == conf.getOrDefault('chain.parachainId')
+			return Moonbeam(conf).isParachain() and int(Moonbeam(conf).getParachainId()) == int(conf.getOrDefault('chain.parachainId'))
 		except:
 			return False
 
