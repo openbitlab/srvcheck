@@ -25,6 +25,7 @@ print_help () {
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
      --gov enable checks on new governance proposals (tendermint)
+     --parachain-id <id> parachain id (substrate)
  -v  --verbose enable verbose installation"
 }
 
@@ -72,6 +73,11 @@ install_monitor () {
         sed -i -e "s/^thresholdNotsigned =.*/thresholdNotsigned = $threshold_notsigned/" $config_file
         sed -i -e "s/^blockWindow =.*/blockWindow = $block_window/" $config_file
     fi
+    if [ ! -z "$id" ]
+    then
+        sed -i -e "s/^parachainId =.*/parachainId = $id/" $config_file
+    fi
+    
     if [ "$enable_gov" = true ]
     then
         sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
@@ -191,6 +197,11 @@ case $1 in
         block_window="$3"
         shift # past argument
         shift # past value
+        shift # past value
+    ;;
+    --parachain-id)
+        id="$2"
+        shift # past argument
         shift # past value
     ;;
     --active-set)
