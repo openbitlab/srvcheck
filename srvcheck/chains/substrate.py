@@ -154,12 +154,6 @@ class TaskBlockProductionReportCharts(Task):
 		sp.data_mod = lambda y: y
 		sp.color = 'b'
 		
-		sp.label2 = 'Produced (%)'
-		sp.data2 = [100] * len(self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', 30))
-		sp.data_mod2 = lambda y: y
-		sp.color2 = 'r'
-		
-		sp.share_y = True
 		sp.set_bottom_y = True
 		pc.subplots.append(sp)
 
