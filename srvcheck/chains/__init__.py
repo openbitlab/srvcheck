@@ -8,5 +8,8 @@ from .solana import Solana
 from .aptos import Aptos
 from .near import Near
 from .amplitude import Amplitude
+from .astar import Astar
+from .mangata import Mangata
+from .moonbeam import Moonbeam
 
-CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near, Amplitude]
+CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near, Amplitude, Astar, Mangata, Moonbeam]

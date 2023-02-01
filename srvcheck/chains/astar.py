@@ -80,7 +80,7 @@ class TaskBlockProductionReportParachain(Task):
 				return self.notify(report)
 		return False
 
-class Amplitude(Substrate):
+class Astar(Substrate):
 	TYPE = "parachain"
 	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionReportParachain, TaskBlockProductionReportCharts, TaskBlockProductionCheck]
 
@@ -90,8 +90,8 @@ class Amplitude(Substrate):
 	@staticmethod
 	def detect(conf):
 		try:
-			Amplitude(conf).getVersion()
-			return Amplitude(conf).isParachain() and Amplitude(conf).getParachainId() == conf.getOrDefault('chain.parachainId')
+			Astar(conf).getVersion()
+			return Astar(conf).isParachain() and int(Astar(conf).getParachainId()) == int(conf.getOrDefault('chain.parachainId'))
 		except:
 			return False
 
