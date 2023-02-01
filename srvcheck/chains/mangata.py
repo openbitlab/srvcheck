@@ -19,13 +19,14 @@ class TaskBlockProductionReportParachain(Task):
 		return services.chain.isParachain()
 
 	def run(self):
-		session = self.s.chain.getSession()
+		s = self.s.chain.getSession()
+		session = s['current']
         
 		if self.prev is None:
 			self.prev = session
 
 		if self.s.chain.isCollating():
-			startingRoundBlock = session
+			startingRoundBlock = s['first']
 			currentBlock = self.s.chain.getHeight()
 			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 			for b in blocksToCheck:
@@ -56,7 +57,7 @@ class TaskBlockProductionReportParachain(Task):
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 		return False
 
-class Amplitude(Substrate):
+class Mangata(Substrate):
 	TYPE = "parachain"
 	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionReportParachain, TaskBlockProductionReportCharts]
 
@@ -66,17 +67,22 @@ class Amplitude(Substrate):
 	@staticmethod
 	def detect(conf):
 		try:
-			Amplitude(conf).getVersion()
-			return Amplitude(conf).isParachain() and Amplitude(conf).getParachainId() == conf.getOrDefault('chain.parachainId')
+			Mangata(conf).getVersion()
+			return Mangata(conf).isParachain() and Mangata(conf).getParachainId() == conf.getOrDefault('chain.parachainId')
 		except:
 			return False
+
+	def getSession(self):
+		si = self.getSubstrateInterface()
+		result = si.query(module='ParachainStaking', storage_function='Round', params=[])
+		return result.value
 
 	def isCollating(self):
 		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			si = self.getSubstrateInterface()
-			result = si.query(module='ParachainStaking', storage_function='TopCandidates', params=[])
+			result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
 			for c in result.value:
-				if c["owner"].lower() == collator.lower():
+				if c.lower() == collator.lower():
 					return True
 		return False
