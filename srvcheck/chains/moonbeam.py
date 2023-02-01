@@ -19,18 +19,20 @@ class TaskBlockProductionReportParachain(Task):
 		return services.chain.isParachain()
 
 	def run(self):
-		session = self.s.chain.getSession()
+		s = self.s.chain.getSession()
+		session = s['current']
         
 		if self.prev is None:
 			self.prev = session
 
+		orb = self.s.chain.moonbeamAssignedOrbiter()
 		if self.s.chain.isCollating():
-			startingRoundBlock = session
+			startingRoundBlock = s['first']
 			currentBlock = self.s.chain.getHeight()
 			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 			for b in blocksToCheck:
 				a = self.s.chain.getBlockAuthor(b)
-				collator = self.s.conf.getOrDefault('chain.validatorAddress')
+				collator = orb if orb != '0x0' and orb is not None else self.s.conf.getOrDefault('chain.validatorAddress')
 				if a.lower() == collator.lower():
 					self.oc += 1
 				self.lastBlockChecked = b
@@ -52,11 +54,16 @@ class TaskBlockProductionReportParachain(Task):
 			self.oc = 0
 			if self.s.chain.isValidator():
 				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
+			elif orb != '0x0':
+				if orb is None:
+					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoOrbiter}\n{report}')
+				else:
+					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Orbiter}\n{report}')
 			else:
 				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 		return False
 
-class Amplitude(Substrate):
+class Moonbeam(Substrate):
 	TYPE = "parachain"
 	CUSTOM_TASKS = [TaskRelayChainStuck, TaskBlockProductionReportParachain, TaskBlockProductionReportCharts]
 
@@ -66,17 +73,43 @@ class Amplitude(Substrate):
 	@staticmethod
 	def detect(conf):
 		try:
-			Amplitude(conf).getVersion()
-			return Amplitude(conf).isParachain() and Amplitude(conf).getParachainId() == conf.getOrDefault('chain.parachainId')
+			Moonbeam(conf).getVersion()
+			return Moonbeam(conf).isParachain() and Moonbeam(conf).getParachainId() == conf.getOrDefault('chain.parachainId')
 		except:
 			return False
+
+	def getSession(self):
+		si = self.getSubstrateInterface()
+		result = si.query(module='ParachainStaking', storage_function='Round', params=[])
+		return result.value
+
+	def isValidator(self):
+		collator = self.conf.getOrDefault('chain.validatorAddress')
+		if collator:
+			si = self.getSubstrateInterface()
+			result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
+			for c in result.value:
+				if c.lower() == collator.lower():
+					return True
+		return False
 
 	def isCollating(self):
 		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
 			si = self.getSubstrateInterface()
-			result = si.query(module='ParachainStaking', storage_function='TopCandidates', params=[])
+			c = self.moonbeamAssignedOrbiter()
+			if c != '0x0' and c is not None:
+				collator = c
+			result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
 			for c in result.value:
-				if c["owner"].lower() == collator.lower():
+				if c.lower() == collator.lower():
 					return True
 		return False
+
+	def moonbeamAssignedOrbiter(self):
+		collator = self.conf.getOrDefault('chain.validatorAddress')
+		if collator:
+			si = self.getSubstrateInterface()
+			result = si.query(module='MoonbeamOrbiters', storage_function='AccountLookupOverride', params=[collator])
+			return result.value
+		return "0x0"
