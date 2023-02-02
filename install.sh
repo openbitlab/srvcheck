@@ -73,11 +73,6 @@ install_monitor () {
         sed -i -e "s/^thresholdNotsigned =.*/thresholdNotsigned = $threshold_notsigned/" $config_file
         sed -i -e "s/^blockWindow =.*/blockWindow = $block_window/" $config_file
     fi
-    if [ ! -z "$id" ]
-    then
-        sed -i -e "s/^parachainId =.*/parachainId = $id/" $config_file
-    fi
-    
     if [ "$enable_gov" = true ]
     then
         sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module

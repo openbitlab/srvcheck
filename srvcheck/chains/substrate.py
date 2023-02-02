@@ -6,7 +6,6 @@ from ..notification import Emoji
 from ..utils import ConfItem, ConfSet, Bash, savePlots, PlotsConf, SubPlotConf
 
 ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
-ConfSet.addItem(ConfItem('chain.parachainId', description='Parachain Id'))
 
 class TaskSubstrateNewReferenda(Task):
 	def __init__(self, services, checkEvery=hours(1), notifyEvery=60*10*60):
@@ -187,7 +186,7 @@ class Substrate(Chain):
 	def detect(conf):
 		try:
 			Substrate(conf).getVersion()
-			return conf.getOrDefault('chain.parachainId') is not None and not Substrate(conf).isParachain()
+			return not Substrate(conf).isParachain()
 		except:
 			return False
 
@@ -228,6 +227,9 @@ class Substrate(Chain):
 		si = self.getSubstrateInterface()
 		result = si.query(module='ParachainInfo', storage_function='ParachainId', params=[])
 		return result.value
+
+	def getNodeName(self):
+		return self.rpcCall('system_name')
 
 	def isParachain(self):
 		try:

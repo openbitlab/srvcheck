@@ -91,7 +91,7 @@ class Astar(Substrate):
 	def detect(conf):
 		try:
 			Astar(conf).getVersion()
-			return Astar(conf).isParachain() and int(Astar(conf).getParachainId()) == int(conf.getOrDefault('chain.parachainId'))
+			return Astar(conf).isParachain() and Astar(conf).getNodeName() == "Astar Collator"
 		except:
 			return False
 
