@@ -68,7 +68,7 @@ class Mangata(Substrate):
 	def detect(conf):
 		try:
 			Mangata(conf).getVersion()
-			return Mangata(conf).isParachain() and int(Mangata(conf).getParachainId()) == int(conf.getOrDefault('chain.parachainId'))
+			return Mangata(conf).isParachain() and Mangata(conf).getNodeName() == "Mangata Parachain Collator"
 		except:
 			return False
 

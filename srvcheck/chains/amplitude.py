@@ -67,7 +67,7 @@ class Amplitude(Substrate):
 	def detect(conf):
 		try:
 			Amplitude(conf).getVersion()
-			return Amplitude(conf).isParachain() and int(Amplitude(conf).getParachainId()) == int(conf.getOrDefault('chain.parachainId'))
+			return Amplitude(conf).isParachain() and Amplitude(conf).getNodeName() == "Pendulum Collator"
 		except:
 			return False
 
