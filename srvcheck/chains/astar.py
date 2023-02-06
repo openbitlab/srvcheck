@@ -34,6 +34,7 @@ class TaskBlockProductionReportParachain(Task):
 		self.lastBlockChecked = None
 		self.totalBlockChecked = 0
 		self.oc = 0
+		self.prevSessionLastBlock = 0
 
 	@staticmethod
 	def isPluggable(services):
@@ -60,24 +61,17 @@ class TaskBlockProductionReportParachain(Task):
 
 		if self.prev != session:
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
-			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = session
-			report = f'{self.oc} block produced last session'
 			perc = 0
+			self.totalBlockChecked  = len([b for b in self.s.chain.getExpectedBlocks() if b > self.prevSessionLastBlock])
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			if self.totalBlockChecked > 0:
 				perc = self.oc / self.totalBlockChecked * 100
-				report = f'{report} out of {self.totalBlockChecked} ({perc:.2f} %)'
 				self.totalBlockChecked = 0
-			report = f'{report} {Emoji.BlockProd}'
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 			self.oc = 0
-			if self.s.chain.isValidator():
-				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
-			elif block != -1:
-				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
-			else:
-				return self.notify(report)
+			self.prevSessionLastBlock = block
 		return False
 
 class Astar(Substrate):
