@@ -258,10 +258,10 @@ class Substrate(Chain):
 					return True
 		return False
 
-	def getExpectedBlocks(self):
+	def getExpectedBlocks(self, since=60):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
-			blocks = Bash(f"journalctl -u {serv} --no-pager --since '60 min ago' | grep -Eo 'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g").value().split("\n")
+			blocks = Bash(f"journalctl -u {serv} --no-pager --since '{since} min ago' | grep -Eo 'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g").value().split("\n")
 			blocks = [int(b) for b in blocks if b != '']
 			return blocks
 		return []

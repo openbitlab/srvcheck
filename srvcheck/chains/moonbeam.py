@@ -32,7 +32,7 @@ class TaskBlockProductionReportParachain(Task):
 			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 			for b in blocksToCheck:
 				a = self.s.chain.getBlockAuthor(b)
-				collator = orb if orb != '0x0' and orb is not None else self.s.conf.getOrDefault('chain.validatorAddress')
+				collator = self.s.conf.getOrDefault('chain.validatorAddress')
 				if a.lower() == collator.lower():
 					self.oc += 1
 				self.lastBlockChecked = b
