@@ -25,7 +25,7 @@ class TaskBlockProductionReportParachain(Task):
 			self.prev = session
 
 		if self.s.chain.isCollating():
-			startingRoundBlock = session
+			startingRoundBlock = self.s.chain.getRoundInfo()['first']
 			currentBlock = self.s.chain.getHeight()
 			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 			for b in blocksToCheck:
@@ -70,6 +70,11 @@ class Amplitude(Substrate):
 			return Amplitude(conf).isParachain() and Amplitude(conf).getNodeName() == "Pendulum Collator"
 		except:
 			return False
+
+	def getRoundInfo(self):
+		si = self.getSubstrateInterface()
+		result = si.query(module='ParachainStaking', storage_function='Round', params=[])
+		return result.value
 
 	def isCollating(self):
 		collator = self.conf.getOrDefault('chain.validatorAddress')

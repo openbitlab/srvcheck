@@ -46,32 +46,28 @@ class TaskBlockProductionReportParachain(Task):
 		if self.prev is None:
 			self.prev = session
 
-		block = 0
 		if self.s.chain.isCollating():
-			block = self.s.chain.latestBlockProduced()
-			if block > 0:
-				if self.prevBlock is None:
-					self.prevBlock = block
+			currentBlock = self.s.chain.getHeight()
+			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked)]
+			for b in blocksToCheck:
+				a = self.s.chain.getBlockAuthor(b)
+				collator = self.s.conf.getOrDefault('chain.validatorAddress')
+				if a.lower() == collator.lower():
 					self.oc += 1
-
-				if block != self.prevBlock:
-					self.oc += 1
-
-				self.prevBlock = block
+				self.lastBlockChecked = b
+				self.totalBlockChecked += 1
 
 		if self.prev != session:
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = session
 			perc = 0
-			self.totalBlockChecked  = len([b for b in self.s.chain.getExpectedBlocks() if b > self.prevSessionLastBlock])
-			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			if self.totalBlockChecked > 0:
 				perc = self.oc / self.totalBlockChecked * 100
 				self.totalBlockChecked = 0
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 			self.oc = 0
-			self.prevSessionLastBlock = block
 		return False
 
 class Astar(Substrate):
