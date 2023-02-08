@@ -106,6 +106,3 @@ class Astar(Substrate):
 			result = si.query(module='CollatorSelection', storage_function='LastAuthoredBlock', params=[collator])
 			return result.value
 		return 0
-
-	def getBlockAuthor(self, block):
-		return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
