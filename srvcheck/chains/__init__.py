@@ -13,4 +13,4 @@ from .mangata import Mangata
 from .moonbeam import Moonbeam
 from .t3rn import T3rn
 
-CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near, Amplitude, Astar, Mangata, Moonbeam]
+CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near, Amplitude, Astar, Mangata, Moonbeam, T3rn]

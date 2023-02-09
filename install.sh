@@ -17,15 +17,15 @@ print_help () {
  -a  --validator-address <address> enable checks on block production
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+     --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed
-     --rel <version> release version installed (required for tendermint chain if git_api is specified)
- -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+     --gov enable checks on new governance proposals (tendermint)
      --mount <mount_point> mount point where the node is installed
  -n  --name <name> monitor name [default is the server hostname]
+ -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+     --rel <version> release version installed (required for tendermint chain if git_api is specified)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
-     --gov enable checks on new governance proposals (tendermint)
-     --parachain-id <id> parachain id (substrate)
  -v  --verbose enable verbose installation"
 }
 
@@ -67,6 +67,10 @@ install_monitor () {
     if [ ! -z "$mountPoint" ]
     then
         sed -i -e "s,^mountPoint =.*,mountPoint = $mountPoint,g" $config_file
+    fi
+    if [ ! -z "$endpoint" ]
+    then
+        sed -i -e "s,^endpoint =.*,endpoint = $endpoint,g" $config_file
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -194,11 +198,6 @@ case $1 in
         shift # past value
         shift # past value
     ;;
-    --parachain-id)
-        id="$2"
-        shift # past argument
-        shift # past value
-    ;;
     --active-set)
         if [[ -z $2 ]]
         then
@@ -217,6 +216,17 @@ case $1 in
             exit 1
         else
             service="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        endpoint="$2"
         fi
         shift # past argument
         shift # past value
