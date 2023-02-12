@@ -2,7 +2,6 @@ from srvcheck.tasks.task import hours, minutes
 from ..tasks import Task
 from .substrate import Substrate
 from .substrate import TaskRelayChainStuck, TaskBlockProductionReportCharts
-from ..notification import Emoji
 
 class TaskBlockProductionReportParachain(Task):
 	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
@@ -42,25 +41,13 @@ class TaskBlockProductionReportParachain(Task):
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = session
-			report = f'{self.oc} block produced last session'
 			perc = 0
 			if self.totalBlockChecked > 0:
 				perc = self.oc / self.totalBlockChecked * 100
-				report = f'{report} out of {self.totalBlockChecked} ({perc:.2f} %)'
 				self.totalBlockChecked = 0
-			report = f'{report} {Emoji.BlockProd}'
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 			self.oc = 0
-			if self.s.chain.isValidator():
-				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
-			elif orb != '0x0':
-				if orb is None:
-					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoOrbiter}\n{report}')
-				else:
-					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Orbiter}\n{report}')
-			else:
-				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
 		return False
 
 class Moonbeam(Substrate):
