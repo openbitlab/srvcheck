@@ -61,9 +61,6 @@ class TaskBlockProductionReport(Task):
 		super().__init__('TaskBlockProductionReport',
 			  services, checkEvery, notifyEvery)
 		self.prev = None
-		self.prevSession = None
-		self.prevTotalSessions = None
-		self.prevValidatedSessions = None
 		self.lastBlockChecked = None
 		self.totalBlockChecked = 0
 		self.oc = 0
@@ -74,13 +71,8 @@ class TaskBlockProductionReport(Task):
 
 	def run(self):
 		era = self.s.chain.getEra()
-		session = self.s.chain.getSession()
 		if self.prev is None:
 			self.prev = era
-		if self.prevSession is None:
-			self.prevSession = session
-			self.prevValidatedSessions = 0
-			self.prevTotalSessions = 0
 
 		if self.s.chain.isStaking():
 			currentBlock = self.s.chain.getHeight()
@@ -97,26 +89,58 @@ class TaskBlockProductionReport(Task):
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
 			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = era
-			report = f'validated in {self.prevValidatedSessions} active sessions out of {self.prevTotalSessions} in the last era {Emoji.Leader if self.prevValidatedSessions > 0 else Emoji.NoLeader}\n'
-			self.prevTotalSessions = 0
 			perc = 0
 			if self.totalBlockChecked > 0:
 				perc = self.oc / self.totalBlockChecked * 100
-				report += f'produced {self.oc} blocks out of {self.totalBlockChecked} ({perc:.2f} %)'
 				self.totalBlockChecked = 0
-				report = f'{report} {Emoji.BlockProd}'
 				self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
 				self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 				self.oc = 0
-				self.prevValidatedSessions = 0
-				return self.notify(report)
+		return False
 
-		if self.prevSession != session:
-			if self.s.chain.isValidator():
-				self.prevValidatedSessions += 1
-			self.prevTotalSessions += 1
-			self.prevSession = session
-			
+class TaskBlockProductionReportParachain(Task):
+	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
+		super().__init__('TaskBlockProductionReportParachain',
+                    services, checkEvery, notifyEvery)
+		self.prev = None
+		self.prevBlock = None
+		self.lastBlockChecked = None
+		self.totalBlockChecked = 0
+		self.oc = 0
+
+	@staticmethod
+	def isPluggable(services):
+		return services.chain.isParachain()
+
+	def run(self):
+		session = self.s.chain.getSessionWrapped()
+        
+		if self.prev is None:
+			self.prev = session
+
+		if self.s.chain.isCollating():
+			startingRoundBlock = self.s.chain.getStartingBlock()
+			currentBlock = self.s.chain.getHeight()
+			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
+			for b in blocksToCheck:
+				a = self.s.chain.getBlockAuthor(b)
+				collator = self.s.conf.getOrDefault('chain.validatorAddress')
+				if a.lower() == collator.lower():
+					self.oc += 1
+				self.lastBlockChecked = b
+				self.totalBlockChecked += 1
+
+		if self.prev != session:
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
+			self.prev = session
+			perc = 0
+			if self.totalBlockChecked > 0:
+				perc = self.oc / self.totalBlockChecked * 100
+				self.totalBlockChecked = 0
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
+			self.oc = 0
 		return False
 
 class TaskBlockProductionReportCharts(Task):
@@ -280,3 +304,6 @@ class Substrate(Chain):
 			if b == bh:
 				return self.conf.getOrDefault('chain.validatorAddress')
 		return "0x0"
+
+	def getSessionWrapped(self):
+		return self.getSession()
