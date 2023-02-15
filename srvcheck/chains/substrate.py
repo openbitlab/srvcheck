@@ -119,7 +119,7 @@ class TaskBlockProductionReportParachain(Task):
 			self.prev = session
 
 		if self.s.chain.isCollating():
-			startingRoundBlock = self.s.chain.getStartingBlock()
+			startingRoundBlock = self.s.chain.getStartingRoundBlock()
 			currentBlock = self.s.chain.getHeight()
 			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
 			for b in blocksToCheck:
