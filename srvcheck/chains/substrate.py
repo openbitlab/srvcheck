@@ -1,10 +1,9 @@
 from substrateinterface import SubstrateInterface
-from substrateinterface.exceptions import StorageFunctionNotFound
 from srvcheck.tasks.task import hours, minutes
 from .chain import Chain
 from ..tasks import Task
 from ..notification import Emoji
-from ..utils import ConfItem, ConfSet, Bash
+from ..utils import ConfItem, ConfSet, Bash, savePlots, PlotsConf, SubPlotConf
 
 ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
 
@@ -57,52 +56,23 @@ class TaskRelayChainStuck(Task):
 			return self.notify(f'relay is stuck at block {self.prev} {Emoji.Stuck}')
 		return False
 
-class TaskBlockProductionCheck(Task):
-	def __init__(self, services, checkEvery=minutes(20), notifyEvery=minutes(20)):
-		super().__init__('TaskBlockProductionCheck',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
-
-	@staticmethod
-	def isPluggable(services):
-		return services.chain.isParachain()
-
-	def run(self):
-		if self.s.chain.isCollating():
-			block = self.s.chain.latestBlockProduced()
-			if block > 0:
-				if self.prev is None:
-					self.prev = block
-				elif self.prev == block:
-					return self.notify(f'no block produced in the latest 20 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
-				self.prev = block
-		return False
-
 class TaskBlockProductionReport(Task):
 	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
 		super().__init__('TaskBlockProductionReport',
 			  services, checkEvery, notifyEvery)
 		self.prev = None
-		self.prevSession = None
-		self.prevTotalSessions = None
-		self.prevValidatedSessions = None
 		self.lastBlockChecked = None
 		self.totalBlockChecked = 0
 		self.oc = 0
 
 	@staticmethod
 	def isPluggable(services):
-		return True
+		return not services.chain.isParachain()
 
 	def run(self):
 		era = self.s.chain.getEra()
-		session = self.s.chain.getSession()
 		if self.prev is None:
 			self.prev = era
-		if self.prevSession is None:
-			self.prevSession = session
-			self.prevValidatedSessions = 0
-			self.prevTotalSessions = 0
 
 		if self.s.chain.isStaking():
 			currentBlock = self.s.chain.getHeight()
@@ -116,29 +86,22 @@ class TaskBlockProductionReport(Task):
 				self.totalBlockChecked += 1
 
 		if self.prev != era:
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = era
-			report = f'validated in {self.prevValidatedSessions} active sessions out of {self.prevTotalSessions} in the last era {Emoji.Leader if self.prevValidatedSessions > 0 else Emoji.NoLeader}\n'
-			self.prevTotalSessions = 0
+			perc = 0
 			if self.totalBlockChecked > 0:
-				report += f'produced {self.oc} blocks out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+				perc = self.oc / self.totalBlockChecked * 100
 				self.totalBlockChecked = 0
-				report = f'{report} {Emoji.BlockProd}'
+				self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
+				self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 				self.oc = 0
-				self.prevValidatedSessions = 0
-				return self.notify(report)
-
-		if self.prevSession != session:
-			if self.s.chain.isValidator():
-				self.prevValidatedSessions += 1
-			self.prevTotalSessions += 1
-			self.prevSession = session
-			
 		return False
 
 class TaskBlockProductionReportParachain(Task):
 	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
-		super().__init__('TaskBlockProductionReport',
-			  services, checkEvery, notifyEvery)
+		super().__init__('TaskBlockProductionReportParachain',
+                    services, checkEvery, notifyEvery)
 		self.prev = None
 		self.prevBlock = None
 		self.lastBlockChecked = None
@@ -150,64 +113,86 @@ class TaskBlockProductionReportParachain(Task):
 		return services.chain.isParachain()
 
 	def run(self):
-		s = self.s.chain.getSession()
-		session = s['current'] if isinstance(s, dict) and 'current' in s else s
-
+		session = self.s.chain.getSessionWrapped()
+        
 		if self.prev is None:
 			self.prev = session
 
-		block = 0
-		orb = self.s.chain.moonbeamAssignedOrbiter()
 		if self.s.chain.isCollating():
-			block = self.s.chain.latestBlockProduced()
-			if block > 0:
-				if self.prevBlock is None:
-					self.prevBlock = block
+			startingRoundBlock = self.s.chain.getStartingRoundBlock()
+			currentBlock = self.s.chain.getHeight()
+			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
+			for b in blocksToCheck:
+				a = self.s.chain.getBlockAuthor(b)
+				collator = self.s.conf.getOrDefault('chain.validatorAddress')
+				if a.lower() == collator.lower():
 					self.oc += 1
-
-				if block != self.prevBlock:
-					self.oc += 1
-
-				self.prevBlock = block
-			elif block == -1:
-				startingRoundBlock = s['first']
-				currentBlock = self.s.chain.getHeight()
-				blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
-				for b in blocksToCheck:
-					a = self.s.chain.getBlockAuthor(b)
-					collator = orb if orb != '0x0' and orb is not None else self.s.conf.getOrDefault('chain.validatorAddress')
-					if a.lower() == collator.lower():
-						self.oc += 1
-					self.lastBlockChecked = b
-					self.totalBlockChecked += 1
+				self.lastBlockChecked = b
+				self.totalBlockChecked += 1
 
 		if self.prev != session:
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', self.prev)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', self.totalBlockChecked)
 			self.prev = session
-			report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"}'
+			perc = 0
 			if self.totalBlockChecked > 0:
-				report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
+				perc = self.oc / self.totalBlockChecked * 100
 				self.totalBlockChecked = 0
-			report = f'{report} {Emoji.BlockProd}'
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', self.oc)
+			self.s.persistent.timedAdd(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', perc)
 			self.oc = 0
-			if self.s.chain.isValidator():
-				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
-			elif orb != '0x0':
-				if orb is None:
-					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoOrbiter}\n{report}')
-				else:
-					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Orbiter}\n{report}')
-			elif block != -1:
-				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
-			else:
-				return self.notify(report)
 		return False
 
-class Substrate (Chain):
+class TaskBlockProductionReportCharts(Task):
+	def __init__(self, services, checkEvery=hours(24), notifyEvery=hours(24)):
+		super().__init__('TaskBlockProductionReportCharts',
+                    services, checkEvery, notifyEvery)
+
+	@staticmethod
+	def isPluggable(services):
+		return True
+
+	def run(self):
+		pc = PlotsConf()
+		pc.title = self.s.conf.getOrDefault('chain.name') + " - Block production"
+		
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksProduced', 30)
+		sp.label = 'Produced'
+		sp.data_mod = lambda y: y
+		sp.color = 'y'
+		
+		sp.label2 = 'Produced'
+		sp.data2 = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksChecked', 30)
+		sp.data_mod2 = lambda y: y
+		sp.color2 = 'r'
+		
+		sp.share_y = True
+		sp.set_bottom_y = True
+		pc.subplots.append(sp)
+
+		sp = SubPlotConf()
+		sp.data = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_blocksPercentageProduced', 30)
+		sp.label = 'Produced (%)'
+		sp.data_mod = lambda y: y
+		sp.color = 'b'
+		
+		sp.set_bottom_y = True
+		pc.subplots.append(sp)
+
+		pc.fpath = '/tmp/p.png'
+
+		lastSessions = self.s.persistent.getN(self.s.conf.getOrDefault('chain.name') + '_sessionBlocksProduced', 30)
+		if lastSessions and len(lastSessions) >= 3:
+			savePlots(pc, 1, 2)
+			self.s.notification.sendPhoto('/tmp/p.png')
+
+class Substrate(Chain):
 	TYPE = "substrate"
 	NAME = ""
 	BLOCKTIME = 15
 	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionCheck, TaskBlockProductionReport, TaskBlockProductionReportParachain]
+	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionReport, TaskBlockProductionReportCharts]
 
 	def __init__(self, conf):
 		super().__init__(conf)
@@ -225,7 +210,7 @@ class Substrate (Chain):
 	def detect(conf):
 		try:
 			Substrate(conf).getVersion()
-			return True
+			return not Substrate(conf).isParachain()
 		except:
 			return False
 
@@ -245,12 +230,6 @@ class Substrate (Chain):
 		return self.rpcCall('system_chain')
 
 	def isStaking(self):
-		'''c = self.rpcCall('babe_epochAuthorship')
-		if len(c.keys()) == 0:
-			return False
-
-		cc = c[c.keys()[0]]
-		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0'''
 		si = self.getSubstrateInterface()
 		collator = self.conf.getOrDefault('chain.validatorAddress')
 		era = self.getEra()
@@ -273,6 +252,9 @@ class Substrate (Chain):
 		result = si.query(module='ParachainInfo', storage_function='ParachainId', params=[])
 		return result.value
 
+	def getNodeName(self):
+		return self.rpcCall('system_name')
+
 	def isParachain(self):
 		try:
 			self.getParachainId()
@@ -282,103 +264,37 @@ class Substrate (Chain):
 
 	def getSession(self):
 		si = self.getSubstrateInterface()
-		try:
-			# Check session on Moonbase/Moonriver, Mangata
-			result = si.query(module='ParachainStaking', storage_function='Round', params=[])
-			return result.value
-		except StorageFunctionNotFound:
-			# Check session on Shiden/Shibuya
-			result = si.query(module='Session', storage_function='CurrentIndex', params=[])
-			return result.value
+		result = si.query(module='Session', storage_function='CurrentIndex', params=[])
+		return result.value
 
 	def getEra(self):
 		si = self.getSubstrateInterface()
-		try:
-			# Check session on Polkadot/Kusama, Aleph
-			result = si.query(module='Staking', storage_function='ActiveEra', params=[])
-			return result.value['index']
-		except StorageFunctionNotFound:
-			return -1
+		result = si.query(module='Staking', storage_function='ActiveEra', params=[])
+		return result.value['index']
 
 	def isValidator(self):
 		collator = self.conf.getOrDefault('chain.validatorAddress')
 		if collator:
-			try:
-				# Check validator on Shiden/Shibuya, Mangata
-				si = self.getSubstrateInterface()
-				result = si.query(module='Session', storage_function='QueuedKeys', params=[])
-				for v in result.value:
-					if v[0].lower() == f'{collator}'.lower():
-						return True
-			except StorageFunctionNotFound:
-				return False
-		return False
-
-	def isCollating(self):
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		if collator:
 			si = self.getSubstrateInterface()
-			try:
-				# Check collator on Shiden/Shibuya
-				result = si.query(module='CollatorSelection', storage_function='Candidates', params=[])
-				for c in result.value:
-					if c['who'].lower() == f'{collator}'.lower():
-						return True
-				result = si.query(module='CollatorSelection', storage_function='Invulnerables', params=[])
-				for c in result.value:
-					if c.lower() == f'{collator}'.lower():
-						return True
-			except StorageFunctionNotFound:
-				# Check collator on Moonbase/Moonriver, Mangata
-				c = self.moonbeamAssignedOrbiter()
-				if c != '0x0' and c is not None:
-					collator = c
-				result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
-				for c in result.value:
-					if c.lower() == collator.lower():
-						return True
+			result = si.query(module='Session', storage_function='QueuedKeys', params=[])
+			for v in result.value:
+				if v[0].lower() == f'{collator}'.lower():
+					return True
 		return False
 
-	def latestBlockProduced(self):
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		if collator:
-			try:
-				# Check last block produced on Shiden/Shibuya
-				si = self.getSubstrateInterface()
-				result = si.query(module='CollatorSelection', storage_function='LastAuthoredBlock', params=[collator])
-				return result.value
-			except StorageFunctionNotFound:
-				return -1
-		return 0
-
-	def getExpectedBlocks(self):
+	def getExpectedBlocks(self, since=60):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
-			blocks = Bash(f"journalctl -u {serv} --no-pager --since '60 min ago' | grep -Eo 'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g").value().split("\n")
+			blocks = Bash(f"journalctl -u {serv} --no-pager --since '{since} min ago' | grep -Eo 'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g").value().split("\n")
 			blocks = [int(b) for b in blocks if b != '']
 			return blocks
 		return []
 
 	def getBlockAuthor(self, block):
-		try:
-			return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
-		except:
-			# Check block author Mangata, Polkadot/Kusama and Aleph Zero
-			return self.checkAuthoredBlock(block)
-
-	def moonbeamAssignedOrbiter(self):
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		if collator:
-			try:
-				si = self.getSubstrateInterface()
-				result = si.query(module='MoonbeamOrbiters', storage_function='AccountLookupOverride', params=[collator])
-				return result.value
-			except StorageFunctionNotFound:
-				return "0x0"
-		return "0x0"
+		return self.checkAuthoredBlock(block)
 
 	def getSeals(self, block):
-		seals = Bash("grep -Eo 'Pre-sealed block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
+		seals = Bash("grep -Eo 'block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
 		return seals
 
 	def checkAuthoredBlock(self, block):
@@ -388,3 +304,6 @@ class Substrate (Chain):
 			if b == bh:
 				return self.conf.getOrDefault('chain.validatorAddress')
 		return "0x0"
+
+	def getSessionWrapped(self):
+		return self.getSession()

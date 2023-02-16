@@ -50,6 +50,7 @@ class SubPlotConf:
 		self.data_mod2 = lambda y: y
 
 		self.share_y = False
+		self.set_bottom_y = False
 
 class PlotsConf:
 	def __init__(self):
@@ -76,16 +77,36 @@ def savePlots(c, s1, s2):
 			
 		ax.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data)),
 			list(map(lambda l: (sp.data_mod(l[1])), sp.data)), '-' + sp.color)
+		ax.fill_between(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data)),
+			list(map(lambda l: (sp.data_mod(l[1])), sp.data)), facecolor=setColor(sp.color), interpolate=True, alpha=.3)
 
 		if sp.data2 and not sp.share_y:
 			ax2.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data2)), list(map(lambda l: (sp.data_mod2(l[1])), sp.data2)), sp.color2 + '-')
+			ax2.fill_between(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data2)), list(map(lambda l: (sp.data_mod2(l[1])), sp.data2)), facecolor=setColor(sp.color2), interpolate=True, alpha=.3)
 			ax2.set_ylabel(sp.label2, color=sp.color2)
 		elif sp.data2 and sp.share_y:
 			ax.plot(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data2)), list(map(lambda l: (sp.data_mod2(l[1])), sp.data2)), sp.color2 + '-')
+			ax.fill_between(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data2)), list(map(lambda l: (sp.data_mod2(l[1])), sp.data2)), facecolor=setColor(sp.color2), interpolate=True, alpha=.8)
+			ax.fill_between(list(map(lambda l: (dateutil.parser.isoparse(l[0])), sp.data)), list(map(lambda l: (sp.data_mod(l[1])), sp.data)), facecolor=setColor(sp.color), interpolate=True, alpha=.8)
 
 		# ax.set_xlabel('Date')
 		ax.set_ylabel(sp.label, color=sp.color)
 
+		if sp.set_bottom_y:
+			ax.set_ylim(bottom=0)
+
 		ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
 		ax.xaxis.set_major_locator(mdates.DayLocator(interval=5))
 	plt.savefig(c.fpath, bbox_inches="tight")
+
+def setColor(color):
+	if color == 'b':
+		return '#58508d'
+	elif color == 'r':
+		return '#ff6361'
+	elif color == 'y':
+		return '#ffa600'
+	elif color == 'g':
+		return '#558f4c'
+	else:
+		return 'none'

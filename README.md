@@ -52,6 +52,7 @@ Substrate specific tasks:
 - TaskSubstrateNewReferenda
 - TaskBlockProductionCheck
 - TaskBlockProductionReport
+- TaskBlockProductionReportCharts
 
 Near specific tasks:
 - TaskNearBlockMissed
@@ -75,14 +76,13 @@ install --help
  -a  --validator-address <address> enable checks on block production
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
-     --git <git_api> git api to query the latest realease version installed
-     --rel <version> release version installed (required for tendermint chain if git_api is specified)
- -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+     --git <git_api> git api to query the latest realease version installed     
+     --gov enable checks on new governance proposals (tendermint)
      --mount <mount_point> mount point where the node is installed
  -n  --name <name> monitor name [default is the server hostname]
-     --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
+     --rel <version> release version installed (required for tendermint chain if git_api is specified)          --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
-     --gov enable checks on new governance proposals (tendermint)
+ -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -v  --verbose enable verbose installation
 ```
 
