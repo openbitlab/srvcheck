@@ -11,8 +11,14 @@ class TaskSystemUsage(Task):
 
 	def run(self):
 		usage = self.s.system.getUsage()
+
+		# Burnrate estimation
+		rate = self.s.persistent.getAveragedDiff('TaskSystemUsage_diskUsed')
+		days = (usage.diskSize - usage.diskUsed) / rate
+		sv = '\n\t%.1f days left until disk full (%f MB/day rate)' % (days, toMB(rate))
+
 		serviceUptime = self.s.system.getServiceUptime()
-		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
+		self.notify(str(usage) + sv + '\n\tService uptime: ' + str(serviceUptime))
 
 		# Saving historical data
 		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_ramSize', 23):
