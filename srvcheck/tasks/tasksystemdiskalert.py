@@ -1,5 +1,5 @@
 from ..notification import Emoji
-from ..utils import toGB, Bash, ConfItem, ConfSet, toMB
+from ..utils import toGB, Bash, ConfItem, ConfSet
 from . import Task, minutes, hours
 
 ConfSet.addItem(ConfItem('system.log_size_threshold', 4, int, 'threshold for log size in GB'))

@@ -1,5 +1,5 @@
 from . import Task, hours
-from ..utils import savePlots, PlotsConf, SubPlotConf, toGB
+from ..utils import savePlots, PlotsConf, SubPlotConf, toGB, toMB
 
 class TaskSystemUsage(Task):
 	def __init__(self, services):
@@ -15,7 +15,7 @@ class TaskSystemUsage(Task):
 		# Burnrate estimation
 		rate = self.s.persistent.getAveragedDiff('TaskSystemUsage_diskUsed')
 		days = (usage.diskSize - usage.diskUsed) / rate
-		sv = '\n\t%.1f days left until disk full (%f MB/day rate)' % (days, toMB(rate))
+		sv = '\n\tDisk burnrate: %.1f days left until disk full (%f MB/day rate)' % (days, toMB(rate))
 
 		serviceUptime = self.s.system.getServiceUptime()
 		self.notify(str(usage) + sv + '\n\tService uptime: ' + str(serviceUptime))
