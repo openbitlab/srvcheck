@@ -30,7 +30,7 @@ ConfSet.addItem(ConfItem('chain.name', None, str, 'name of the chain'))
 ConfSet.addItem(ConfItem('tasks.autoRecover', False, bool, 'enable auto recoverable tasks'))
 ConfSet.addItem(ConfItem('tasks.disabled', '', str, 'comma separated list of disabled tasks'))
 ConfSet.addItem(ConfItem('chain.service', None, str, 'node service name'))
-ConfSet.addItem(ConfItem('tasks.govAdmin', '', str, 'Proposal voter nickname'))
+ConfSet.addItem(ConfItem('tasks.govAdmin', None, str, 'Proposal voter nickname'))
 
 
 def addTasks(services):

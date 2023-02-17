@@ -73,7 +73,8 @@ class TaskTendermintNewProposal(Task):
 					out += '\n'
 				out += f'{self.getProposalTitle(p)}{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
 			self.prev = proposals
-			out += f'{self.admin_gov}'
+			if self.admin_gov:
+				out += f'{self.admin_gov}'
 			return self.notify(out)
 
 	def run(self):
