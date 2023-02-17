@@ -25,6 +25,17 @@ class Persistent:
 			return self.data[k]
 		return None
 
+	def getAveragedDiff(self, k, n = None):
+		if k in self.data:
+			if not n:
+				n = len(self.data[k])
+
+			dd = self.data[k][-n:]
+
+			diffs = [dd[i+1] - dd[i] for i in range(len(dd)-1)]
+			return sum(diffs) / len(diffs)
+
+
 	def getN(self, k, n):
 		if k in self.data:
 			return self.data[k][-n:]

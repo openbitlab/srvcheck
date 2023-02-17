@@ -21,6 +21,14 @@ class TaskSystemDiskAlert(Task):
 			self.prevDiskSize = usage.diskSize
 
 		dl = self.s.conf.getOrDefault('system.disk_limit')
+
+
+		# Burnrate estimation
+		rate = self.s.persistent.getAveragedDiff('TaskSystemUsage_diskUsed')
+		days = (usage.diskSize - usage.diskUsed) / rate
+
+		self.notify('%f days left %f rate %s' % (days, rate, Emoji.Disk), True)
+
 		if usage.diskPercentageUsed > dl:
 			return self.notify('disk usage is above %d%% (%d%%) (/var/log: %.1fG, /: %.1fG) %s' % 
 				(dl, usage.diskPercentageUsed, toGB(usage.diskUsedByLog), toGB(usage.diskUsed), Emoji.Disk))
