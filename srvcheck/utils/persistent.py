@@ -31,6 +31,7 @@ class Persistent:
 				n = len(self.data[k])
 
 			dd = self.data[k][-n:]
+			print(dd)
 
 			diffs = [dd[i+1] - dd[i] for i in range(len(dd)-1)]
 			return sum(diffs) / len(diffs)
