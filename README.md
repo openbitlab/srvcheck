@@ -76,6 +76,7 @@ install --help
  -a  --validator-address <address> enable checks on block production
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+     --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed     
      --gov enable checks on new governance proposals (tendermint)
      --mount <mount_point> mount point where the node is installed
