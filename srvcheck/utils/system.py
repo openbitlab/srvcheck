@@ -5,6 +5,9 @@ ConfSet.addItem(ConfItem('chain.mountPoint', defaultValue="/", description='Moun
 
 def toGB(size):
 	return size / 1024 / 1024
+	
+def toMB(size):
+	return size / 1024
 
 class SystemUsage:
 	uptime = ''
