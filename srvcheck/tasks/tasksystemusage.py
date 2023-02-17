@@ -13,9 +13,9 @@ class TaskSystemUsage(Task):
 		usage = self.s.system.getUsage()
 
 		# Burnrate estimation
-		rate = self.s.persistent.getAveragedDiff('TaskSystemUsage_diskUsed')
+		rate = self.s.persistent.getAveragedDiff('TaskSystemUsage_diskUsed', 7)
 		days = (usage.diskSize - usage.diskUsed) / rate
-		sv = '\n\tDisk burnrate: %.1f days left until disk full (%f MB/day rate)' % (days, toMB(rate))
+		sv = '\n\tDisk burnrate: %.1f days left (%d MB/day rate)' % (days, toMB(rate))
 
 		serviceUptime = self.s.system.getServiceUptime()
 		self.notify(str(usage) + sv + '\n\tService uptime: ' + str(serviceUptime))
