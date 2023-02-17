@@ -51,7 +51,7 @@ class TaskTendermintNewProposal(Task):
 		super().__init__('TaskTendermintNewProposal',
 		      services, checkEvery, notifyEvery)
 		self.prev=None
-		self.admin_gov=self.conf.getOrDefault('tasks.govAdmin')
+		self.admin_gov=self.s.conf.getOrDefault('tasks.govAdmin')
 
 	@staticmethod
 	def isPluggable(services):
