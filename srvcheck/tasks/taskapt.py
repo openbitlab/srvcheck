@@ -3,6 +3,13 @@ import subprocess
 from ..notification import Emoji
 from . import Task, hours
 
+def indexOf(a, v):
+	try:
+		return a.index(v)
+	except ValueError:
+		return -1
+
+
 class TaskAPT(Task):
 	def __init__(self, services):
 		super().__init__('TaskAPT', services, hours(12), hours(24))
@@ -18,14 +25,16 @@ class TaskAPT(Task):
 
 	def run(self):
 		import apt 
-		
+
 		cache = apt.Cache()
 		cache.update()
 		security_updates = []
 		updates = []
 
 		for pkg in cache:
-			if pkg.is_upgradable and pkg.is_security_upgrade:
+			if not pkg.is_installed:
+				continue
+			if pkg.is_upgradable and indexOf(pkg.candidate.uri, 'security') != -1:
 				security_updates.append(pkg.name)
 			elif pkg.is_upgradable:
 				updates.append(pkg.name)
