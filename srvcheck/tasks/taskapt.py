@@ -1,5 +1,4 @@
 import subprocess
-import apt
 
 from ..notification import Emoji
 from . import Task, hours
@@ -11,12 +10,15 @@ class TaskAPT(Task):
 	@staticmethod
 	def isPluggable(services):
 		try:
+			import apt
 			subprocess.check_call(['apt', '--version'])
 			return True
 		except subprocess.CalledProcessError:
 			return False
 
 	def run(self):
+		import apt 
+		
 		cache = apt.Cache()
 		cache.update()
 		security_updates = []
