@@ -40,6 +40,6 @@ class TaskAPT(Task):
 				updates.append(pkg.name)
 
 		if security_updates:
-			return self.notify(f'has {len(security_updates)} security updates pending ({len(updates)} pending updates total): {",".join(security_updates)} {Emoji.Floppy}')
+			return self.notify(f'has {len(security_updates)} security updates pending ({len(updates)+len(security_updates)} pending updates total): {", ".join(security_updates)} {Emoji.Floppy}')
 
 		return False
