@@ -4,8 +4,6 @@ import apt
 from ..notification import Emoji
 from . import Task, hours
 
-
-
 class TaskAPT(Task):
 	def __init__(self, services):
 		super().__init__('TaskAPT', services, hours(12), hours(24))
@@ -31,7 +29,6 @@ class TaskAPT(Task):
 				updates.append(pkg.name)
 
 		if security_updates:
-			# Notify
-			pass
+			return self.notify(f'has {len(security_updates)} security updates pending ({len(updates)} pending updates total): {",".join(security_updates)} {Emoji.Floppy}')
 
 		return False
