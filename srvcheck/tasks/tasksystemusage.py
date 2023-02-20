@@ -1,5 +1,5 @@
 from . import Task, hours
-from ..utils import savePlots, PlotsConf, SubPlotConf, toGB
+from ..utils import savePlots, PlotsConf, SubPlotConf, toGB, toPrettySize
 
 class TaskSystemUsage(Task):
 	def __init__(self, services):
@@ -11,8 +11,14 @@ class TaskSystemUsage(Task):
 
 	def run(self):
 		usage = self.s.system.getUsage()
+
+		# Burnrate estimation
+		rate = self.s.persistent.getAveragedDiff('TaskSystemUsage_diskUsed', 7)
+		days = (usage.diskSize - usage.diskUsed) / rate
+		sv = '\n\tDisk burnrate: %.1f days left (%s/day rate)' % (days, toPrettySize(rate))
+
 		serviceUptime = self.s.system.getServiceUptime()
-		self.notify(str(usage) + '\n\tService uptime: ' + str(serviceUptime))
+		self.notify(str(usage) + sv + '\n\tService uptime: ' + str(serviceUptime))
 
 		# Saving historical data
 		if self.s.persistent.hasPassedNHoursSinceLast(self.name + '_ramSize', 23):
