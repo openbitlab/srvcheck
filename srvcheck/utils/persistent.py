@@ -33,6 +33,10 @@ class Persistent:
 			dd = self.data[k][-n:]
 
 			diffs = [dd[i+1][1] - dd[i][1] for i in range(len(dd)-1)]
+
+			# Remove negative increments
+			diffs = list(filter(lambda y: y > 0, diffs))
+
 			return sum(diffs) / len(diffs)
 
 

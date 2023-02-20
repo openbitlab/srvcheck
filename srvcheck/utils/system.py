@@ -9,6 +9,13 @@ def toGB(size):
 def toMB(size):
 	return size / 1024
 
+def toPrettySize(size):
+	v = size / 1024
+	if v > 1024:
+		return '%.1f GB' % (v/1024.)
+	else:
+		return '%d MB' % (int(v))
+
 class SystemUsage:
 	uptime = ''
 	diskSize = 0
