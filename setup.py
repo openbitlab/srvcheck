@@ -23,5 +23,5 @@ setup(name='srvcheck',
 		],
 	},
     zip_safe=False,
-	install_requires=['requests', 'substrate-interface', 'packaging==21.3', 'python-dateutil', 'matplotlib'],
+	install_requires=['requests', 'substrate-interface', 'python-apt==0.7.8', 'packaging==21.3', 'python-dateutil', 'matplotlib'],
 )

@@ -1,5 +1,9 @@
+import subprocess
+import apt
+
 from ..notification import Emoji
 from . import Task, hours
+
 
 
 class TaskAPT(Task):
@@ -8,16 +12,26 @@ class TaskAPT(Task):
 
 	@staticmethod
 	def isPluggable(services):
-        # Check if it is a debian based distro
-		return True
+		try:
+			subprocess.check_call(['apt', '--version'])
+			return True
+		except subprocess.CalledProcessError:
+			return False
 
 	def run(self):
-        # Apt update
+		cache = apt.Cache()
+		cache.update()
+		security_updates = []
+		updates = []
 
-        # Check for security updates
+		for pkg in cache:
+			if pkg.is_upgradable and pkg.is_security_upgrade:
+				security_updates.append(pkg.name)
+			elif pkg.is_upgradable:
+				updates.append(pkg.name)
 
-        # Check for other updates
-
-        # Notify / update security
+		if security_updates:
+			# Notify
+			pass
 
 		return False
