@@ -32,6 +32,7 @@ class Emoji:
 	Slow	    = "\U0001f40c"
 	Unreachable = "\U0001f50c"
 	Updated     = "\U0001F4E2"
+	Floppy 		= "\U0001F4BE"
 
 class Notification:
 	def __init__(self, name):

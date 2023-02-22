@@ -9,6 +9,7 @@ from .tasknewrelease import TaskNewRelease, versionCompare
 from .taskautoupdater import TaskAutoUpdater
 from .taskchainunreachable import TaskChainUnreachable
 from .taskchainsynching import TaskChainSynching
+from .taskapt import TaskAPT
 
 TASKS = [
     TaskChainStuck,
@@ -20,5 +21,6 @@ TASKS = [
     TaskNewRelease,
     TaskAutoUpdater,
     TaskChainUnreachable,
-    TaskChainSynching
+    TaskChainSynching,
+    TaskAPT
 ]
