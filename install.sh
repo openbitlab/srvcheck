@@ -14,6 +14,7 @@ install() {
 print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
+     --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
  -a  --validator-address <address> enable checks on block production
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
@@ -51,6 +52,10 @@ install_monitor () {
     if [ ! -z "$active_set" ]
     then
         sed -i -e "s/^activeSet =.*/activeSet = $active_set/" $config_file
+    fi
+    if [ ! -z "$admin" ]
+    then
+        sed -i -e "s/^govAdmin =.*/govAdmin = $admin/" $config_file
     fi
     if [ ! -z "$git_api" ]
     then
@@ -115,6 +120,17 @@ case $1 in
             exit 1
         else
             validatorAddress="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --admin)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            admin="$2"
         fi
         shift # past argument
         shift # past value

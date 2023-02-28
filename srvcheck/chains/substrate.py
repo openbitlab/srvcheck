@@ -294,7 +294,7 @@ class Substrate(Chain):
 		return self.checkAuthoredBlock(block)
 
 	def getSeals(self, block):
-		seals = Bash("grep -Eo 'block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
+		seals = Bash("grep -Eo 'block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog --text | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
 		return seals
 
 	def checkAuthoredBlock(self, block):
