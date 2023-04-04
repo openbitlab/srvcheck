@@ -73,6 +73,7 @@ The install script can be customized with these flags:
 ```
 install --help
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
+     --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
  -a  --validator-address <address> enable checks on block production
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
@@ -81,7 +82,8 @@ install --help
      --gov enable checks on new governance proposals (tendermint)
      --mount <mount_point> mount point where the node is installed
  -n  --name <name> monitor name [default is the server hostname]
-     --rel <version> release version installed (required for tendermint chain if git_api is specified)          --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
+     --rel <version> release version installed (required for tendermint chain if git_api is specified)          
+     --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -v  --verbose enable verbose installation
