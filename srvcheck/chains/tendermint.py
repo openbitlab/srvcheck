@@ -213,9 +213,13 @@ class Tendermint (Chain):
 	def getLatestProposals(self):
 		serv = self.conf.getOrDefault('chain.service')
 		if serv:
-			c = configparser.ConfigParser()
+			c = configparser.ConfigParser(strict=False)
 			c.read(f"/etc/systemd/system/{serv}")
 			cmd = re.split(' ', c["Service"]["ExecStart"])[0]
-			proposals = json.loads(Bash(cmd + " q gov proposals --reverse --output json").value())["proposals"]
-			return [p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
+			props = Bash(cmd + " q gov proposals --reverse --output json")
+			if props:
+				proposals = json.loads(props.value())["proposals"]
+				return [p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
+			else:
+				return []
 		raise Exception('No service file name specified!')
