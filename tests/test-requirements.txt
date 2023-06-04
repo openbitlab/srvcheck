@@ -4,4 +4,3 @@ tox
 substrate-interface
 python-dateutil
 matplotlib
-# coverage
