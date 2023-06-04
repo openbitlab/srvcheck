@@ -1,6 +1,7 @@
 # SRVCHECK
 
-![Status](https://circleci.com/gh/openbitlab/srvcheck.svg?style=svg)
+![CI Status](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Srvcheck helps you to monitor blockchain nodes.
 
