@@ -1,7 +1,8 @@
 import unittest
-from .task_test import buildTaskEnv
+
 from srvcheck.chains.substrate import TaskSubstrateNewReferenda
 
+from .task_test import buildTaskEnv
 
 # class TestTaskSubstrateNewReferenda(unittest.TestCase):
 #     def test(self):
