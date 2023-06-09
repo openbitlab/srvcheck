@@ -7,3 +7,6 @@ tests/__pycache__
 .pytest_cache
 build
 dist
+.mypy_cache
+.pytest_cache
+htmlcov
