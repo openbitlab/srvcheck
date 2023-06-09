@@ -16,20 +16,21 @@ class TaskSubstrateNewReferenda(Task):
         self.prev = None
 
     @staticmethod
+    def getCount(si):
+        return si.query(
+            module="Referenda", storage_function="ReferendumCount", params=[]
+        ).value
+
+    @staticmethod
     def isPluggable(services):
-        return True
+        if services.chain.getNetwork() in ["Kusama"]:
+            return True
+        return False
 
     def run(self):
-        n = self.s.chain.getNetwork()
-        if n not in ["Kusama", "Polkadot"]:
-            return False
-
         si = self.s.chain.getSubstrateInterface()
-        result = si.query(
-            module="Referenda", storage_function="ReferendumCount", params=[]
-        )
-
-        count = result.value
+        net = self.s.chain.getNetwork()
+        count = self.getCount(si)
 
         if self.prev is None:
             self.prev = count
@@ -37,7 +38,51 @@ class TaskSubstrateNewReferenda(Task):
 
         if count > self.prev:
             self.prev = count
-            return self.notify(f"New referendum found on {n}: {n, count - 1}")
+            return self.notify(f"New referendum found on {net}: {count - 1}")
+
+
+class TaskSubstrateReferendaVotingCheck(Task):
+    def __init__(self, services, checkEvery=hours(1), notifyEvery=60 * 10 * 60):
+        super().__init__(
+            "TaskSubstrateReferendaVotingCheck", services, checkEvery, notifyEvery
+        )
+        self.prev = None
+
+    @staticmethod
+    def isPluggable(services):
+        if services.chain.getNetwork() in ["Kusama"]:
+            return services.conf.exists("chain.validatorAddress")
+        return False
+
+    def run(self):
+        si = self.s.chain.getSubstrateInterface()
+        net = self.s.chain.getNetwork()
+        validator = self.conf.getOrDefault("chain.validatorAddress")
+        result = si.query_map(
+            module="ConvictionVoting",
+            storage_function="VotingFor",
+            params=[validator],
+            max_results=1000,
+        )
+        count = TaskSubstrateNewReferenda.getCount(si)
+
+        vt = {}
+        vtl = []
+        for votes in map(
+            lambda y: list(y.values())[0]["votes"], map(lambda y: y[1].value, result)
+        ):
+            for n, v in votes:
+                vt[n] = v
+                vtl.append(n)
+        nv = []
+        for x in range(count - 16, count):
+            if x not in vt:
+                nv.append(x)
+
+        if len(nv) > 0:
+            return self.notify(
+                f"Validator {validator} is not voting on {net} Referenda {str(nv)}"
+            )
 
 
 class TaskRelayChainStuck(Task):
@@ -242,6 +287,7 @@ class Substrate(Chain):
     CUSTOM_TASKS = [
         TaskRelayChainStuck,
         TaskSubstrateNewReferenda,
+        TaskSubstrateReferendaVotingCheck,
         TaskBlockProductionReport,
         TaskBlockProductionReportCharts,
     ]
