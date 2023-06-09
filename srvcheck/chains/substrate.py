@@ -38,7 +38,7 @@ class TaskSubstrateNewReferenda(Task):
 
         if count > self.prev:
             self.prev = count
-            return self.notify(f"New referendum found on {net}: {count - 1}")
+            return self.notify(f"New referendum found on {net}: {count - 1} {Emoji.Proposal}")
 
 
 class TaskSubstrateReferendaVotingCheck(Task):
@@ -89,7 +89,7 @@ class TaskSubstrateReferendaVotingCheck(Task):
 
         if len(nv) > 0:
             return self.notify(
-                f"Validator {validator} is not voting on {net} Referenda {str(nv)}"
+                f"Validator {validator} is not voting on {net} Referenda {str(nv)} {Emoji.Proposal}"
             )
 
 
