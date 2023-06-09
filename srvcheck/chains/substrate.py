@@ -77,7 +77,9 @@ class TaskSubstrateReferendaVotingCheck(Task):
         nv = []
         for x in range(count - 16, count):
             if x not in vt:
-                nv.append(x)
+                c = si.query(module="Referenda", storage_function="ReferendumInfoFor", params=["205"]).value
+                if 'Approved' not in c and 'Rejected' not in c:
+                    nv.append(x)
 
         if len(nv) > 0:
             return self.notify(
