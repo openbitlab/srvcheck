@@ -57,7 +57,7 @@ class TaskSubstrateReferendaVotingCheck(Task):
     def run(self):
         si = self.s.chain.getSubstrateInterface()
         net = self.s.chain.getNetwork()
-        validator = self.conf.getOrDefault("chain.validatorAddress")
+        validator = self.s.conf.getOrDefault("chain.validatorAddress")
         result = si.query_map(
             module="ConvictionVoting",
             storage_function="VotingFor",
