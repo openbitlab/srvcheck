@@ -289,7 +289,7 @@ class TaskBlockProductionReportCharts(Task):
             self.s.notification.sendPhoto("/tmp/p.png")
 
 
-class Polkasama(Chain):
+class Polkasama(Substrate):
     TYPE = "substrate"
     NAME = "polkasama"
     EP = "ws://localhost:9944/"
