@@ -289,31 +289,6 @@ class TaskBlockProductionReportCharts(Task):
             self.s.notification.sendPhoto("/tmp/p.png")
 
 
-class Polkasama(Substrate):
-    TYPE = "substrate"
-    NAME = "polkasama"
-    EP = "ws://localhost:9944/"
-    BLOCKTIME = 15
-    CUSTOM_TASKS = [
-        TaskRelayChainStuck,
-        TaskSubstrateNewReferenda,
-        TaskSubstrateReferendaVotingCheck,
-        TaskBlockProductionReport,
-        TaskBlockProductionReportCharts,
-    ]
-
-    def __init__(self, conf):
-        conf.setDefaultValue("ws://localhost:9944")
-        super().__init__(conf)
-
-    @staticmethod
-    def detect(conf):
-        try:
-            return Polkasama(conf).getNodeName() == "Parity Polkadot"
-        except:
-            return False
-
-
 class Substrate(Chain):
     TYPE = "substrate"
     NAME = ""
@@ -329,9 +304,6 @@ class Substrate(Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
-        ep = self.conf.getOrDefault("chain.endpoint")
-        if ep:
-            self.EP = ep
         self.sub_iface = SubstrateInterface(url=self.EP)
         self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"][
             "methods"
@@ -464,3 +436,28 @@ class Substrate(Chain):
 
     def getSessionWrapped(self):
         return self.getSession()
+
+
+
+class Polkasama(Substrate):
+    TYPE = "substrate"
+    NAME = "polkasama"
+    EP = "ws://localhost:9944/"
+    BLOCKTIME = 15
+    CUSTOM_TASKS = [
+        TaskRelayChainStuck,
+        TaskSubstrateNewReferenda,
+        TaskSubstrateReferendaVotingCheck,
+        TaskBlockProductionReport,
+        TaskBlockProductionReportCharts,
+    ]
+
+    def __init__(self, conf):
+        super().__init__(conf)
+
+    @staticmethod
+    def detect(conf):
+        try:
+            return Polkasama(conf).getNodeName() == "Parity Polkadot"
+        except:
+            return False
