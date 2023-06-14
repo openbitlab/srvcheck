@@ -28,7 +28,7 @@ class TaskSubstrateNewReferenda(Task):
         return False
 
     def run(self):
-        si = self.s.chain.getSubstrateInterface()
+        si = self.s.chain.sub_iface
         net = self.s.chain.getNetwork()
         count = self.getCount(si)
 
@@ -38,7 +38,9 @@ class TaskSubstrateNewReferenda(Task):
 
         if count > self.prev:
             self.prev = count
-            return self.notify(f"New referendum found on {net}: {count - 1} {Emoji.Proposal}")
+            return self.notify(
+                f"New referendum found on {net}: {count - 1} {Emoji.Proposal}"
+            )
 
 
 class TaskSubstrateReferendaVotingCheck(Task):
@@ -55,7 +57,7 @@ class TaskSubstrateReferendaVotingCheck(Task):
         return False
 
     def run(self):
-        si = self.s.chain.getSubstrateInterface()
+        si = self.s.chain.sub_iface
         net = self.s.chain.getNetwork()
         validator = self.s.conf.getOrDefault("chain.validatorAddress")
         result = si.query_map(
@@ -302,15 +304,15 @@ class Substrate(Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
-        self.rpcMethods = super().rpcCall("rpc_methods", [])["methods"]
+        self.sub_iface = SubstrateInterface(url=self.EP)
+        self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"][
+            "methods"
+        ]
 
     def rpcCall(self, method, params=[]):
         if method in self.rpcMethods:
-            return super().rpcCall(method, params)
+            return self.sub_iface.rpc_request(method, params)["result"]
         return None
-
-    def getSubstrateInterface(self):
-        return SubstrateInterface(url=self.EP)
 
     @staticmethod
     def detect(conf):
@@ -336,10 +338,9 @@ class Substrate(Chain):
         return self.rpcCall("system_chain")
 
     def isStaking(self):
-        si = self.getSubstrateInterface()
         collator = self.conf.getOrDefault("chain.validatorAddress")
         era = self.getEra()
-        result = si.query(
+        result = self.sub_iface.query(
             module="Staking", storage_function="ErasStakers", params=[era, collator]
         )
         if result.value["total"] > 0:
@@ -351,15 +352,13 @@ class Substrate(Chain):
         return abs(c - h) > 32
 
     def getRelayHeight(self):
-        si = self.getSubstrateInterface()
-        result = si.query(
+        result = self.sub_iface.query(
             module="ParachainSystem", storage_function="ValidationData", params=[]
         )
         return result.value["relay_parent_number"]
 
     def getParachainId(self):
-        si = self.getSubstrateInterface()
-        result = si.query(
+        result = self.sub_iface.query(
             module="ParachainInfo", storage_function="ParachainId", params=[]
         )
         return result.value
@@ -375,20 +374,21 @@ class Substrate(Chain):
             return False
 
     def getSession(self):
-        si = self.getSubstrateInterface()
-        result = si.query(module="Session", storage_function="CurrentIndex", params=[])
+        result = self.sub_iface.query(
+            module="Session", storage_function="CurrentIndex", params=[]
+        )
         return result.value
 
     def getEra(self):
-        si = self.getSubstrateInterface()
-        result = si.query(module="Staking", storage_function="ActiveEra", params=[])
+        result = self.sub_iface.query(
+            module="Staking", storage_function="ActiveEra", params=[]
+        )
         return result.value["index"]
 
     def isValidator(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.getSubstrateInterface()
-            result = si.query(
+            result = self.sub_iface.query(
                 module="Session", storage_function="QueuedKeys", params=[]
             )
             for v in result.value:
@@ -436,3 +436,26 @@ class Substrate(Chain):
 
     def getSessionWrapped(self):
         return self.getSession()
+
+
+class Polkasama(Substrate):
+    TYPE = "polkasama"
+    EP = "ws://localhost:9944/"
+    BLOCKTIME = 15
+    CUSTOM_TASKS = [
+        TaskRelayChainStuck,
+        TaskSubstrateNewReferenda,
+        TaskSubstrateReferendaVotingCheck,
+        TaskBlockProductionReport,
+        TaskBlockProductionReportCharts,
+    ]
+
+    def __init__(self, conf):
+        super().__init__(conf)
+
+    @staticmethod
+    def detect(conf):
+        try:
+            return Polkasama(conf).getNodeName() == "Parity Polkadot"
+        except:
+            return False
