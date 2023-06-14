@@ -289,30 +289,9 @@ class TaskBlockProductionReportCharts(Task):
             self.s.notification.sendPhoto("/tmp/p.png")
 
 
-class Kusama(Chain):
+class Polkasama(Chain):
     TYPE = "substrate"
-    NAME = "kusama"
-    EP = "ws://localhost:9944/"
-    BLOCKTIME = 15
-    CUSTOM_TASKS = [
-        TaskRelayChainStuck,
-        TaskSubstrateNewReferenda,
-        TaskSubstrateReferendaVotingCheck,
-        TaskBlockProductionReport,
-        TaskBlockProductionReportCharts,
-    ]
-
-    @staticmethod
-    def detect(conf):
-        try:
-            return Kusama(conf).getNodeName() == "Parity Kusama"
-        except:
-            return False
-
-
-class Polkadot(Chain):
-    TYPE = "substrate"
-    NAME = "kusama"
+    NAME = "polkasama"
     EP = "ws://localhost:9944/"
     BLOCKTIME = 15
     CUSTOM_TASKS = [
