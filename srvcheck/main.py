@@ -112,7 +112,7 @@ def main():  # noqa: C901
         for x in CHAINS:
             if x.detect(conf):
                 chain = x(conf)
-                print("Detected chain", chain.TYPE)
+                print("Detected chain", chain.NAME, chain.TYPE)
                 services = Services(conf, notification, system, chain, persistent)
                 tasks = addTasks(services)
                 print(tasks)
