@@ -290,7 +290,17 @@ class TaskBlockProductionReportCharts(Task):
 
 
 class Kusama(Chain):
+    TYPE = "substrate"
+    NAME = "kusama"
     EP = "ws://localhost:9944/"
+    BLOCKTIME = 15
+    CUSTOM_TASKS = [
+        TaskRelayChainStuck,
+        TaskSubstrateNewReferenda,
+        TaskSubstrateReferendaVotingCheck,
+        TaskBlockProductionReport,
+        TaskBlockProductionReportCharts,
+    ]
 
     @staticmethod
     def detect(conf):
@@ -301,7 +311,17 @@ class Kusama(Chain):
 
 
 class Polkadot(Chain):
+    TYPE = "substrate"
+    NAME = "kusama"
     EP = "ws://localhost:9944/"
+    BLOCKTIME = 15
+    CUSTOM_TASKS = [
+        TaskRelayChainStuck,
+        TaskSubstrateNewReferenda,
+        TaskSubstrateReferendaVotingCheck,
+        TaskBlockProductionReport,
+        TaskBlockProductionReportCharts,
+    ]
 
     @staticmethod
     def detect(conf):
