@@ -438,7 +438,6 @@ class Substrate(Chain):
         return self.getSession()
 
 
-
 class Polkasama(Substrate):
     TYPE = "substrate"
     NAME = "polkasama"
