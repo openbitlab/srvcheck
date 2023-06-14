@@ -112,7 +112,7 @@ def main():  # noqa: C901
         for x in CHAINS:
             if x.detect(conf):
                 chain = x(conf)
-                print("Detected chain", chain.TYPE, chain.NAME)
+                print("Detected chain", chain.TYPE)
                 services = Services(conf, notification, system, chain, persistent)
                 tasks = addTasks(services)
                 print(tasks)
@@ -123,7 +123,7 @@ def main():  # noqa: C901
         sys.exit(0)
 
     notification.send(
-        f"monitor v{version} started {Emoji.Start}\nDetected chain: {chain.TYPE} {chain.NAME}\n"
+        f"monitor v{version} started {Emoji.Start}\nDetected chain: {chain.TYPE}\n"
         + f"Enabled tasks: {reduce(lambda x, y: x + ', ' + y, [x.name for x in tasks])}"
     )
 

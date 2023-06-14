@@ -439,8 +439,7 @@ class Substrate(Chain):
 
 
 class Polkasama(Substrate):
-    TYPE = "substrate"
-    NAME = "polkasama"
+    TYPE = "polkasama"
     EP = "ws://localhost:9944/"
     BLOCKTIME = 15
     CUSTOM_TASKS = [
