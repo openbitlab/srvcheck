@@ -302,6 +302,10 @@ class Polkasama(Chain):
         TaskBlockProductionReportCharts,
     ]
 
+    def __init__(self, conf):
+        conf.setDefaultValue("ws://localhost:9944")
+        super().__init__(conf)
+
     @staticmethod
     def detect(conf):
         try:
@@ -325,6 +329,9 @@ class Substrate(Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
+        ep = self.conf.getOrDefault("chain.endpoint")
+        if ep:
+            self.EP = ep
         self.sub_iface = SubstrateInterface(url=self.EP)
         self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"][
             "methods"
