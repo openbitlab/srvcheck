@@ -305,7 +305,7 @@ class Polkasama(Chain):
     @staticmethod
     def detect(conf):
         try:
-            return Polkadot(conf).getNodeName() == "Parity Polkadot"
+            return Polkasama(conf).getNodeName() == "Parity Polkadot"
         except:
             return False
 
