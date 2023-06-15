@@ -23,7 +23,7 @@ class TaskSubstrateNewReferenda(Task):
 
     @staticmethod
     def isPluggable(services):
-        if services.chain.getNetwork() in ["Kusama"]:
+        if services.chain.getNetwork() in ["Kusama", "Polkadot"]:
             return True
         return False
 
