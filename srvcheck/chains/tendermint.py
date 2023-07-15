@@ -23,7 +23,7 @@ class TaskTendermintBlockMissed(Task):
 
     @staticmethod
     def isPluggable(services):
-        return True
+        return services.chain.isStaking()
 
     def run(self):
         nblockh = self.s.chain.getHeight()
