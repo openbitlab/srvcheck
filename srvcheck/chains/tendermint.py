@@ -46,10 +46,8 @@ class TaskTendermintBlockMissed(Task):
 
             start += 1
 
-        if (
-            self.s.chain.isStaking()
-            and missed >= self.THRESHOLD_NOTSIGNED
-            and (self.prevMissed is None or self.prevMissed != lastMissed)
+        if missed >= self.THRESHOLD_NOTSIGNED and (
+            self.prevMissed is None or self.prevMissed != lastMissed
         ):
             self.prevMissed = lastMissed
             self.prev = nblockh
