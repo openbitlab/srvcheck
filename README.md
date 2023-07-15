@@ -52,13 +52,14 @@ And it offers many features thanks to the following tasks:
 **Substrate** specific tasks:
 - **TaskSubstrateNewReferenda**
 - **TaskBlockProductionCheck**
-- **TaskBlockProductionReport**
-- **TaskBlockProductionReportCharts**
+- **TaskSubstrateBlockProductionReport**
+- **TaskSubstrateBlockProductionReportCharts**
 
 **Near** specific tasks:
 - **TaskNearBlockMissed**
 - **TaskNearChunksMissed**
-- **TaskCheckProposal**
+- **TaskNearCheckProposal**
+- **TaskNearCheckKicked**
 
 We suggest adding the binary of the node to the PATH in order to benefit from all the monitor features' 
 
