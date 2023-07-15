@@ -2,8 +2,10 @@ import configparser
 import json
 import re
 
+from dateutil import parser
+
 from ..notification import Emoji
-from ..tasks import Task, hours, minutes
+from ..tasks import Task, hours, minutes, seconds
 from ..utils import Bash, ConfItem, ConfSet
 from .chain import Chain
 
@@ -14,9 +16,16 @@ ConfSet.addItem(ConfItem("chain.thresholdNotsigned", 5, int))
 
 class TaskTendermintBlockMissed(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
-        super().__init__("TaskTendermintBlockMissed", services, checkEvery, notifyEvery)
+        self.BLOCK_WINDOW = services.conf.getOrDefault("chain.blockWindow")
+        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
 
-        self.BLOCK_WINDOW = self.s.conf.getOrDefault("chain.blockWindow")
+        super().__init__(
+            "TaskTendermintBlockMissed",
+            services,
+            checkEvery=seconds(self.BLOCK_TIME * self.BLOCK_WINDOW),
+            notifyEvery=notifyEvery,
+        )
+
         self.THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault("chain.thresholdNotsigned")
         self.prev = None
         self.prevMissed = None
@@ -29,15 +38,17 @@ class TaskTendermintBlockMissed(Task):
         nblockh = self.s.chain.getHeight()
 
         if self.prev is None:
-            self.prev = nblockh
+            self.prev = nblockh - self.BLOCK_WINDOW
+
+        validatorAddress = self.s.chain.getValidatorAddress()
         missed = 0
-        start = nblockh - self.BLOCK_WINDOW
+        start = self.prev
         while start < nblockh:
             if not next(
                 (
                     x
                     for x in self.s.chain.getSignatures(start)
-                    if x["validator_address"] == self.s.chain.getValidatorAddress()
+                    if x["validator_address"] == validatorAddress
                 ),
                 None,
             ):
@@ -239,6 +250,21 @@ class Tendermint(Chain):
 
     def getBlockHash(self):
         return self.rpcCall("status")["sync_info"]["latest_block_hash"]
+
+    def getAverageBlockTime(self):
+        span = 1000
+        current_height = self.getHeight()
+        current_block_time = parser.parse(
+            self.rpcCall("block", [str(current_height)])["block"]["header"]["time"]
+        )
+        past_block_time = parser.parse(
+            self.rpcCall("block", [str(current_height - span)])["block"]["header"][
+                "time"
+            ]
+        )
+        time_diff = (current_block_time - past_block_time).total_seconds()
+        average_block_time = int(time_diff / span)
+        return average_block_time if average_block_time > 0 else 1
 
     def getPeerCount(self):
         return int(self.rpcCall("net_info")["n_peers"])
