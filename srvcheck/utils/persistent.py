@@ -29,13 +29,15 @@ class Persistent:
 
     def getAveragedDiff(self, k, n=None):
         if k in self.data:
-            if not n:
+            if not n or n is None:
                 n = len(self.data[k])
 
-            dd = self.data[k][-n:]
-            diffs = [dd[i + 1][1] - dd[i][1] for i in range(len(dd) - 1)]
+            if n is not None:
+                dd = self.data[k][-n:]
+                diffs = [dd[i + 1][1] - dd[i][1] for i in range(len(dd) - 1)]
+            
+            return None if len(diffs) == 0 else sum(diffs) / len(diffs)
 
-            return sum(diffs) / len(diffs)
 
     def getN(self, k, n):
         if k in self.data:

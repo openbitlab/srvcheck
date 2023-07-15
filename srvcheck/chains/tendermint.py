@@ -57,9 +57,8 @@ class TaskTendermintBlockMissed(Task):
 
         return False
 
-
 class TaskTendermintNewProposal(Task):
-    def __init__(self, services, checkEvery=minutes(1), notifyEvery=hours(1)):
+    def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(1)):
         super().__init__("TaskTendermintNewProposal", services, checkEvery, notifyEvery)
         self.prev = None
         self.admin_gov = self.s.conf.getOrDefault("tasks.govAdmin")
@@ -96,11 +95,17 @@ class TaskTendermintNewProposal(Task):
     def run(self):
         nProposal = self.s.chain.getLatestProposals()
         if not self.prev:
-            self.prev = nProposal
-            if len(self.prev) > 0:
-                return self.notify(
-                    f"got latest proposal: {self.getProposalTitle(nProposal[0])} {Emoji.Proposal}"
-                )
+            if len(nProposal) > 0:
+                self.prev = nProposal
+                c = len(self.prev)
+                if c > 0:
+                    out = f"got latest proposal{ 's' if c > 1 else '' }: \n"
+                    for p in nProposal[:-1]:
+                        out += f"{self.getProposalTitle(p)}\n"
+                    out += f"{self.getProposalTitle(nProposal[-1])} {Emoji.Proposal}"
+                if self.admin_gov:
+                    out += f" {self.admin_gov}"
+                return self.notify(out)
         elif "id" in self.prev[0]:
             self.notifyAboutLatestProposals(nProposal, "id")
         elif "proposal_id" in self.prev[0] and int(self.prev[0]["proposal_id"]) < int(
