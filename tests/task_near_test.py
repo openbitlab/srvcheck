@@ -1,7 +1,7 @@
 import unittest
 import urllib.parse
 
-from srvcheck.chains.near import TaskCheckKicked
+from srvcheck.chains.near import TaskNearCheckKicked
 from srvcheck.notification.notification import Emoji
 from tests.mocks.mockchain import MockChainNear
 
@@ -10,7 +10,7 @@ from .task_test import buildTaskEnv
 
 class TestTaskNearKickedout(unittest.TestCase):
     def test_chunk(self):
-        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskNearCheckKicked, MockChainNear)
         c.epoch = 18
         t.run()
         c.kicked_set = [
@@ -41,7 +41,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         )
 
     def test_blocks(self):
-        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskNearCheckKicked, MockChainNear)
         c.epoch = 18
         t.run()
         c.kicked_set = [
@@ -72,7 +72,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         )
 
     def test_notenoughstake(self):
-        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskNearCheckKicked, MockChainNear)
         c.epoch = 21
         t.run()
         c.kicked_set = [
@@ -106,7 +106,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         )
 
     def test_no_kick(self):
-        c, n, t, s, p = buildTaskEnv(TaskCheckKicked, MockChainNear)
+        c, n, t, s, p = buildTaskEnv(TaskNearCheckKicked, MockChainNear)
         t.run()
         n.flush()
         print(n.events)

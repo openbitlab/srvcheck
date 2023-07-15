@@ -4,15 +4,15 @@ from ..notification import Emoji
 from ..tasks import Task
 from .substrate import (
     Substrate,
-    TaskBlockProductionReportCharts,
-    TaskBlockProductionReportParachain,
-    TaskRelayChainStuck,
+    TaskSubstrateBlockProductionReportCharts,
+    TaskSubstrateBlockProductionReportParachain,
+    TaskSubstrateRelayChainStuck,
 )
 
 
-class TaskBlockProductionCheck(Task):
+class TaskAstarBlockProductionCheck(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
-        super().__init__("TaskBlockProductionCheck", services, checkEvery, notifyEvery)
+        super().__init__("TaskAstarBlockProductionCheck", services, checkEvery, notifyEvery)
         self.prev = None
 
     @staticmethod
@@ -37,10 +37,10 @@ class TaskBlockProductionCheck(Task):
 class Astar(Substrate):
     TYPE = "parachain"
     CUSTOM_TASKS = [
-        TaskRelayChainStuck,
-        TaskBlockProductionReportParachain,
-        TaskBlockProductionReportCharts,
-        TaskBlockProductionCheck,
+        TaskSubstrateRelayChainStuck,
+        TaskSubstrateBlockProductionReportParachain,
+        TaskSubstrateBlockProductionReportCharts,
+        TaskAstarBlockProductionCheck,
     ]
 
     def __init__(self, conf):

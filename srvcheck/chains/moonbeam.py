@@ -1,17 +1,17 @@
 from .substrate import (
     Substrate,
-    TaskBlockProductionReportCharts,
-    TaskBlockProductionReportParachain,
-    TaskRelayChainStuck,
+    TaskSubstrateBlockProductionReportCharts,
+    TaskSubstrateBlockProductionReportParachain,
+    TaskSubstrateRelayChainStuck,
 )
 
 
 class Moonbeam(Substrate):
     TYPE = "parachain"
     CUSTOM_TASKS = [
-        TaskRelayChainStuck,
-        TaskBlockProductionReportParachain,
-        TaskBlockProductionReportCharts,
+        TaskSubstrateRelayChainStuck,
+        TaskSubstrateBlockProductionReportParachain,
+        TaskSubstrateBlockProductionReportCharts,
     ]
 
     def __init__(self, conf):

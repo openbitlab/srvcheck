@@ -95,9 +95,9 @@ class TaskSubstrateReferendaVotingCheck(Task):
             )
 
 
-class TaskRelayChainStuck(Task):
+class TaskSubstrateRelayChainStuck(Task):
     def __init__(self, services, checkEvery=30, notifyEvery=60 * 5):
-        super().__init__("TaskRelayChainStuck", services, checkEvery, notifyEvery)
+        super().__init__("TaskSubstrateRelayChainStuck", services, checkEvery, notifyEvery)
         self.prev = None
 
     @staticmethod
@@ -112,9 +112,9 @@ class TaskRelayChainStuck(Task):
         return False
 
 
-class TaskBlockProductionReport(Task):
+class TaskSubstrateBlockProductionReport(Task):
     def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
-        super().__init__("TaskBlockProductionReport", services, checkEvery, notifyEvery)
+        super().__init__("TaskSubstrateBlockProductionReport", services, checkEvery, notifyEvery)
         self.prev = None
         self.lastBlockChecked = None
         self.totalBlockChecked = 0
@@ -171,10 +171,10 @@ class TaskBlockProductionReport(Task):
         return False
 
 
-class TaskBlockProductionReportParachain(Task):
+class TaskSubstrateBlockProductionReportParachain(Task):
     def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
         super().__init__(
-            "TaskBlockProductionReportParachain", services, checkEvery, notifyEvery
+            "TaskSubstrateBlockProductionReportParachain", services, checkEvery, notifyEvery
         )
         self.prev = None
         self.prevBlock = None
@@ -235,10 +235,10 @@ class TaskBlockProductionReportParachain(Task):
         return False
 
 
-class TaskBlockProductionReportCharts(Task):
+class TaskSubstrateBlockProductionReportCharts(Task):
     def __init__(self, services, checkEvery=hours(24), notifyEvery=hours(24)):
         super().__init__(
-            "TaskBlockProductionReportCharts", services, checkEvery, notifyEvery
+            "TaskSubstrateBlockProductionReportCharts", services, checkEvery, notifyEvery
         )
 
     @staticmethod
@@ -295,11 +295,11 @@ class Substrate(Chain):
     BLOCKTIME = 15
     EP = "http://localhost:9933/"
     CUSTOM_TASKS = [
-        TaskRelayChainStuck,
+        TaskSubstrateRelayChainStuck,
         TaskSubstrateNewReferenda,
         TaskSubstrateReferendaVotingCheck,
-        TaskBlockProductionReport,
-        TaskBlockProductionReportCharts,
+        TaskSubstrateBlockProductionReport,
+        TaskSubstrateBlockProductionReportCharts,
     ]
 
     def __init__(self, conf):
@@ -443,11 +443,11 @@ class Polkasama(Substrate):
     EP = "ws://localhost:9944/"
     BLOCKTIME = 15
     CUSTOM_TASKS = [
-        TaskRelayChainStuck,
+        TaskSubstrateRelayChainStuck,
         TaskSubstrateNewReferenda,
         TaskSubstrateReferendaVotingCheck,
-        TaskBlockProductionReport,
-        TaskBlockProductionReportCharts,
+        TaskSubstrateBlockProductionReport,
+        TaskSubstrateBlockProductionReportCharts,
     ]
 
     def __init__(self, conf):
