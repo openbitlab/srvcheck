@@ -17,12 +17,12 @@ ConfSet.addItem(ConfItem("chain.thresholdNotsigned", 5, int))
 class TaskTendermintBlockMissed(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
         self.BLOCK_WINDOW = services.conf.getOrDefault("chain.blockWindow")
-        average_block_time = services.chain.getAverageBlockTime()
+        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
 
         super().__init__(
             "TaskTendermintBlockMissed",
             services,
-            checkEvery=seconds(average_block_time * self.BLOCK_WINDOW),
+            checkEvery=seconds(self.BLOCK_TIME * self.BLOCK_WINDOW),
             notifyEvery=notifyEvery,
         )
 
