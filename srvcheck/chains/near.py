@@ -51,10 +51,10 @@ class TaskNearChunksMissed(Task):
         return False
 
 
-class TaskCheckProposal(Task):
+class TaskNearCheckProposal(Task):
     def __init__(self, services):
         super().__init__(
-            "TaskCheckProposal",
+            "TaskNearCheckProposal",
             services,
             checkEvery=seconds(services.chain.EPOCHTIME),
             notifyEvery=seconds(services.chain.EPOCHTIME / 2),
@@ -78,10 +78,10 @@ class TaskCheckProposal(Task):
         return False
 
 
-class TaskCheckKicked(Task):
+class TaskNearCheckKicked(Task):
     def __init__(self, services, checkEvery=minutes(1)):
         super().__init__(
-            "TaskCheckKicked",
+            "TaskNearCheckKicked",
             services,
             checkEvery=checkEvery,
             notifyEvery=seconds(services.chain.EPOCHTIME / 3),
@@ -145,8 +145,8 @@ class Near(Chain):
     CUSTOM_TASKS = [
         TaskNearBlockMissed,
         TaskNearChunksMissed,
-        TaskCheckProposal,
-        TaskCheckKicked,
+        TaskNearCheckProposal,
+        TaskNearCheckKicked,
     ]
 
     def __init__(self, conf):
