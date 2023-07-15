@@ -122,7 +122,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         self.assertEqual(
             n.events[0],
             urllib.parse.quote(
-                "#got latest proposal: \nupgrade client " + Emoji.Proposal
+                "#got latest proposal: \nupgrade client " + Emoji.Proposal + " "
             ),
         )
 

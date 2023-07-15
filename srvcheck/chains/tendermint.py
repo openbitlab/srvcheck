@@ -107,7 +107,7 @@ class TaskTendermintNewProposal(Task):
                     out += f"{self.getProposalTitle(nProposal[-1])} {Emoji.Proposal}"
                 if self.admin_gov:
                     out += f" {self.admin_gov}"
-                    return self.notify(out)
+                return self.notify(out)
         elif "id" in self.prev[0]:
             self.notifyAboutLatestProposals(nProposal, "id")
         elif "proposal_id" in self.prev[0] and int(self.prev[0]["proposal_id"]) < int(
