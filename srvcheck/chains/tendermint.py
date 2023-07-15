@@ -30,6 +30,8 @@ class TaskTendermintBlockMissed(Task):
 
         if self.prev is None:
             self.prev = nblockh
+            
+        validatorAddress = self.s.chain.getValidatorAddress()
         missed = 0
         start = nblockh - self.BLOCK_WINDOW
         while start < nblockh:
@@ -37,7 +39,7 @@ class TaskTendermintBlockMissed(Task):
                 (
                     x
                     for x in self.s.chain.getSignatures(start)
-                    if x["validator_address"] == self.s.chain.getValidatorAddress()
+                    if x["validator_address"] == validatorAddress
                 ),
                 None,
             ):
@@ -250,7 +252,7 @@ class Tendermint(Chain):
 
     def getValidatorAddress(self):
         return self.rpcCall("status")["validator_info"]["address"]
-
+           
     def getSignatures(self, height):
         return self.rpcCall("block", [str(height)])["block"]["last_commit"][
             "signatures"
