@@ -1,41 +1,45 @@
+from typing import List
+
+from ..tasks import Task
 from .chain import Chain
 
-class Tezos (Chain):
-	TYPE = "tezos"
-	NAME = "tezos"
-	BLOCKTIME = 60
-	EP = 'http://127.0.0.1:8732/'
-	CUSTOM_TASKS = []
 
-	@staticmethod
-	def detect(conf):
-		try:
-			Tezos(conf).getVersion()
-			return True
-		except:
-			return False
+class Tezos(Chain):
+    TYPE = "tezos"
+    NAME = "tezos"
+    BLOCKTIME = 60
+    EP = "http://127.0.0.1:8732/"
+    CUSTOM_TASKS: List[Task] = []
 
-	def getLatestVersion(self):
-		raise Exception('Abstract getLatestVersion()')
+    @staticmethod
+    def detect(conf):
+        try:
+            Tezos(conf).getVersion()
+            return True
+        except:
+            return False
 
-	def getVersion(self):
-		a = self.getCall('version')
-		return f'v%s.%s.0' % (a['major'], a['minor'])
+    def getLatestVersion(self):
+        raise Exception("Abstract getLatestVersion()")
 
-	def getHeight(self):
-		return self.getCall('chains/main/blocks/head/helpers/current_level')['level']
+    def getVersion(self):
+        a = self.getCall("version")
+        return f"v{a['major']}.{a['minor']}%s.0"
 
-	def getBlockHash(self):
-		return self.getCall('chains/main/blocks/head')['hash']
+    def getHeight(self):
+        return self.getCall("chains/main/blocks/head/helpers/current_level")["level"]
 
-	def getPeerCount(self):
-		return len(self.getCall('network/peers'))
+    def getBlockHash(self):
+        return self.getCall("chains/main/blocks/head")["hash"]
 
-	def getNetwork(self):
-		return self.getCall('network/version')['chain_name']
+    def getPeerCount(self):
+        return len(self.getCall("network/peers"))
 
-	def isStaking(self):
-		return False
+    def getNetwork(self):
+        return self.getCall("network/version")["chain_name"]
 
-	def isSynching(self):
-		return False
+    def isStaking(self):
+        return False
+
+    def isSynching(self):
+        return False
