@@ -29,7 +29,7 @@ class Mangata(Substrate):
             return False
 
     def getSession(self):
-        si = self.getSubstrateInterface()
+        si = self.sub_iface
         result = si.query(
             module="ParachainStaking", storage_function="Round", params=[]
         )
@@ -38,7 +38,7 @@ class Mangata(Substrate):
     def isCollating(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.getSubstrateInterface()
+            si = self.sub_iface
             result = si.query(
                 module="ParachainStaking",
                 storage_function="SelectedCandidates",

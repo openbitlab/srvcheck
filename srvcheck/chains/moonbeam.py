@@ -29,7 +29,7 @@ class Moonbeam(Substrate):
             return False
 
     def getSession(self):
-        si = self.getSubstrateInterface()
+        si = self.sub_iface
         result = si.query(
             module="ParachainStaking", storage_function="Round", params=[]
         )
@@ -38,7 +38,7 @@ class Moonbeam(Substrate):
     def isValidator(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.getSubstrateInterface()
+            si = self.sub_iface
             result = si.query(
                 module="ParachainStaking",
                 storage_function="SelectedCandidates",
@@ -52,7 +52,7 @@ class Moonbeam(Substrate):
     def isCollating(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.getSubstrateInterface()
+            si = self.sub_iface
             c = self.moonbeamAssignedOrbiter()
             if c != "0x0" and c is not None:
                 collator = c
@@ -69,7 +69,7 @@ class Moonbeam(Substrate):
     def moonbeamAssignedOrbiter(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.getSubstrateInterface()
+            si = self.sub_iface
             result = si.query(
                 module="MoonbeamOrbiters",
                 storage_function="AccountLookupOverride",

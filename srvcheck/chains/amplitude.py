@@ -29,7 +29,7 @@ class Amplitude(Substrate):
             return False
 
     def getRoundInfo(self):
-        si = self.getSubstrateInterface()
+        si = self.sub_iface
         result = si.query(
             module="ParachainStaking", storage_function="Round", params=[]
         )
@@ -38,7 +38,7 @@ class Amplitude(Substrate):
     def isCollating(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.getSubstrateInterface()
+            si = self.sub_iface
             result = si.query(
                 module="ParachainStaking", storage_function="TopCandidates", params=[]
             )

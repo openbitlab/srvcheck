@@ -10,9 +10,9 @@ from .substrate import (
 )
 
 
-class TaskAstarBlockProductionCheck(Task):
+class TaskBridgeHubPolkaBlockProductionCheck(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
-        super().__init__("TaskAstarBlockProductionCheck", services, checkEvery, notifyEvery)
+        super().__init__("TaskBridgeHubPolkaBlockProductionCheck", services, checkEvery, notifyEvery)
         self.prev = None
 
     @staticmethod
@@ -34,13 +34,13 @@ class TaskAstarBlockProductionCheck(Task):
         return False
 
 
-class Astar(Substrate):
+class BridgeHubPolka(Substrate):
     TYPE = "parachain"
     CUSTOM_TASKS = [
         TaskSubstrateRelayChainStuck,
         TaskSubstrateBlockProductionReportParachain,
         TaskSubstrateBlockProductionReportCharts,
-        TaskAstarBlockProductionCheck,
+        TaskBridgeHubPolkaBlockProductionCheck,
     ]
 
     def __init__(self, conf):
@@ -49,10 +49,10 @@ class Astar(Substrate):
     @staticmethod
     def detect(conf):
         try:
-            Astar(conf).getVersion()
+            BridgeHubPolka(conf).getVersion()
             return (
-                Astar(conf).isParachain()
-                and Astar(conf).getNodeName() == "Astar Collator"
+                BridgeHubPolka(conf).isParachain()
+                and BridgeHubPolka(conf).getNodeName() == "Polkadot parachain"
             )
         except:
             return False
