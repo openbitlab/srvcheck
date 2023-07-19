@@ -97,7 +97,9 @@ class TaskSubstrateReferendaVotingCheck(Task):
 
 class TaskSubstrateRelayChainStuck(Task):
     def __init__(self, services, checkEvery=30, notifyEvery=60 * 5):
-        super().__init__("TaskSubstrateRelayChainStuck", services, checkEvery, notifyEvery)
+        super().__init__(
+            "TaskSubstrateRelayChainStuck", services, checkEvery, notifyEvery
+        )
         self.prev = None
 
     @staticmethod
@@ -114,7 +116,9 @@ class TaskSubstrateRelayChainStuck(Task):
 
 class TaskSubstrateBlockProductionReport(Task):
     def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
-        super().__init__("TaskSubstrateBlockProductionReport", services, checkEvery, notifyEvery)
+        super().__init__(
+            "TaskSubstrateBlockProductionReport", services, checkEvery, notifyEvery
+        )
         self.prev = None
         self.lastBlockChecked = None
         self.totalBlockChecked = 0
@@ -174,7 +178,10 @@ class TaskSubstrateBlockProductionReport(Task):
 class TaskSubstrateBlockProductionReportParachain(Task):
     def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
         super().__init__(
-            "TaskSubstrateBlockProductionReportParachain", services, checkEvery, notifyEvery
+            "TaskSubstrateBlockProductionReportParachain",
+            services,
+            checkEvery,
+            notifyEvery,
         )
         self.prev = None
         self.prevBlock = None
@@ -238,7 +245,10 @@ class TaskSubstrateBlockProductionReportParachain(Task):
 class TaskSubstrateBlockProductionReportCharts(Task):
     def __init__(self, services, checkEvery=hours(24), notifyEvery=hours(24)):
         super().__init__(
-            "TaskSubstrateBlockProductionReportCharts", services, checkEvery, notifyEvery
+            "TaskSubstrateBlockProductionReportCharts",
+            services,
+            checkEvery,
+            notifyEvery,
         )
 
     @staticmethod

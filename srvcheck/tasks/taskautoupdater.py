@@ -49,6 +49,7 @@ class TaskAutoUpdater(Task):
             self.notify(f"New monitor version detected: v{nTag}")
             self.s.notification.flush()
             Bash(
-                f"pip install --force-reinstall --break-system-packages git+https://github.com/openbitlab/srvcheck@v{nTag}"
+                "pip install --force-reinstall --break-system-packages "
+                + f"git+https://github.com/openbitlab/srvcheck@v{nTag}"
             )
             Bash("systemctl restart node-monitor.service")

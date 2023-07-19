@@ -68,6 +68,7 @@ class TaskTendermintBlockMissed(Task):
 
         return False
 
+
 class TaskTendermintNewProposal(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(1)):
         super().__init__("TaskTendermintNewProposal", services, checkEvery, notifyEvery)

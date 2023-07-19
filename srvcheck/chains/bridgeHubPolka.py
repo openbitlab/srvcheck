@@ -12,7 +12,9 @@ from .substrate import (
 
 class TaskBridgeHubPolkaBlockProductionCheck(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
-        super().__init__("TaskBridgeHubPolkaBlockProductionCheck", services, checkEvery, notifyEvery)
+        super().__init__(
+            "TaskBridgeHubPolkaBlockProductionCheck", services, checkEvery, notifyEvery
+        )
         self.prev = None
 
     @staticmethod

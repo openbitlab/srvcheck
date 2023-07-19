@@ -12,7 +12,9 @@ from .substrate import (
 
 class TaskAstarBlockProductionCheck(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
-        super().__init__("TaskAstarBlockProductionCheck", services, checkEvery, notifyEvery)
+        super().__init__(
+            "TaskAstarBlockProductionCheck", services, checkEvery, notifyEvery
+        )
         self.prev = None
 
     @staticmethod
