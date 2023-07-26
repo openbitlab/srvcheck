@@ -40,6 +40,7 @@ class TaskTendermintBlockMissed(Task):
         if self.prev is None:
             self.prev = nblockh - self.BLOCK_WINDOW
 
+        blocksChecked = nblockh - self.prev
         validatorAddress = self.s.chain.getValidatorAddress()
         missed = 0
         start = self.prev
@@ -63,7 +64,7 @@ class TaskTendermintBlockMissed(Task):
             self.prevMissed = lastMissed
             self.prev = nblockh
             return self.notify(
-                f"{missed} not signed blocks in the latest {self.BLOCK_WINDOW} {Emoji.BlockMiss}"
+                f"{missed} not signed blocks in the latest {blocksChecked} {Emoji.BlockMiss}"
             )
 
         return False
