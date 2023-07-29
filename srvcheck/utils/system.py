@@ -1,5 +1,8 @@
+import datetime
+
 import psutil
 import requests
+
 from .bash import Bash
 from .confset import ConfItem, ConfSet
 
@@ -41,7 +44,9 @@ class SystemUsage:
         return (
             "\n\tBoot time: %s\n\tDisk (size, used, %%): %.1fG %.1fG %d%% (/var/log: %.1fG)\n\tRam (size, used, free): %.1fG %.1fG %.1fG\n\tCPU: %d%%"  # noqa: 501
             % (
-                self.bootTime,
+                datetime.datetime.fromtimestamp(self.bootTime).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
                 toGB(self.diskSize),
                 toGB(self.diskUsed),
                 self.diskPercentageUsed,
@@ -63,7 +68,7 @@ class System:
 
     def getIP(self):
         """Return IP address"""
-        return requests.get('http://zx2c4.com/ip').text.split('\n')[0]
+        return requests.get("http://zx2c4.com/ip").text.split("\n")[0]
 
     def getServiceUptime(self):
         serv = self.conf.getOrDefault("chain.service")
@@ -81,14 +86,14 @@ class System:
     def getUsage(self):
         """Returns an usage object"""
         u = SystemUsage()
-        u.boot_time = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
+        u.bootTime = psutil.boot_time()
 
         dd = psutil.disk_usage(self.conf.getOrDefault("chain.mountPoint"))
 
         u.diskSize = dd.total
         u.diskUsed = dd.used
         u.diskPercentageUsed = dd.percent
-        u.diskUsedByLog = psutil.disk_usage('/var/log/').used
+        u.diskUsedByLog = psutil.disk_usage("/var/log/").used
 
         mem = psutil.virtual_memory()
         u.ramSize = mem.total
