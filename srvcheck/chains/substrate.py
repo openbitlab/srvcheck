@@ -10,6 +10,22 @@ from .chain import Chain
 ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))
 
 
+class SubstrateInterfaceWrapper(SubstrateInterface):
+    def query(self, **kwargs):
+        try:
+            return super(SubstrateInterface, self).query(**kwargs)
+        except (WebSocketConnectionClosedException, ConnectionRefusedError,
+                WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
+            self.connect_websocket()
+
+    def rpc_request(self, **kwargs):
+        try:
+            return super(SubstrateInterface, self).rpc_request(**kwargs)
+        except (WebSocketConnectionClosedException, ConnectionRefusedError,
+                WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
+            self.connect_websocket()
+
+
 class TaskSubstrateNewReferenda(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=60 * 10 * 60):
         super().__init__("TaskSubstrateNewReferenda", services, checkEvery, notifyEvery)
@@ -313,7 +329,7 @@ class Substrate(Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
-        self.sub_iface = SubstrateInterface(url=self.EP)
+        self.sub_iface = SubstrateInterfaceWrapper(url=self.EP)
         self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"][
             "methods"
         ]
