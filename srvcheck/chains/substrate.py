@@ -13,14 +13,14 @@ ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator addres
 class SubstrateInterfaceWrapper(SubstrateInterface):
     def query(self, **kwargs):
         try:
-            return super(SubstrateInterface, self).query(**kwargs)
+            return super(SubstrateInterfaceWrapper, self).query(**kwargs)
         except (WebSocketConnectionClosedException, ConnectionRefusedError,
                 WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
             self.connect_websocket()
 
     def rpc_request(self, **kwargs):
         try:
-            return super(SubstrateInterface, self).rpc_request(**kwargs)
+            return super(SubstrateInterfaceWrapper, self).rpc_request(**kwargs)
         except (WebSocketConnectionClosedException, ConnectionRefusedError,
                 WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
             self.connect_websocket()
