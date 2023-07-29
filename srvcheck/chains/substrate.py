@@ -28,9 +28,8 @@ class TaskSubstrateNewReferenda(Task):
         return False
 
     def run(self):
-        si = self.s.chain.sub_iface
         net = self.s.chain.getNetwork()
-        count = self.getCount(si)
+        count = self.getCount(self.s.chain.sub_iface)
 
         if self.prev is None:
             self.prev = count

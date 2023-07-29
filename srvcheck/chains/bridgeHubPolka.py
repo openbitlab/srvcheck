@@ -62,14 +62,13 @@ class BridgeHubPolka(Substrate):
     def isCollating(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.sub_iface
-            result = si.query(
+            result = self.sub_iface.query(
                 module="CollatorSelection", storage_function="Candidates", params=[]
             )
             for c in result.value:
                 if c["who"].lower() == f"{collator}".lower():
                     return True
-            result = si.query(
+            result = self.sub_iface.query(
                 module="CollatorSelection", storage_function="Invulnerables", params=[]
             )
             for c in result.value:
@@ -80,8 +79,7 @@ class BridgeHubPolka(Substrate):
     def latestBlockProduced(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
-            si = self.sub_iface
-            result = si.query(
+            result = self.sub_iface.query(
                 module="CollatorSelection",
                 storage_function="LastAuthoredBlock",
                 params=[collator],
