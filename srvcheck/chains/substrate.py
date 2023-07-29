@@ -1,4 +1,6 @@
 from substrateinterface import SubstrateInterface
+from substrateinterface.exceptions import SubstrateRequestException
+from websocket import WebSocketBadStatusException, WebSocketConnectionClosedException
 
 from srvcheck.tasks.task import hours, minutes
 
@@ -11,18 +13,32 @@ ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator addres
 
 
 class SubstrateInterfaceWrapper(SubstrateInterface):
-    def query(self, **kwargs):
+    def query(self, module, storage_function, params=[]):
         try:
-            return super(SubstrateInterfaceWrapper, self).query(**kwargs)
-        except (WebSocketConnectionClosedException, ConnectionRefusedError,
-                WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
+            return super(SubstrateInterfaceWrapper, self).query(
+                module=module, storage_function=storage_function, params=params
+            )
+        except (  # noqa: F841
+            WebSocketConnectionClosedException,
+            ConnectionRefusedError,
+            WebSocketBadStatusException,
+            BrokenPipeError,
+            SubstrateRequestException,
+        ) as e:
             self.connect_websocket()
 
-    def rpc_request(self, **kwargs):
+    def rpc_request(self, method, params):
         try:
-            return super(SubstrateInterfaceWrapper, self).rpc_request(**kwargs)
-        except (WebSocketConnectionClosedException, ConnectionRefusedError,
-                WebSocketBadStatusException, BrokenPipeError, SubstrateRequestException) as e:
+            return super(SubstrateInterfaceWrapper, self).rpc_request(
+                method=method, params=params
+            )
+        except (  # noqa: F841
+            WebSocketConnectionClosedException,
+            ConnectionRefusedError,
+            WebSocketBadStatusException,
+            BrokenPipeError,
+            SubstrateRequestException,
+        ) as e:
             self.connect_websocket()
 
 
@@ -344,8 +360,7 @@ class Substrate(Chain):
         try:
             Substrate(conf).getVersion()
             return not Substrate(conf).isParachain()
-        except Exception as e:
-            print (e)
+        except:
             return False
 
     def getVersion(self):
