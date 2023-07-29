@@ -344,7 +344,8 @@ class Substrate(Chain):
         try:
             Substrate(conf).getVersion()
             return not Substrate(conf).isParachain()
-        except:
+        except Exception as e:
+            print (e)
             return False
 
     def getVersion(self):
