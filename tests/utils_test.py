@@ -33,7 +33,7 @@ class TestUtilsSystem(unittest.TestCase):
         confUsage = ConfSet(confRawUsage)
         ConfSet.addItem(ConfItem("chain.mountPoint", "/", str))
         us = System(confUsage).getUsage()
-        self.assertNotEqual(us.uptime, "")
+        self.assertNotEqual(us.bootTime, "")
         self.assertNotEqual(us.diskSize, 0)
         self.assertNotEqual(us.diskUsed, 0)
         self.assertNotEqual(us.diskUsedByLog, 0)

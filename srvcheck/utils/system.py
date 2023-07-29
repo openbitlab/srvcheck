@@ -1,3 +1,5 @@
+import psutil
+import requests
 from .bash import Bash
 from .confset import ConfItem, ConfSet
 
@@ -23,7 +25,7 @@ def toPrettySize(size):
 
 
 class SystemUsage:
-    uptime = ""
+    bootTime = ""
     diskSize = 0
     diskUsed = 0
     diskUsedByLog = 0
@@ -37,9 +39,9 @@ class SystemUsage:
 
     def __str__(self):
         return (
-            "\n\tUptime: %s\n\tDisk (size, used, %%): %.1fG %.1fG %d%% (/var/log: %.1fG)\n\tRam (size, used, free): %.1fG %.1fG %.1fG\n\tCPU: %d%%"  # noqa: 501
+            "\n\tBoot time: %s\n\tDisk (size, used, %%): %.1fG %.1fG %d%% (/var/log: %.1fG)\n\tRam (size, used, free): %.1fG %.1fG %.1fG\n\tCPU: %d%%"  # noqa: 501
             % (
-                self.uptime,
+                self.bootTime,
                 toGB(self.diskSize),
                 toGB(self.diskUsed),
                 self.diskPercentageUsed,
@@ -61,7 +63,7 @@ class System:
 
     def getIP(self):
         """Return IP address"""
-        return Bash("ip addr").value().rsplit("inet ", 1)[-1].split("/")[0]
+        return requests.get('http://zx2c4.com/ip').text.split('\n')[0]
 
     def getServiceUptime(self):
         serv = self.conf.getOrDefault("chain.service")
@@ -79,22 +81,19 @@ class System:
     def getUsage(self):
         """Returns an usage object"""
         u = SystemUsage()
-        mp = self.conf.getOrDefault("chain.mountPoint")
-        u.uptime = Bash("uptime").value().split("up ")[1].split(",")[0]
-        u.diskSize = int(Bash(f"df {mp}").value().split("\n")[1].split()[1])
-        u.diskUsed = int(Bash(f"df {mp}").value().split("\n")[1].split()[2])
-        u.diskPercentageUsed = float(
-            Bash(f"df {mp}").value().split("\n")[1].split()[4].replace("%", "")
-        )
-        u.diskUsedByLog = int(
-            Bash("du /var/log").value().rsplit("\n", 1)[-1].split()[0]
-        )
+        u.boot_time = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
 
-        u.ramSize = int(Bash("free").value().split("\n")[1].split()[1])
-        u.ramUsed = int(Bash("free").value().split("\n")[1].split()[2])
-        u.ramFree = int(Bash("free").value().split("\n")[1].split()[4])
+        dd = psutil.disk_usage(self.conf.getOrDefault("chain.mountPoint"))
 
-        u.cpuUsage = float(
-            Bash("top -b -n 1 | grep Cpu").value().split()[1].replace(",", ".")
-        )
+        u.diskSize = dd.total
+        u.diskUsed = dd.used
+        u.diskPercentageUsed = dd.percent
+        u.diskUsedByLog = psutil.disk_usage('/var/log/').used
+
+        mem = psutil.virtual_memory()
+        u.ramSize = mem.total
+        u.ramUsed = mem.used
+        u.ramFree = mem.free
+
+        u.cpuUsage = psutil.cpu_percent()
         return u

@@ -25,7 +25,7 @@ And it offers many features thanks to the following tasks:
 - **TaskChainLowPeer**: check if the number of connected peers is low
 - **TaskChainUnreachable**: check if the node is unreachable, and consequently down
 - **TaskSystemCpuAlert**: check if the cpu usage is too high
-- **TaskSystemUsage**: send daily stats about disk usage, uptime, and other metrics
+- **TaskSystemUsage**: send daily stats about disk usage, memory usage and other metrics
 - **TaskNewRelease**: check if there is a new release of the installed node
 - **TaskSystemDiskAlert**: check if the ram usage is too high
 
