@@ -82,7 +82,8 @@ class TaskTendermintNewProposal(Task):
 
     def getProposalTitle(self, proposal):
         if "id" in proposal:
-            return proposal["messages"][0]["content"]["title"]
+            content = proposal["messages"][0] 
+            return content["content"]["title"] if "content" in content else proposal["title"]
         elif "proposal_id" in proposal:
             return proposal["content"]["title"]
 
