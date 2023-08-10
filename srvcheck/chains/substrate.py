@@ -6,7 +6,15 @@ from srvcheck.tasks.task import hours, minutes
 
 from ..notification import Emoji
 from ..tasks import Task
-from ..utils import Bash, ConfItem, ConfSet, PlotsConf, SubPlotConf, savePlots, clearData
+from ..utils import (
+    Bash,
+    ConfItem,
+    ConfSet,
+    PlotsConf,
+    SubPlotConf,
+    clearData,
+    savePlots,
+)
 from .chain import Chain
 
 ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))
@@ -291,17 +299,21 @@ class TaskSubstrateBlockProductionReportCharts(Task):
         pc.title = self.s.conf.getOrDefault("chain.name") + " - Block production"
 
         sp = SubPlotConf()
-        sp.data = clearData(self.s.persistent.getN(
-            self.s.conf.getOrDefault("chain.name") + "_blocksProduced", 30
-        ))
+        sp.data = clearData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_blocksProduced", 30
+            )
+        )
         sp.label = "Produced"
         sp.data_mod = lambda y: y
         sp.color = "y"
 
         sp.label2 = "Produced"
-        sp.data2 = clearData(self.s.persistent.getN(
-            self.s.conf.getOrDefault("chain.name") + "_blocksChecked", 30
-        ))
+        sp.data2 = clearData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_blocksChecked", 30
+            )
+        )
         sp.data_mod2 = lambda y: y
         sp.color2 = "r"
 
@@ -310,9 +322,11 @@ class TaskSubstrateBlockProductionReportCharts(Task):
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = clearData(self.s.persistent.getN(
-            self.s.conf.getOrDefault("chain.name") + "_blocksPercentageProduced", 30
-        ))
+        sp.data = clearData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_blocksPercentageProduced", 30
+            )
+        )
         sp.label = "Produced (%)"
         sp.data_mod = lambda y: y
         sp.color = "b"
@@ -322,9 +336,11 @@ class TaskSubstrateBlockProductionReportCharts(Task):
 
         pc.fpath = "/tmp/p.png"
 
-        lastSessions = clearData(self.s.persistent.getN(
-            self.s.conf.getOrDefault("chain.name") + "_sessionBlocksProduced", 30
-        ))
+        lastSessions = clearData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_sessionBlocksProduced", 30
+            )
+        )
         if lastSessions and len(lastSessions) >= 3:
             savePlots(pc, 1, 2)
             self.s.notification.sendPhoto("/tmp/p.png")

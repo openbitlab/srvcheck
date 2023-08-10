@@ -1,17 +1,20 @@
+from datetime import datetime
+
 import dateutil.parser
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-from datetime import datetime
+
 
 def clearData(data):
     clean = 0
     for i in range(len(data) - 1):
-        first_date = datetime.strptime(data[i][0].split("T")[0], '%Y-%m-%d')
-        second_date = datetime.strptime(data[i + 1][0].split("T")[0], '%Y-%m-%d')
-        if int(str(second_date - first_date).split(' ', maxsplit=1)[0]) > 5:
+        first_date = datetime.strptime(data[i][0].split("T")[0], "%Y-%m-%d")
+        second_date = datetime.strptime(data[i + 1][0].split("T")[0], "%Y-%m-%d")
+        if int(str(second_date - first_date).split(" ", maxsplit=1)[0]) > 5:
             clean = i + 1
     dataCleared = data[clean:]
     return dataCleared
+
 
 class PlotConf:
     def __init__(self):

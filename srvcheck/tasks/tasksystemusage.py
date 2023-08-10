@@ -1,5 +1,6 @@
-from ..utils import PlotsConf, SubPlotConf, savePlots, toGB, toPrettySize, clearData
+from ..utils import PlotsConf, SubPlotConf, clearData, savePlots, toGB, toPrettySize
 from . import Task, hours
+
 
 class TaskSystemUsage(Task):
     def __init__(self, services):
@@ -56,7 +57,9 @@ class TaskSystemUsage(Task):
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = clearData(self.s.persistent.getN(self.name + "_diskPercentageUsed", 30))
+        sp.data = clearData(
+            self.s.persistent.getN(self.name + "_diskPercentageUsed", 30)
+        )
         sp.label = "Used (%)"
         sp.data_mod = lambda y: y
         sp.color = "r"
