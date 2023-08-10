@@ -1,13 +1,45 @@
 from substrateinterface import SubstrateInterface
+from substrateinterface.exceptions import SubstrateRequestException
+from websocket import WebSocketBadStatusException, WebSocketConnectionClosedException
 
 from srvcheck.tasks.task import hours, minutes
 
 from ..notification import Emoji
 from ..tasks import Task
-from ..utils import Bash, ConfItem, ConfSet, PlotsConf, SubPlotConf, savePlots
+from ..utils import Bash, ConfItem, ConfSet, PlotsConf, SubPlotConf, savePlots, clearData
 from .chain import Chain
 
 ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))
+
+
+class SubstrateInterfaceWrapper(SubstrateInterface):
+    def query(self, module, storage_function, params=[]):
+        try:
+            return super(SubstrateInterfaceWrapper, self).query(
+                module=module, storage_function=storage_function, params=params
+            )
+        except (  # noqa: F841
+            WebSocketConnectionClosedException,
+            ConnectionRefusedError,
+            WebSocketBadStatusException,
+            BrokenPipeError,
+            SubstrateRequestException,
+        ) as e:
+            self.connect_websocket()
+
+    def rpc_request(self, method, params):
+        try:
+            return super(SubstrateInterfaceWrapper, self).rpc_request(
+                method=method, params=params
+            )
+        except (  # noqa: F841
+            WebSocketConnectionClosedException,
+            ConnectionRefusedError,
+            WebSocketBadStatusException,
+            BrokenPipeError,
+            SubstrateRequestException,
+        ) as e:
+            self.connect_websocket()
 
 
 class TaskSubstrateNewReferenda(Task):
@@ -28,9 +60,8 @@ class TaskSubstrateNewReferenda(Task):
         return False
 
     def run(self):
-        si = self.s.chain.sub_iface
         net = self.s.chain.getNetwork()
-        count = self.getCount(si)
+        count = self.getCount(self.s.chain.sub_iface)
 
         if self.prev is None:
             self.prev = count
@@ -260,17 +291,17 @@ class TaskSubstrateBlockProductionReportCharts(Task):
         pc.title = self.s.conf.getOrDefault("chain.name") + " - Block production"
 
         sp = SubPlotConf()
-        sp.data = self.s.persistent.getN(
+        sp.data = clearData(self.s.persistent.getN(
             self.s.conf.getOrDefault("chain.name") + "_blocksProduced", 30
-        )
+        ))
         sp.label = "Produced"
         sp.data_mod = lambda y: y
         sp.color = "y"
 
         sp.label2 = "Produced"
-        sp.data2 = self.s.persistent.getN(
+        sp.data2 = clearData(self.s.persistent.getN(
             self.s.conf.getOrDefault("chain.name") + "_blocksChecked", 30
-        )
+        ))
         sp.data_mod2 = lambda y: y
         sp.color2 = "r"
 
@@ -279,9 +310,9 @@ class TaskSubstrateBlockProductionReportCharts(Task):
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = self.s.persistent.getN(
+        sp.data = clearData(self.s.persistent.getN(
             self.s.conf.getOrDefault("chain.name") + "_blocksPercentageProduced", 30
-        )
+        ))
         sp.label = "Produced (%)"
         sp.data_mod = lambda y: y
         sp.color = "b"
@@ -291,9 +322,9 @@ class TaskSubstrateBlockProductionReportCharts(Task):
 
         pc.fpath = "/tmp/p.png"
 
-        lastSessions = self.s.persistent.getN(
+        lastSessions = clearData(self.s.persistent.getN(
             self.s.conf.getOrDefault("chain.name") + "_sessionBlocksProduced", 30
-        )
+        ))
         if lastSessions and len(lastSessions) >= 3:
             savePlots(pc, 1, 2)
             self.s.notification.sendPhoto("/tmp/p.png")
@@ -314,7 +345,7 @@ class Substrate(Chain):
 
     def __init__(self, conf):
         super().__init__(conf)
-        self.sub_iface = SubstrateInterface(url=self.EP)
+        self.sub_iface = SubstrateInterfaceWrapper(url=self.EP)
         self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"][
             "methods"
         ]

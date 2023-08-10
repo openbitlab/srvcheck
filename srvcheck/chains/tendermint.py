@@ -40,6 +40,7 @@ class TaskTendermintBlockMissed(Task):
         if self.prev is None:
             self.prev = nblockh - self.BLOCK_WINDOW
 
+        blocksChecked = nblockh - self.prev
         validatorAddress = self.s.chain.getValidatorAddress()
         missed = 0
         start = self.prev
@@ -57,13 +58,13 @@ class TaskTendermintBlockMissed(Task):
 
             start += 1
 
+        self.prev = nblockh
         if missed >= self.THRESHOLD_NOTSIGNED and (
             self.prevMissed is None or self.prevMissed != lastMissed
         ):
             self.prevMissed = lastMissed
-            self.prev = nblockh
             return self.notify(
-                f"{missed} not signed blocks in the latest {self.BLOCK_WINDOW} {Emoji.BlockMiss}"
+                f"{missed} not signed blocks in the latest {blocksChecked} {Emoji.BlockMiss}"
             )
 
         return False
@@ -81,7 +82,8 @@ class TaskTendermintNewProposal(Task):
 
     def getProposalTitle(self, proposal):
         if "id" in proposal:
-            return proposal["messages"][0]["content"]["title"]
+            content = proposal["messages"][0] 
+            return content["content"]["title"] if "content" in content else proposal["title"]
         elif "proposal_id" in proposal:
             return proposal["content"]["title"]
 

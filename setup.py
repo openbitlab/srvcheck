@@ -25,6 +25,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "requests",
+        "psutil",
         "substrate-interface",
         "packaging==21.3",
         "python-dateutil",
