@@ -47,7 +47,8 @@ class Tezos(Chain):
         try:
             Tezos(conf).getVersion()
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
 
     def getLatestVersion(self):
