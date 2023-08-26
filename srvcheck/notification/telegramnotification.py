@@ -18,11 +18,18 @@ ConfSet.addItem(
 ConfSet.addItem(
     ConfItem("notification.telegram.chatIds", None, str, "telegram chat ids")
 )
+ConfSet.addItem(
+    ConfItem("notification.telegram.infoLevelChatIds", None, str, "telegram chat ids for info notifications")
+)
+ConfSet.addItem(
+    ConfItem("notification.telegram.warningLevelChatIds", None, str, "telegram chat ids for warning notifications")
+)
+ConfSet.addItem(
+    ConfItem("notification.telegram.errorLevelChatIds", None, str, "telegram chat ids for error notifications")
+)
 
 
 class TelegramNotification(NotificationProvider):
-    LOG_LEVEL = 0
-
     def __init__(self, conf):
         super().__init__(conf)
         try:

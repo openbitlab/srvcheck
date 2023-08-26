@@ -7,8 +7,6 @@ ConfSet.addItem(
 
 
 class DummyNotification(NotificationProvider):
-    LOG_LEVEL = 0
-
     def send(self, st, level):
         print(st)
 

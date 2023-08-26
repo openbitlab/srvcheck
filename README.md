@@ -72,6 +72,14 @@ Then, open a new Telegram group, **add the created bot** to it.<br>
 You will need the chat id, and the easiest way to get it is to add `@MissRose_bot` to your group and then type `/id` in the chat group.<br>
 During the installation, you will use the **id** and **token**. These parameters will be flagged respectively **<tg_chat_id>** and **<tg_token>**.
 
+In order to differentiate channels for different notification severity, you can set the following fields in the configuration file:
+
+```
+infoLevelChatIds =
+warningLevelChatIds =
+errorLevelChatIds =
+```
+
 ## Install & Update
 
 ```bash 
@@ -138,6 +146,9 @@ Edit /etc/srvcheck.conf:
 enabled = true
 apiToken = 
 chatIds = 
+infoLevelChatIds =
+warningLevelChatIds =
+errorLevelChatIds =
 
 ; a dummy notification wich prints to stdout
 [notification.dummy]
