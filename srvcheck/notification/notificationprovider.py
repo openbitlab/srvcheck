@@ -16,13 +16,21 @@ class NotificationProvider:
         pass
 
     def append(self, s, level):
-        self.notifies.append(s)
+        self.notifies.append((s,level))
 
     def format(self, name, string):
         return urllib.parse.quote("#" + name + " " + string)
 
     def flush(self):
         if len(self.notifies) > 0:
-            st = "\n".join(self.notifies)
-            self.send(self.format(st, ""))
+            levelGroups = {}
+            for (s,level) in self.notifies:
+                if level not in levelGroups:
+                    levelGroups[level] = []
+                levelGroups[level].append(s)
+
+            for level in levelGroups.keys():    
+                st = "\n".join(levelGroups[level])
+                self.send(self.format(st, ""), level)
+            
             self.notifies = []
