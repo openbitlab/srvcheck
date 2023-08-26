@@ -47,15 +47,14 @@ class Tezos(Chain):
         try:
             Tezos(conf).getVersion()
             return True
-        except Exception as e:
-            print(e)
+        except:
             return False
 
     def getLatestVersion(self):
         raise Exception("Abstract getLatestVersion()")
 
     def getVersion(self):
-        a = self.getCall("version")
+        a = self.getCall("version")['version']
         return f"v{a['major']}.{a['minor']}%s.0"
 
     def getHeight(self):
