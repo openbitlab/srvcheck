@@ -5,6 +5,7 @@ import urllib.parse
 import requests
 
 from ..utils.confset import ConfItem, ConfSet
+from .notification import NotificationLevel
 from .notificationprovider import NotificationProvider
 
 ConfSet.addItem(
@@ -20,26 +21,26 @@ ConfSet.addItem(
 )
 ConfSet.addItem(
     ConfItem(
-        "notification.telegram.infoLevelChatIds",
+        "notification.telegram.infoLevelChatId",
         None,
         str,
-        "telegram chat ids for info notifications",
+        "telegram chat id for info notifications",
     )
 )
 ConfSet.addItem(
     ConfItem(
-        "notification.telegram.warningLevelChatIds",
+        "notification.telegram.warningLevelChatId",
         None,
         str,
-        "telegram chat ids for warning notifications",
+        "telegram chat id for warning notifications",
     )
 )
 ConfSet.addItem(
     ConfItem(
-        "notification.telegram.errorLevelChatIds",
+        "notification.telegram.errorLevelChatId",
         None,
         str,
-        "telegram chat ids for error notifications",
+        "telegram chat id for error notifications",
     )
 )
 
@@ -57,18 +58,48 @@ class TelegramNotification(NotificationProvider):
 
         except:
             self.apiToken = ""
-            self.chatIds = ""
+            self.chatIds = []
+
+        self.errorLevelChatId = conf.getOrDefault(
+            "notification.telegram.errorLevelChatId"
+        )
+        self.warningLevelChatId = conf.getOrDefault(
+            "notification.telegram.warningLevelChatId"
+        )
+        self.infoLevelChatId = conf.getOrDefault(
+            "notification.telegram.infoLevelChatId"
+        )
+
+    def _getChatIdsForLevel(self, level):
+        if level == NotificationLevel.Error and self.errorLevelChatId:
+            return [self.errorLevelChatId]
+        elif (
+            level == NotificationLevel.Warning
+            or (level == NotificationLevel.Error and not self.errorLevelChatId)
+        ) and self.warningLevelChatId:
+            return [self.warningLevelChatId]
+        elif (
+            level == NotificationLevel.Info
+            or (level == NotificationLevel.Error and not self.errorLevelChatId)
+            or (level == NotificationLevel.Warning and not self.warningLevelChatId)
+        ) and self.warningLevelChatId:
+            return [self.infoLevelChatId]
+
+        return self.chatIds
 
     def sendPhoto(self, photo, level):
-        for ci in self.chatIds:
+        cids = self._getChatIdsForLevel(level)
+        for ci in cids:
             os.system(
                 'curl -F photo=@"./%s" https://api.telegram.org/bot%s/sendPhoto?chat_id=%s'
                 % (photo, self.apiToken, ci)
             )
 
     def send(self, st, level):
-        print(st.encode("utf-8"))
-        for x in self.chatIds:
+        print(level, st.encode("utf-8"))
+        cids = self._getChatIdsForLevel(level)
+
+        for x in cids:
             requests.get(
                 f"https://api.telegram.org/bot{self.apiToken}/sendMessage?text={st}&chat_id={x}"
             ).json()

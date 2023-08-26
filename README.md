@@ -75,9 +75,9 @@ During the installation, you will use the **id** and **token**. These parameters
 In order to differentiate channels for different notification severity, you can set the following fields in the configuration file:
 
 ```
-infoLevelChatIds =
-warningLevelChatIds =
-errorLevelChatIds =
+infoLevelChatId =
+warningLevelChatId =
+errorLevelChatId =
 ```
 
 ## Install & Update

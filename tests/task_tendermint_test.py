@@ -31,7 +31,7 @@ class TestTaskTendermintHealthError(unittest.TestCase):
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
-        self.assertEqual(n.events[0], urllib.parse.quote("#health error! 🚨 "))
+        self.assertEqual(n.getFirstEvent()[0], urllib.parse.quote("#health error! 🚨 "))
 
 
 class TestTaskTendermintNewProposal(unittest.TestCase):
@@ -108,7 +108,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#got 1 new proposal: upgrade client " + Emoji.Proposal + " "
             ),
@@ -120,7 +120,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#got latest proposal: \nupgrade client " + Emoji.Proposal + " "
             ),
@@ -156,7 +156,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#got 2 new proposal: Increase Signed Blocks Window Parameter to 2880"
                 + "\n"

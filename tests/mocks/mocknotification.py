@@ -11,13 +11,19 @@ class MockNotification(NotificationProvider):
         self.onNotifyHandler = l
 
     def send(self, st, level):
-        self.events.append(st)
+        self.events.append((st, level))
         self.onNotify(st)
 
     def sendPhoto(self, photo, level):
         f = f"Sending photo: {photo}"
-        self.events.append(f)
+        self.events.append((f, level))
         self.onNotify(f)
 
     def append(self, s, level):
         super().append(s, level)
+
+    def getLastEvent(self):
+        return self.events[-1]
+
+    def getFirstEvent(self):
+        return self.events[-1]
