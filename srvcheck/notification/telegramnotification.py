@@ -19,13 +19,28 @@ ConfSet.addItem(
     ConfItem("notification.telegram.chatIds", None, str, "telegram chat ids")
 )
 ConfSet.addItem(
-    ConfItem("notification.telegram.infoLevelChatIds", None, str, "telegram chat ids for info notifications")
+    ConfItem(
+        "notification.telegram.infoLevelChatIds",
+        None,
+        str,
+        "telegram chat ids for info notifications",
+    )
 )
 ConfSet.addItem(
-    ConfItem("notification.telegram.warningLevelChatIds", None, str, "telegram chat ids for warning notifications")
+    ConfItem(
+        "notification.telegram.warningLevelChatIds",
+        None,
+        str,
+        "telegram chat ids for warning notifications",
+    )
 )
 ConfSet.addItem(
-    ConfItem("notification.telegram.errorLevelChatIds", None, str, "telegram chat ids for error notifications")
+    ConfItem(
+        "notification.telegram.errorLevelChatIds",
+        None,
+        str,
+        "telegram chat ids for error notifications",
+    )
 )
 
 

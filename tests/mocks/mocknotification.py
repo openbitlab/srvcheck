@@ -10,14 +10,14 @@ class MockNotification(NotificationProvider):
     def onNotify(self, l):
         self.onNotifyHandler = l
 
-    def send(self, st):
+    def send(self, st, level):
         self.events.append(st)
         self.onNotify(st)
 
-    def sendPhoto(self, photo):
+    def sendPhoto(self, photo, level):
         f = f"Sending photo: {photo}"
         self.events.append(f)
         self.onNotify(f)
 
-    def append(self, s):
-        super().append(s)
+    def append(self, s, level):
+        super().append(s, level)

@@ -1,12 +1,15 @@
 import time
+
 from ..notification import NotificationLevel
 
 
 def seconds(m):
     return m
 
+
 def minutes(m):
     return m * 60
+
 
 def hours(h):
     return h * 60 * 60
@@ -48,7 +51,7 @@ class Task:
     def notify(self, nstr, noCheck=False, level=NotificationLevel.NotDeclared):
         if self.shouldBeNotified() or noCheck:
             self.lastNotify = time.time()
-            self.s.notification.append((nstr, level))
+            self.s.notification.append(nstr, level)
             return True
         return False
 
