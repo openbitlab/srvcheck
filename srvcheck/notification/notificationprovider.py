@@ -2,8 +2,6 @@ import urllib.parse
 
 
 class NotificationProvider:
-    LOG_LEVEL = 0
-
     def __init__(self, conf):
         self.conf = conf
         self.notifies = []
@@ -11,13 +9,13 @@ class NotificationProvider:
     def __del__(self):
         self.flush()
 
-    def send(self, st):
+    def send(self, st, level):
         raise Exception("Abstract send()")
 
-    def sendPhoto(self, photo):
+    def sendPhoto(self, photo, level):
         pass
 
-    def append(self, s):
+    def append(self, s, level):
         self.notifies.append(s)
 
     def format(self, name, string):

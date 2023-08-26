@@ -37,14 +37,14 @@ class TelegramNotification(NotificationProvider):
             self.apiToken = ""
             self.chatIds = ""
 
-    def sendPhoto(self, photo):
+    def sendPhoto(self, photo, level):
         for ci in self.chatIds:
             os.system(
                 'curl -F photo=@"./%s" https://api.telegram.org/bot%s/sendPhoto?chat_id=%s'
                 % (photo, self.apiToken, ci)
             )
 
-    def send(self, st):
+    def send(self, st, level):
         print(st.encode("utf-8"))
         for x in self.chatIds:
             requests.get(
