@@ -11,7 +11,14 @@ from .chain import Chain
 
 ConfSet.addItem(ConfItem("chain.activeSet", description="active set of validators"))
 ConfSet.addItem(ConfItem("chain.blockWindow", 100, int))
-ConfSet.addItem(ConfItem("chain.thresholdNotsigned", 5, int, description="Percentage of block missed for notification trigger"))
+ConfSet.addItem(
+    ConfItem(
+        "chain.thresholdNotsigned",
+        5,
+        int,
+        description="Percentage of block missed for notification trigger",
+    )
+)
 
 
 class TaskTendermintBlockMissed(Task):
