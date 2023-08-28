@@ -119,6 +119,7 @@ def main():  # noqa: C901
                 break
 
     if not chain:
+        notification.send("no chain detected, srvcheck is closing")
         print("No chain detected")
         sys.exit(0)
 
