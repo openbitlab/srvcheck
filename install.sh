@@ -19,7 +19,7 @@ print_help () {
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
      --endpoint <url:port> node local rpc address
-     --git <git_api> git api to query the latest realease version installed
+     --git <git_api> git api to query the latest release version installed
      --gov enable checks on new governance proposals (tendermint)
      --mount <mount_point> mount point where the node is installed
  -n  --name <name> monitor name [default is the server hostname]
@@ -27,7 +27,8 @@ print_help () {
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
- -v  --verbose enable verbose installation"
+ -v  --verbose enable verbose installation
+ -m  --mpc <Horcrux service name> service name of horcrux to monitor (tendermint)"
 }
 
 install_monitor () {
@@ -54,6 +55,10 @@ install_monitor () {
     if [ ! -z "$block_time" ]
     then
         sed -i -e "s/^blockTime =.*/blockTime = $block_time/" $config_file
+    fi
+    if [ ! -z "$mpc_service" ]
+    then
+        sed -i -e "s/^horcruxService =.*/horcruxService = $mpc_service/" $config_file
     fi
     if [ ! -z "$active_set" ]
     then
@@ -238,6 +243,16 @@ case $1 in
             exit 1
         else
             service="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    -m|--mpc)
+        if [[ -z $2 ]]
+        then
+            mpc_service="horcrux.service"
+        else
+            mpc_service="$2"
         fi
         shift # past argument
         shift # past value

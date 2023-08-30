@@ -13,6 +13,27 @@ ConfSet.addItem(ConfItem("chain.activeSet", description="active set of validator
 ConfSet.addItem(ConfItem("chain.blockWindow", 100, int))
 ConfSet.addItem(ConfItem("chain.thresholdNotsigned", 5, int))
 
+class TaskTendermintHorcruxDown(Task):
+    def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
+        super().__init__(
+            "TaskTendermintHorcruxDown",
+            services,
+            checkEvery=checkEvery,
+            notifyEvery=notifyEvery,
+        )
+
+    @staticmethod
+    def isPluggable(services):
+        return True
+
+    def run(self):
+        status = self.s.chain.getHorcruxStatus()
+
+        if status != 0:
+            return self.notify(f"Horcrux service down!")
+
+        return False
+
 
 class TaskTendermintBlockMissed(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
@@ -310,3 +331,10 @@ class Tendermint(Chain):
                 p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
             ]
         raise Exception("No service file name specified!")
+
+    def getHorcruxStatus(self):
+        serv = self.conf.getOrDefault("chain.service_horcrux")
+        if serv:
+            cmd = f"systemctl is-active --quiet {serv}"
+            return Bash(cmd).value()
+        raise Exception("No service file name for horcrux specified!")
