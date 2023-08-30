@@ -248,6 +248,7 @@ class Tendermint(Chain):
         TaskTendermintPositionChanged,
         TaskTendermintHealthError,
         TaskTendermintNewProposal,
+        TaskTendermintHorcruxDown
     ]
 
     @staticmethod
