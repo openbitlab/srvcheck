@@ -334,7 +334,7 @@ class Tendermint(Chain):
         raise Exception("No service file name specified!")
 
     def getHorcruxStatus(self):
-        serv = self.conf.getOrDefault("chain.service_horcrux")
+        serv = self.conf.getOrDefault("tasks.horcruxService")
         if serv:
             cmd = f"systemctl is-active --quiet {serv}"
             return Bash(cmd).value()
