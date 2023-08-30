@@ -35,6 +35,7 @@ ConfSet.addItem(
 )
 ConfSet.addItem(ConfItem("chain.service", None, str, "node service name"))
 ConfSet.addItem(ConfItem("tasks.govAdmin", None, str, "Proposal voter nickname"))
+ConfSet.addItem(ConfItem("tasks.horcruxService", None, str, "Horcrux service name"))
 
 
 def addTasks(services):
