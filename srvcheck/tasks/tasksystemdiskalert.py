@@ -46,6 +46,59 @@ class TaskSystemDiskAlert(Task):
                     if usage.diskPercentageUsed > cdl
                     else NotificationLevel.Warning
                 ),
+                noCheck=True if usage.diskPercentageUsed > cdl else False
+            )
+
+        if usage.diskSize > self.prevDiskSize:
+            c = self.notify(
+                "disk size increased (%.1fG -> %.1fG) %s"
+                % (toGB(self.prevDiskSize), toGB(usage.diskSize), Emoji.Disk),
+                True,
+            )
+            self.prevDiskSize = usage.diskSize
+            return c
+
+        return False
+
+    def canRecover(self):
+        return toGB(self.s.system.getUsage().diskUsedByLog) > self.s.conf.getOrDefault(
+            "system.log_size_threshold"
+        )
+
+    def recover(self):
+        Bash("truncate -s 0 /var/log/syslog")
+        Bash("rm /var/log/syslog.*")
+        Bash("rm -r /var/log/journal/*")
+
+
+    @staticmethod
+    def isPluggable(services):
+        return True
+
+    def run(self):
+        usage = self.s.system.getUsage()
+
+        if self.prevDiskSize is None:
+            self.prevDiskSize = usage.diskSize
+
+        dl = self.s.conf.getOrDefault("system.disk_limit")
+        cdl = self.s.conf.getOrDefault("system.disk_limit_critical")
+
+        if usage.diskPercentageUsed > dl:
+            return self.notify(
+                "disk usage is above %d%% (%d%%) (/var/log: %.1fG, /: %.1fG) %s"
+                % (
+                    dl,
+                    usage.diskPercentageUsed,
+                    toGB(usage.diskUsedByLog),
+                    toGB(usage.diskUsed),
+                    Emoji.Disk,
+                ),
+                level=(
+                    NotificationLevel.Error
+                    if usage.diskPercentageUsed > cdl
+                    else NotificationLevel.Warning
+                ),
             )
 
         if usage.diskSize > self.prevDiskSize:
