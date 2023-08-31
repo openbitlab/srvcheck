@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 
 
 def cropData(data, cropTo=5):
+    if data == None:
+        return data 
+
     clean = 0
     for i in range(len(data) - 1):
         first_date = datetime.strptime(data[i][0].split("T")[0], "%Y-%m-%d")
