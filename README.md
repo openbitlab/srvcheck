@@ -104,6 +104,7 @@ install --help
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+ -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat for different severity
  -v  --verbose enable verbose installation
 ```
 
@@ -146,9 +147,9 @@ Edit /etc/srvcheck.conf:
 enabled = true
 apiToken = 
 chatIds = 
-infoLevelChatIds =
-warningLevelChatIds =
-errorLevelChatIds =
+infoLevelChatId =
+warningLevelChatId =
+errorLevelChatId =
 
 ; a dummy notification wich prints to stdout
 [notification.dummy]
