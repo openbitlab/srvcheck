@@ -1,6 +1,6 @@
 import time
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from . import Task, minutes
 
 
@@ -49,7 +49,8 @@ class TaskChainStuck(Task):
             self.oc += 1
             elapsed = elapsedToString(self.since)
             return self.notify(
-                f"chain is stuck at block {bh} since {elapsed} ({self.oc}) {Emoji.Stuck}"
+                f"chain is stuck at block {bh} since {elapsed} ({self.oc}) {Emoji.Stuck}",
+                level=NotificationLevel.Error,
             )
 
         if self.oc > 1:
