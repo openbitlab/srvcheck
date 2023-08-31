@@ -1,7 +1,4 @@
-from srvcheck.tasks.task import minutes
-
-from ..notification import Emoji
-from ..tasks import Task
+from .astar import TaskAstarBlockProductionCheck
 from .substrate import (
     Substrate,
     TaskSubstrateBlockProductionReportCharts,
@@ -10,39 +7,13 @@ from .substrate import (
 )
 
 
-class TaskBridgeHubPolkaBlockProductionCheck(Task):
-    def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
-        super().__init__(
-            "TaskBridgeHubPolkaBlockProductionCheck", services, checkEvery, notifyEvery
-        )
-        self.prev = None
-
-    @staticmethod
-    def isPluggable(services):
-        return services.chain.isParachain()
-
-    def run(self):
-        if self.s.chain.isCollating():
-            block = self.s.chain.latestBlockProduced()
-            if block > 0:
-                if self.prev is None:
-                    self.prev = block
-                elif self.prev == block:
-                    return self.notify(
-                        "no block produced in the latest 30 minutes! Last block produced was "
-                        + f"{self.prev} {Emoji.BlockMiss}"
-                    )
-                self.prev = block
-        return False
-
-
 class BridgeHubPolka(Substrate):
     TYPE = "parachain"
     CUSTOM_TASKS = [
         TaskSubstrateRelayChainStuck,
         TaskSubstrateBlockProductionReportParachain,
         TaskSubstrateBlockProductionReportCharts,
-        TaskBridgeHubPolkaBlockProductionCheck,
+        TaskAstarBlockProductionCheck,
     ]
 
     def __init__(self, conf):
