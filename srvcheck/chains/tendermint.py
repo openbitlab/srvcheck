@@ -11,7 +11,14 @@ from .chain import Chain
 
 ConfSet.addItem(ConfItem("chain.activeSet", description="active set of validators"))
 ConfSet.addItem(ConfItem("chain.blockWindow", 100, int))
-ConfSet.addItem(ConfItem("chain.thresholdNotsigned", 5, int))
+ConfSet.addItem(
+    ConfItem(
+        "chain.thresholdNotsigned",
+        5,
+        int,
+        description="Percentage of block missed for notification trigger",
+    )
+)
 
 
 class TaskTendermintBlockMissed(Task):
@@ -59,12 +66,14 @@ class TaskTendermintBlockMissed(Task):
             start += 1
 
         self.prev = nblockh
-        if missed >= self.THRESHOLD_NOTSIGNED and (
+        missed_perc = 100 * missed / blocksChecked
+        if missed_perc >= self.THRESHOLD_NOTSIGNED and (
             self.prevMissed is None or self.prevMissed != lastMissed
         ):
             self.prevMissed = lastMissed
             return self.notify(
-                f"{missed} not signed blocks in the latest {blocksChecked} {Emoji.BlockMiss}",
+                f"{missed_perc}% not signed blocks in the latest {blocksChecked} "
+                + f"({missed}) {Emoji.BlockMiss}",
                 level=NotificationLevel.Warning,
             )
 
