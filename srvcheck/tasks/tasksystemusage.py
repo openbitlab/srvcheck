@@ -1,4 +1,4 @@
-from ..utils import PlotsConf, SubPlotConf, clearData, savePlots, toGB, toPrettySize
+from ..utils import PlotsConf, SubPlotConf, cropData, savePlots, toGB, toPrettySize
 from . import Task, hours
 
 
@@ -46,7 +46,7 @@ class TaskSystemUsage(Task):
 
         sp = SubPlotConf()
         # sp.name = self.s.conf.getOrDefault('chain.name') + " - Disk"
-        sp.data = clearData(self.s.persistent.getN(self.name + "_diskUsed", 30))
+        sp.data = cropData(self.s.persistent.getN(self.name + "_diskUsed", 30))
         sp.label = "Used (GB)"
         sp.data_mod = lambda y: toGB(y)
         sp.color = "b"
@@ -57,7 +57,7 @@ class TaskSystemUsage(Task):
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = clearData(
+        sp.data = cropData(
             self.s.persistent.getN(self.name + "_diskPercentageUsed", 30)
         )
         sp.label = "Used (%)"
@@ -66,20 +66,20 @@ class TaskSystemUsage(Task):
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = clearData(self.s.persistent.getN(self.name + "_diskUsedByLog", 30))
+        sp.data = cropData(self.s.persistent.getN(self.name + "_diskUsedByLog", 30))
         sp.label = "Used by log (GB)"
         sp.data_mod = lambda y: toGB(y)
         sp.color = "g"
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = clearData(self.s.persistent.getN(self.name + "_ramUsed", 30))
+        sp.data = cropData(self.s.persistent.getN(self.name + "_ramUsed", 30))
         sp.label = "Ram used (GB)"
         sp.data_mod = lambda y: toGB(y)
         sp.color = "y"
 
         sp.label2 = "Ram size (GB)"
-        sp.data2 = clearData(self.s.persistent.getN(self.name + "_ramSize", 30))
+        sp.data2 = cropData(self.s.persistent.getN(self.name + "_ramSize", 30))
         sp.data_mod2 = lambda y: toGB(y)
         sp.color2 = "r"
 

@@ -5,15 +5,15 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 
-def clearData(data):
+def cropData(data, cropTo=5):
     clean = 0
     for i in range(len(data) - 1):
         first_date = datetime.strptime(data[i][0].split("T")[0], "%Y-%m-%d")
         second_date = datetime.strptime(data[i + 1][0].split("T")[0], "%Y-%m-%d")
-        if int(str(second_date - first_date).split(" ", maxsplit=1)[0]) > 5:
+        dif = second_date - first_date
+        if dif.days > cropTo:
             clean = i + 1
-    dataCleared = data[clean:]
-    return dataCleared
+    return data[clean:]
 
 
 class PlotConf:

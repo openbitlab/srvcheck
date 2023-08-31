@@ -3,7 +3,7 @@ from .chart import (  # noqa: F401
     PlotConf,
     PlotsConf,
     SubPlotConf,
-    clearData,
+    cropData,
     savePlot,
     savePlots,
     setColor,

@@ -12,7 +12,7 @@ from ..utils import (
     ConfSet,
     PlotsConf,
     SubPlotConf,
-    clearData,
+    cropData,
     savePlots,
 )
 from .chain import Chain
@@ -299,7 +299,7 @@ class TaskSubstrateBlockProductionReportCharts(Task):
         pc.title = self.s.conf.getOrDefault("chain.name") + " - Block production"
 
         sp = SubPlotConf()
-        sp.data = clearData(
+        sp.data = cropData(
             self.s.persistent.getN(
                 self.s.conf.getOrDefault("chain.name") + "_blocksProduced", 30
             )
@@ -309,7 +309,7 @@ class TaskSubstrateBlockProductionReportCharts(Task):
         sp.color = "y"
 
         sp.label2 = "Produced"
-        sp.data2 = clearData(
+        sp.data2 = cropData(
             self.s.persistent.getN(
                 self.s.conf.getOrDefault("chain.name") + "_blocksChecked", 30
             )
@@ -322,7 +322,7 @@ class TaskSubstrateBlockProductionReportCharts(Task):
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = clearData(
+        sp.data = cropData(
             self.s.persistent.getN(
                 self.s.conf.getOrDefault("chain.name") + "_blocksPercentageProduced", 30
             )
@@ -336,7 +336,7 @@ class TaskSubstrateBlockProductionReportCharts(Task):
 
         pc.fpath = "/tmp/p.png"
 
-        lastSessions = clearData(
+        lastSessions = cropData(
             self.s.persistent.getN(
                 self.s.conf.getOrDefault("chain.name") + "_sessionBlocksProduced", 30
             )
