@@ -23,7 +23,7 @@ class T3rn(Substrate):
             T3rn(conf).getVersion()
             return (
                 T3rn(conf).isParachain()
-                and T3rn(conf).getNodeName() == "Circuit Collator"
+                and T3rn(conf).getNodeName() == "t0rn collator"
             )
         except:
             return False
