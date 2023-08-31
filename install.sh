@@ -48,9 +48,6 @@ install_monitor () {
     wget $verbosity https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
-    sed -i -e "s/^infoLevelChatId =.*/chatIds = [\"$info_level_chat\"]/" $config_file
-    sed -i -e "s/^warningLevelChatId =.*/chatIds = [\"$warning_level_chat\"]/" $config_file
-    sed -i -e "s/^errorLevelChatId =.*/chatIds = [\"$error_level_chat\"]/" $config_file
     sed -i -e "s/^tagVersion =.*/tagVersion = $(curl https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags -s | jq .[-1] | jq .ref | grep -oP '(?<=v).*?(?=\")')/" $config_file
     sed -i -e "s/^commit =.*/commit = $(curl https://api.github.com/repos/openbitlab/srvcheck/git/refs/heads/main -s | jq .object.sha -r | head -c 7)/" $config_file
     sed -i -e "s/^name =.*/name = $name/" $config_file
@@ -95,6 +92,11 @@ install_monitor () {
     if [ "$enable_gov" = true ]
     then
         sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
+    fi
+    if [[ ! -z "$info_level_chat" && ! -z "$warning_level_chat" && ! -z "$error_level_chat"]]
+        sed -i -e "s/^infoLevelChatId =.*/chatIds = [\"$info_level_chat\"]/" $config_file
+        sed -i -e "s/^warningLevelChatId =.*/chatIds = [\"$warning_level_chat\"]/" $config_file
+        sed -i -e "s/^errorLevelChatId =.*/chatIds = [\"$error_level_chat\"]/" $config_file
     fi
 }
 
@@ -206,6 +208,7 @@ case $1 in
             error_level_chat="$4"
         fi
         shift # past argument
+        shift # past value
         shift # past value
         shift # past value
     ;;

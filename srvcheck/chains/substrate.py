@@ -6,15 +6,7 @@ from srvcheck.tasks.task import hours, minutes
 
 from ..notification import Emoji
 from ..tasks import Task
-from ..utils import (
-    Bash,
-    ConfItem,
-    ConfSet,
-    PlotsConf,
-    SubPlotConf,
-    cropData,
-    savePlots,
-)
+from ..utils import Bash, ConfItem, ConfSet, PlotsConf, SubPlotConf, cropData, savePlots
 from .chain import Chain
 
 ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))
