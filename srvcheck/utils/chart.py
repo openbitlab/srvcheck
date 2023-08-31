@@ -10,7 +10,8 @@ def clearData(data):
     for i in range(len(data) - 1):
         first_date = datetime.strptime(data[i][0].split("T")[0], "%Y-%m-%d")
         second_date = datetime.strptime(data[i + 1][0].split("T")[0], "%Y-%m-%d")
-        if int(str(second_date - first_date).split(" ", maxsplit=1)[0]) > 5:
+        diff = str(second_date - first_date).split(" ", maxsplit=1)
+        if len(diff) > 1 and int(diff[0]) > 5:
             clean = i + 1
     dataCleared = data[clean:]
     return dataCleared
