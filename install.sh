@@ -94,9 +94,9 @@ install_monitor () {
         sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
     fi
     if [[ ! -z "$info_level_chat" && ! -z "$warning_level_chat" && ! -z "$error_level_chat"]]
-        sed -i -e "s/^infoLevelChatId =.*/chatIds = [\"$info_level_chat\"]/" $config_file
-        sed -i -e "s/^warningLevelChatId =.*/chatIds = [\"$warning_level_chat\"]/" $config_file
-        sed -i -e "s/^errorLevelChatId =.*/chatIds = [\"$error_level_chat\"]/" $config_file
+        sed -i -e "s/^infoLevelChatId =.*/infoLevelChatId = [\"$info_level_chat\"]/" $config_file
+        sed -i -e "s/^warningLevelChatId =.*/warningLevelChatId = [\"$warning_level_chat\"]/" $config_file
+        sed -i -e "s/^errorLevelChatId =.*/errorLevelChatId = [\"$error_level_chat\"]/" $config_file
     fi
 }
 
