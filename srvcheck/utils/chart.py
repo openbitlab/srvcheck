@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 
 
 def cropData(data, cropTo=5):
-    if data == None:
-        return data 
+    if data is None:
+        return []
 
     clean = 0
     for i in range(len(data) - 1):
