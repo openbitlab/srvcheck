@@ -72,7 +72,7 @@ class TaskTendermintBlockMissed(Task):
         ):
             self.prevMissed = lastMissed
             return self.notify(
-                f"{missed_perc:.2f}% not signed blocks in the latest {blocksChecked} "
+                f"{missed_perc:.1f}% not signed blocks in the latest {blocksChecked} "
                 + f"({missed}) {Emoji.BlockMiss}"
             )
 
