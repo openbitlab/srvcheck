@@ -1,4 +1,4 @@
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..tasks import Task, hours, minutes, seconds
 from ..utils import Bash
 from .chain import Chain
@@ -20,7 +20,8 @@ class TaskNearBlockMissed(Task):
             produced = int(r["num_produced_blocks"])
             if produced / expected < self.THRESHOLD_RATIO:
                 return self.notify(
-                    f"produced only {produced} / {expected} blocks {Emoji.BlockMiss}"
+                    f"produced only {produced} / {expected} blocks {Emoji.BlockMiss}",
+                    level=NotificationLevel.Warning,
                 )
         except:
             return False
@@ -44,7 +45,8 @@ class TaskNearChunksMissed(Task):
             produced = int(r["num_produced_chunks"])
             if produced / expected < self.THRESHOLD_RATIO:
                 return self.notify(
-                    f"produced only {produced} / {expected} chunks {Emoji.BlockMiss}"
+                    f"produced only {produced} / {expected} chunks {Emoji.BlockMiss}",
+                    level=NotificationLevel.Warning,
                 )
         except:
             return False
@@ -72,9 +74,15 @@ class TaskNearCheckProposal(Task):
             self.prev_epoch = self.s.chain.getEpoch()
             p = self.s.chain.getProposal()
             if len(p) == 0:
-                return self.notify(f"failed to send proposal {Emoji.Health}")
+                return self.notify(
+                    f"failed to send proposal {Emoji.Health}",
+                    level=NotificationLevel.Warning,
+                )
             elif "Declined" in p:
-                return self.notify(f"proposal has been rejected {Emoji.LowBal}")
+                return self.notify(
+                    f"proposal has been rejected {Emoji.LowBal}",
+                    level=NotificationLevel.Warning,
+                )
         return False
 
 
@@ -107,14 +115,16 @@ class TaskNearCheckKicked(Task):
                         expected = reason["NotEnoughChunks"]["expected"]
                         return self.notify(
                             "kicked out for not producing enough chunks, produced only "
-                            + f"{produced} / {expected} chunks {Emoji.BlockMiss}"
+                            + f"{produced} / {expected} chunks {Emoji.BlockMiss}",
+                            level=NotificationLevel.Error,
                         )
                     elif "NotEnoughBlocks" in reason:
                         produced = reason["NotEnoughBlocks"]["produced"]
                         expected = reason["NotEnoughBlocks"]["expected"]
                         return self.notify(
                             "kicked out for not producing enough blocks, produced only "
-                            + f"{produced} / {expected} blocks {Emoji.BlockMiss}"
+                            + f"{produced} / {expected} blocks {Emoji.BlockMiss}",
+                            level=NotificationLevel.Error,
                         )
                     elif "NotEnoughStake" in reason:
                         stake = int(reason["NotEnoughStake"]["stake_u128"][:-24])
@@ -123,15 +133,23 @@ class TaskNearCheckKicked(Task):
                         )
                         missing = threshold - stake
                         return self.notify(
-                            f"kicked out, missing {missing} Near to stake threshold {Emoji.LowBal}"
+                            f"kicked out, missing {missing} Near to stake threshold {Emoji.LowBal}",
+                            level=NotificationLevel.Error,
                         )
                     elif "Slashed" in reason:
-                        return self.notify(f"kicked out: slashed  {Emoji.Health}")
+                        return self.notify(
+                            f"kicked out: slashed  {Emoji.Health}",
+                            level=NotificationLevel.Error,
+                        )
                     elif "Unstaked" in reason:
-                        return self.notify(f"kicked out: unstaked {Emoji.ActStake}")
+                        return self.notify(
+                            f"kicked out: unstaked {Emoji.ActStake}",
+                            level=NotificationLevel.Error,
+                        )
                     elif "DidNotGetASeat" in reason:
                         return self.notify(
-                            f"kicked out: sufficient stake but failed to get a seat {Emoji.Health}"
+                            f"kicked out: sufficient stake but failed to get a seat {Emoji.Health}",
+                            level=NotificationLevel.Error,
                         )
         return False
 

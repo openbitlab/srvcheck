@@ -4,7 +4,7 @@ from websocket import WebSocketBadStatusException, WebSocketConnectionClosedExce
 
 from srvcheck.tasks.task import hours, minutes
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..tasks import Task
 from ..utils import Bash, ConfItem, ConfSet, PlotsConf, SubPlotConf, cropData, savePlots
 from .chain import Chain
@@ -70,7 +70,8 @@ class TaskSubstrateNewReferenda(Task):
         if count > self.prev:
             self.prev = count
             return self.notify(
-                f"New referendum found on {net}: {count - 1} {Emoji.Proposal}"
+                f"New referendum found on {net}: {count - 1} {Emoji.Proposal}",
+                level=NotificationLevel.Warning,
             )
 
 
@@ -122,7 +123,9 @@ class TaskSubstrateReferendaVotingCheck(Task):
 
         if len(nv) > 0:
             return self.notify(
-                f"Validator {validator} is not voting on {net} Referenda {str(nv)} {Emoji.Proposal}"
+                f"Validator {validator} is not voting on {net} "
+                + f"Referenda {str(nv)} {Emoji.Proposal}",
+                level=NotificationLevel.Error,
             )
 
 
@@ -141,7 +144,10 @@ class TaskSubstrateRelayChainStuck(Task):
         if self.prev is None:
             self.prev = self.s.chain.getRelayHeight()
         elif self.prev == self.s.chain.getRelayHeight():
-            return self.notify(f"relay is stuck at block {self.prev} {Emoji.Stuck}")
+            return self.notify(
+                f"relay is stuck at block {self.prev} {Emoji.Stuck}",
+                level=NotificationLevel.Error,
+            )
         return False
 
 

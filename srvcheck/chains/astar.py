@@ -1,6 +1,6 @@
 from srvcheck.tasks.task import minutes
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..tasks import Task
 from .substrate import (
     Substrate,
@@ -30,7 +30,8 @@ class TaskAstarBlockProductionCheck(Task):
                 elif self.prev == block:
                     return self.notify(
                         "no block produced in the latest 30 minutes! Last block produced was "
-                        + f"{self.prev} {Emoji.BlockMiss}"
+                        + f"{self.prev} {Emoji.BlockMiss}",
+                        level=NotificationLevel.Error,
                     )
                 self.prev = block
         return False

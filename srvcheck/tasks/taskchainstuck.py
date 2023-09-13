@@ -56,7 +56,8 @@ class TaskChainStuck(Task):
         if self.oc > 1:
             elapsed = elapsedToString(self.since)
             self.notify(
-                f"chain come back in sync after {elapsed} ({self.oc}) {Emoji.SyncOk}"
+                f"chain come back in sync after {elapsed} ({self.oc}) {Emoji.SyncOk}",
+                level=NotificationLevel.Warning,
             )
 
         self.prev = bh

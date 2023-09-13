@@ -2,7 +2,7 @@ import configparser
 
 from packaging import version
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..utils import Bash, ConfSet
 from . import Task, hours, minutes
 
@@ -56,12 +56,13 @@ class TaskNewRelease(Task):
                 output += f"\n\tDelinquent Stake: {d_stake}%"
                 output += "\n\tIt's recommended to upgrade when there's less than 5%% "
                 output += "delinquent stake"
-            return self.notify(output)
+            return self.notify(output, level=NotificationLevel.Info)
 
         if versionCompare(current, self.conf.getOrDefault("chain.localVersion")) > 0:
             Bash(f'sed -i -e "s/^localVersion =.*/localVersion = {current}/" {self.cf}')
             self.notify(
-                f'is now running latest version: {current.split("-")[0]} {Emoji.Updated}'
+                f'is now running latest version: {current.split("-")[0]} {Emoji.Updated}',
+                level=NotificationLevel.Info,
             )
             self.s.notification.flush()
 

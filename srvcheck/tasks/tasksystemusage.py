@@ -1,3 +1,4 @@
+from ..notification import NotificationLevel
 from ..utils import PlotsConf, SubPlotConf, cropData, savePlots, toGB, toPrettySize
 from . import Task, hours
 
@@ -26,7 +27,10 @@ class TaskSystemUsage(Task):
             out = str(usage)
 
         serviceUptime = self.s.system.getServiceUptime()
-        self.notify(out + "\n\tService uptime: " + str(serviceUptime))
+        self.notify(
+            out + "\n\tService uptime: " + str(serviceUptime),
+            level=NotificationLevel.Info,
+        )
 
         # Saving historical data
         if self.s.persistent.hasPassedNHoursSinceLast(self.name + "_ramSize", 23):

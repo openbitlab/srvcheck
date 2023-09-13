@@ -93,7 +93,7 @@ class TestTaskChainLowPeer(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 0)
 
-    def test_alert(self):
+    def test_alert_error(self):
         c, n, t, s, p = buildTaskEnv(TaskChainLowPeer)
         c.peers = 0
         t.run()
@@ -101,7 +101,18 @@ class TestTaskChainLowPeer(unittest.TestCase):
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
             n.getFirstEvent()[0],
-            urllib.parse.quote("#chain has only 0 peers" + " " + Emoji.Peers + " "),
+            urllib.parse.quote("#chain has 0 peers" + " " + Emoji.Peers + " "),
+        )
+
+    def test_alert(self):
+        c, n, t, s, p = buildTaskEnv(TaskChainLowPeer)
+        c.peers = 1
+        t.run()
+        n.flush()
+        self.assertEqual(len(n.events), 1)
+        self.assertEqual(
+            n.getFirstEvent()[0],
+            urllib.parse.quote("#chain has only 1 peers" + " " + Emoji.Peers + " "),
         )
 
 
