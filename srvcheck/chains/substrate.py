@@ -125,7 +125,7 @@ class TaskSubstrateReferendaVotingCheck(Task):
             return self.notify(
                 f"Validator {validator} is not voting on {net} "
                 + f"Referenda {str(nv)} {Emoji.Proposal}",
-                level=NotificationLevel.Error,
+                level=NotificationLevel.Warning,
             )
 
 
