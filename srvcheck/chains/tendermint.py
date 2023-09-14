@@ -19,6 +19,14 @@ ConfSet.addItem(
         description="Percentage of block missed for notification trigger",
     )
 )
+ConfSet.addItem(
+    ConfItem(
+        "chain.criticalThresholdNotsigned",
+        20,
+        int,
+        description="Percentage of block missed for error notification trigger",
+    )
+)
 
 
 class TaskTendermintBlockMissed(Task):
@@ -34,6 +42,9 @@ class TaskTendermintBlockMissed(Task):
         )
 
         self.THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault("chain.thresholdNotsigned")
+        self.CRITICAL_THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault(
+            "chain.criticalThresholdNotsigned"
+        )
         self.prev = None
         self.prevMissed = None
 
@@ -74,7 +85,9 @@ class TaskTendermintBlockMissed(Task):
             return self.notify(
                 f"{missed_perc:.1f}% not signed blocks in the latest {blocksChecked} "
                 + f"({missed}) {Emoji.BlockMiss}",
-                level=NotificationLevel.Warning
+                level=NotificationLevel.Error
+                if missed_perc > self.CRITICAL_THRESHOLD_NOTSIGNED
+                else NotificationLevel.Warning,
             )
 
         return False
