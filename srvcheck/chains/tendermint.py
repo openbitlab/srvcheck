@@ -59,6 +59,9 @@ class TaskTendermintBlockMissed(Task):
             self.prev = nblockh - self.BLOCK_WINDOW
 
         blocksChecked = nblockh - self.prev
+        if blocksChecked <= 0:
+            return False
+
         validatorAddress = self.s.chain.getValidatorAddress()
         missed = 0
         start = self.prev
