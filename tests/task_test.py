@@ -59,7 +59,7 @@ class TestTaskSystemCpuAlert(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0], urllib.parse.quote("#CPU usage is above 90% (99%) ⚠ ")
+            n.getFirstEvent()[0], urllib.parse.quote("#CPU usage is above 90% (99%) ⚠ ")
         )
 
 
@@ -78,7 +78,7 @@ class TestTaskSystemDiskAlert(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#disk usage is above 90% (99%) (/var/log: 0.0G, /: 0.0G) 💾 "
             ),
@@ -93,15 +93,26 @@ class TestTaskChainLowPeer(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 0)
 
-    def test_alert(self):
+    def test_alert_error(self):
         c, n, t, s, p = buildTaskEnv(TaskChainLowPeer)
         c.peers = 0
         t.run()
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
-            urllib.parse.quote("#chain has only 0 peers" + " " + Emoji.Peers + " "),
+            n.getFirstEvent()[0],
+            urllib.parse.quote("#chain has 0 peers" + " " + Emoji.Peers + " "),
+        )
+
+    def test_alert(self):
+        c, n, t, s, p = buildTaskEnv(TaskChainLowPeer)
+        c.peers = 1
+        t.run()
+        n.flush()
+        self.assertEqual(len(n.events), 1)
+        self.assertEqual(
+            n.getFirstEvent()[0],
+            urllib.parse.quote("#chain has only 1 peers" + " " + Emoji.Peers + " "),
         )
 
 
@@ -123,7 +134,7 @@ class TestTaskChainStuck(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#chain is stuck at block 0x1234567890 since 0 seconds (1)"
                 + " "
@@ -149,7 +160,7 @@ class TestTaskChainStuck(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#chain is stuck at block 1 since 0 seconds (1)"
                 + " "
@@ -203,6 +214,6 @@ class TestTaskNewRelease(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(f"#has new release: {c.latestVersion} {Emoji.Rel} "),
         )

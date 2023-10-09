@@ -1,4 +1,4 @@
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from . import Task, hours, minutes
 
 RAM_LIMIT = 85
@@ -17,7 +17,8 @@ class TaskSystemRamAlert(Task):
         ramUsed = round(usage.ramUsed / usage.ramSize * 100, 1)
         if ramUsed > RAM_LIMIT:
             return self.notify(
-                "Ram usage is above %d%% (%d%%) %s" % (RAM_LIMIT, ramUsed, Emoji.Ram)
+                "Ram usage is above %d%% (%d%%) %s" % (RAM_LIMIT, ramUsed, Emoji.Ram),
+                level=NotificationLevel.Warning,
             )
 
         return False

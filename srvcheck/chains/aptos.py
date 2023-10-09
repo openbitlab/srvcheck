@@ -3,7 +3,7 @@ import re
 
 import requests
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..tasks import Task, hours, minutes
 from ..utils import Bash, ConfItem, ConfSet
 from .chain import Chain
@@ -25,7 +25,7 @@ class TaskAptosHealthError(Task):
             self.s.chain.getHealth()
             return False
         except Exception:
-            return self.notify(f"health error! {Emoji.Health}")
+            return self.notify(f"health error! {Emoji.Health}", NotificationLevel.Error)
 
 
 class TaskAptosValidatorPerformanceCheck(Task):
@@ -74,18 +74,21 @@ class TaskAptosValidatorPerformanceCheck(Task):
             )
             if int(lastEpoch[0]) == 0:
                 return self.notify(
-                    f"is not proposing new consensus {Emoji.BlockMiss}\n{activeStakeOut}"
+                    f"is not proposing new consensus {Emoji.BlockMiss}\n{activeStakeOut}",
+                    level=NotificationLevel.Error,
                 )
             elif int(lastEpoch[3]) / int(lastEpoch[0]) < 0.25:
                 return self.notify(
                     f"{int(lastEpoch[3])/int(lastEpoch[0]) * 100:.2f}% of proposals failed "
-                    + f"{Emoji.BlockMiss}\n{activeStakeOut}"
+                    + f"{Emoji.BlockMiss}\n{activeStakeOut}",
+                    level=NotificationLevel.Error,
                 )
             else:
                 successPercentage = int(lastEpoch[3]) / int(lastEpoch[0]) * 100
                 return self.notify(
                     f"proposed {lastEpoch[0]} new consensus, {successPercentage:.2f}% succeed "
-                    + f"{Emoji.BlockProd}\n{activeStakeOut}"
+                    + f"{Emoji.BlockProd}\n{activeStakeOut}",
+                    level=NotificationLevel.Info,
                 )
         return False
 
@@ -112,7 +115,9 @@ class TaskAptosCurrentConsensusStuck(Task):
             self.prev = cur_round
             return False
         if cur_round == self.prev:
-            return self.notify(f"consensus round stuck {Emoji.BlockMiss}")
+            return self.notify(
+                f"consensus round stuck {Emoji.BlockMiss}", NotificationLevel.Error
+            )
 
         self.prev = cur_round
         return False
@@ -138,7 +143,10 @@ class TaskAptosConnectedToFullNodeCheck(Task):
         if len(conn) > 0:
             vfn_in = conn[1].split(" ")[-1]
             if vfn_in == "0":
-                return self.notify(f"not connected to full node {Emoji.NoLeader}")
+                return self.notify(
+                    f"not connected to full node {Emoji.NoLeader}",
+                    NotificationLevel.Error,
+                )
 
         return False
 
@@ -163,7 +171,9 @@ class TaskAptosConnectedToAptosNodeCheck(Task):
             f"#Debug TaskAptosConnectedToAptosNodeCheck: {self.s.chain.isConnectedToPeer(peerId)}"
         )
         if self.s.chain.isConnectedToPeer(peerId) is False:
-            return self.notify(f"not connected to Aptos node {Emoji.Peers}")
+            return self.notify(
+                f"not connected to Aptos node {Emoji.Peers}", NotificationLevel.Error
+            )
 
         return False
 
@@ -189,7 +199,9 @@ class TaskAptosStateSyncCheck(Task):
         if self.prev is None:
             self.prev = sync
         elif sync == self.prev:
-            return self.notify(f"is not state synching {Emoji.Stuck}")
+            return self.notify(
+                f"is not state synching {Emoji.Stuck}", NotificationLevel.Error
+            )
 
         self.prev = sync
         return False

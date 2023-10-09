@@ -1,5 +1,7 @@
 import time
 
+from ..notification import NotificationLevel
+
 
 def seconds(m):
     return m
@@ -46,10 +48,10 @@ class Task:
     def markChecked(self):
         self.lastCheck = time.time()
 
-    def notify(self, nstr, noCheck=False):
+    def notify(self, nstr, noCheck=False, level=NotificationLevel.NotDeclared):
         if self.shouldBeNotified() or noCheck:
             self.lastNotify = time.time()
-            self.s.notification.append(nstr)
+            self.s.notification.append(nstr, level)
             return True
         return False
 

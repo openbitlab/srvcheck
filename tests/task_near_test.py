@@ -32,7 +32,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#kicked out for not producing enough chunks, produced only 0 / 1 chunks "
                 + Emoji.BlockMiss
@@ -63,7 +63,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#kicked out for not producing enough blocks, produced only 0 / 1 blocks "
                 + Emoji.BlockMiss
@@ -99,7 +99,7 @@ class TestTaskNearKickedout(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.events[0],
+            n.getFirstEvent()[0],
             urllib.parse.quote(
                 "#kicked out, missing 17 Near to stake threshold " + Emoji.LowBal + " "
             ),

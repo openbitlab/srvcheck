@@ -7,10 +7,8 @@ ConfSet.addItem(
 
 
 class DummyNotification(NotificationProvider):
-    LOG_LEVEL = 0
+    def send(self, st, level):
+        print(level, st)
 
-    def send(self, st):
-        print(st)
-
-    def sendPhoto(self, photo):
-        print(f"Sending photo: {photo}")
+    def sendPhoto(self, photo, level):
+        print(f"{level} Sending photo: {photo}")

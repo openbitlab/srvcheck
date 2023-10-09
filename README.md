@@ -72,6 +72,14 @@ Then, open a new Telegram group, **add the created bot** to it.<br>
 You will need the chat id, and the easiest way to get it is to add `@MissRose_bot` to your group and then type `/id` in the chat group.<br>
 During the installation, you will use the **id** and **token**. These parameters will be flagged respectively **<tg_chat_id>** and **<tg_token>**.
 
+In order to differentiate channels for different notification severity, you can set the following fields in the configuration file:
+
+```
+infoLevelChatId =
+warningLevelChatId =
+errorLevelChatId =
+```
+
 ## Install & Update
 
 ```bash 
@@ -96,6 +104,7 @@ install --help
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+ -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation
 ```
 
@@ -138,6 +147,9 @@ Edit /etc/srvcheck.conf:
 enabled = true
 apiToken = 
 chatIds = 
+infoLevelChatId =
+warningLevelChatId =
+errorLevelChatId =
 
 ; a dummy notification wich prints to stdout
 [notification.dummy]
@@ -157,6 +169,7 @@ endpoint =
 blockTime =
 activeSet = 
 thresholdNotsigned = 
+criticalThresholdNotsigned = 
 blockWindow = 
 ; Github repository (org/repo)
 ghRepository = 

@@ -4,7 +4,7 @@ import re
 
 from dateutil import parser
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..tasks import Task, hours, minutes, seconds
 from ..utils import Bash, ConfItem, ConfSet
 from .chain import Chain
@@ -17,6 +17,14 @@ ConfSet.addItem(
         5,
         int,
         description="Percentage of block missed for notification trigger",
+    )
+)
+ConfSet.addItem(
+    ConfItem(
+        "chain.criticalThresholdNotsigned",
+        20,
+        int,
+        description="Percentage of block missed for error notification trigger",
     )
 )
 
@@ -34,6 +42,9 @@ class TaskTendermintBlockMissed(Task):
         )
 
         self.THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault("chain.thresholdNotsigned")
+        self.CRITICAL_THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault(
+            "chain.criticalThresholdNotsigned"
+        )
         self.prev = None
         self.prevMissed = None
 
@@ -48,6 +59,9 @@ class TaskTendermintBlockMissed(Task):
             self.prev = nblockh - self.BLOCK_WINDOW
 
         blocksChecked = nblockh - self.prev
+        if blocksChecked <= 0:
+            return False
+
         validatorAddress = self.s.chain.getValidatorAddress()
         missed = 0
         start = self.prev
@@ -73,7 +87,10 @@ class TaskTendermintBlockMissed(Task):
             self.prevMissed = lastMissed
             return self.notify(
                 f"{missed_perc:.1f}% not signed blocks in the latest {blocksChecked} "
-                + f"({missed}) {Emoji.BlockMiss}"
+                + f"({missed}) {Emoji.BlockMiss}",
+                level=NotificationLevel.Error
+                if missed_perc > self.CRITICAL_THRESHOLD_NOTSIGNED
+                else NotificationLevel.Warning,
             )
 
         return False
@@ -117,7 +134,7 @@ class TaskTendermintNewProposal(Task):
             self.prev = proposals
             if self.admin_gov:
                 out += f" {self.admin_gov}"
-            return self.notify(out)
+            return self.notify(out, level=NotificationLevel.Warning)
 
     def run(self):
         nProposal = self.s.chain.getLatestProposals()
@@ -132,7 +149,7 @@ class TaskTendermintNewProposal(Task):
                     out += f"{self.getProposalTitle(nProposal[-1])} {Emoji.Proposal}"
                 if self.admin_gov:
                     out += f" {self.admin_gov}"
-                return self.notify(out)
+                return self.notify(out, level=NotificationLevel.Warning)
         elif "id" in self.prev[0]:
             self.notifyAboutLatestProposals(nProposal, "id")
         elif "proposal_id" in self.prev[0] and int(self.prev[0]["proposal_id"]) < int(
@@ -161,7 +178,10 @@ class TaskTendermintPositionChanged(Task):
             self.prev = npos
 
         if not self.s.chain.isStaking():
-            return self.notify(f"out from the active set {Emoji.NoLeader}")
+            return self.notify(
+                f"out from the active set {Emoji.NoLeader}",
+                level=NotificationLevel.Warning,
+            )
 
         if npos != self.prev:
             prev = self.prev
@@ -169,11 +189,13 @@ class TaskTendermintPositionChanged(Task):
 
             if npos > prev:
                 return self.notify(
-                    f"position decreased from {prev} to {npos} {Emoji.PosDown}"
+                    f"position decreased from {prev} to {npos} {Emoji.PosDown}",
+                    level=NotificationLevel.Warning,
                 )
             else:
                 return self.notify(
-                    f"position increased from {prev} to {npos} {Emoji.PosUp}"
+                    f"position increased from {prev} to {npos} {Emoji.PosUp}",
+                    level=NotificationLevel.Warning,
                 )
 
         return False
@@ -223,7 +245,9 @@ class TaskTendermintHealthError(Task):
             self.s.chain.getHealth()
             return False
         except:
-            return self.notify(f"health error! {Emoji.Health}")
+            return self.notify(
+                f"health error! {Emoji.Health}", level=NotificationLevel.Error
+            )
 
 
 class Tendermint(Chain):

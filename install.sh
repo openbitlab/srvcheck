@@ -27,6 +27,7 @@ print_help () {
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+ -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation"
 }
 
@@ -91,6 +92,12 @@ install_monitor () {
     if [ "$enable_gov" = true ]
     then
         sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
+    fi
+    if [[ ! -z "$info_level_chat" && ! -z "$warning_level_chat" && ! -z "$error_level_chat" ]]
+    then
+        sed -i -e "s/^infoLevelChatId =.*/infoLevelChatId = $info_level_chat/" $config_file
+        sed -i -e "s/^warningLevelChatId =.*/warningLevelChatId = $warning_level_chat/" $config_file
+        sed -i -e "s/^errorLevelChatId =.*/errorLevelChatId = $error_level_chat/" $config_file
     fi
 }
 
@@ -188,6 +195,21 @@ case $1 in
             api_token="$3"
         fi
         shift # past argument
+        shift # past value
+        shift # past value
+    ;;
+    -tl|--telegram-levels)
+        if [[ -z $2 || -z $3 || -z $4 ]]
+        then
+            print_help
+            exit 1
+        else
+	        info_level_chat="$2"
+            warning_level_chat="$3"
+            error_level_chat="$4"
+        fi
+        shift # past argument
+        shift # past value
         shift # past value
         shift # past value
     ;;

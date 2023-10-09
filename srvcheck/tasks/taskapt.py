@@ -1,6 +1,6 @@
 import subprocess
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from . import Task, hours
 
 
@@ -45,7 +45,8 @@ class TaskAPT(Task):
             return self.notify(
                 f"has {len(security_updates)} security updates pending "
                 + f"({len(updates)+len(security_updates)} pending updates total): "
-                + f'{", ".join(security_updates)} {Emoji.Floppy}'
+                + f'{", ".join(security_updates)} {Emoji.Floppy}',
+                level=NotificationLevel.Info,
             )
 
         return False

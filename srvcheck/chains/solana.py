@@ -1,7 +1,7 @@
 import json
 from statistics import median
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..tasks import Task, hours, minutes, seconds
 from ..utils import Bash
 from .chain import Chain
@@ -21,7 +21,9 @@ class TaskSolanaHealthError(Task):
             self.s.chain.getHealth()
             return False
         except:
-            return self.notify(f"health error! {Emoji.Health}")
+            return self.notify(
+                f"health error! {Emoji.Health}", level=NotificationLevel.Error
+            )
 
 
 class TaskSolanaDelinquentCheck(Task):
@@ -35,7 +37,9 @@ class TaskSolanaDelinquentCheck(Task):
 
     def run(self):
         if self.s.chain.isDelinquent():
-            return self.notify(f"validator is delinquent {Emoji.Delinq}")
+            return self.notify(
+                f"validator is delinquent {Emoji.Delinq}", level=NotificationLevel.Error
+            )
         else:
             return False
 
@@ -53,7 +57,8 @@ class TaskSolanaBalanceCheck(Task):
         balance = self.s.chain.getValidatorBalance()
         if balance < 1.0:
             return self.notify(
-                f"validator balance is too low, {balance} SOL left {Emoji.LowBal}"
+                f"validator balance is too low, {balance} SOL left {Emoji.LowBal}",
+                level=NotificationLevel.Error,
             )
         else:
             return False
@@ -75,7 +80,8 @@ class TaskSolanaLastVoteCheck(Task):
             self.prev = lastVote
         elif self.prev == lastVote and md > lastVote:
             return self.notify(
-                f"last vote stuck at height: {lastVote}, median is: {md} {Emoji.Slow}"
+                f"last vote stuck at height: {lastVote}, median is: {md} {Emoji.Slow}",
+                level=NotificationLevel.Error,
             )
         self.prev = lastVote
         return False
@@ -106,7 +112,8 @@ class TaskSolanaEpochActiveStake(Task):
             self.prev = act_stake
             self.prevEpoch = ep
             return self.notify(
-                f"active stake for epoch {ep}: {act_stake} SOL {Emoji.ActStake}"
+                f"active stake for epoch {ep}: {act_stake} SOL {Emoji.ActStake}",
+                level=NotificationLevel.Info,
             )
         return False
 
@@ -131,12 +138,14 @@ class TaskSolanaLeaderSchedule(Task):
                 schedule = self.s.chain.getLeaderSchedule()
                 self.prev = ep
                 return self.notify(
-                    f"{len(schedule)} leader slot assigned for the epoch {ep} {Emoji.Leader}"
+                    f"{len(schedule)} leader slot assigned for the epoch {ep} {Emoji.Leader}",
+                    level=NotificationLevel.Info,
                 )
             return False
         except Exception:
             return self.notify(
-                f"no leader slot assigned for the epoch {ep} {Emoji.NoLeader}"
+                f"no leader slot assigned for the epoch {ep} {Emoji.NoLeader}",
+                level=NotificationLevel.Info,
             )
 
 
@@ -168,7 +177,8 @@ class TaskSolanaSkippedSlots(Task):
                 skip_p = f"{skipped_perc * 100:.2f}"
                 return self.notify(
                     "skipped %s%% of assigned slots (%d/%d) %s"
-                    % (skip_p, bp_info[1], bp_info[0], Emoji.BlockMiss)
+                    % (skip_p, bp_info[1], bp_info[0], Emoji.BlockMiss),
+                    level=NotificationLevel.Warning,
                 )
         if self.prev != ep:
             e = self.prev
@@ -177,7 +187,8 @@ class TaskSolanaSkippedSlots(Task):
                 skip_p = f"{(self.prevBP - self.prevM) / self.prevBP * 100:.2f}"
                 return self.notify(
                     "skipped %s%% of assigned slots (%d/%d) in the epoch %s %s"
-                    % (skip_p, self.prevM, self.prevBP, e, Emoji.BlockProd)
+                    % (skip_p, self.prevM, self.prevBP, e, Emoji.BlockProd),
+                    level=NotificationLevel.Warning,
                 )
         return False
 
@@ -226,7 +237,8 @@ class Solana(Chain):
         if len(schedule) == 1:
             return schedule[identityAddr]
         raise Exception(
-            "No leader slot assigned to your Identity for the current epoch"
+            "No leader slot assigned to your Identity for the current epoch",
+            level=NotificationLevel.Warning,
         )
 
     def getBlockProduction(self):

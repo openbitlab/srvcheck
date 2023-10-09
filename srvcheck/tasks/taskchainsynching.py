@@ -1,4 +1,4 @@
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from . import Task, minutes
 
 
@@ -13,6 +13,8 @@ class TaskChainSynching(Task):
 
     def run(self):
         if self.s.chain.isSynching():
-            return self.notify(f"chain is synching {Emoji.Slow}")
+            return self.notify(
+                f"chain is synching {Emoji.Slow}", level=NotificationLevel.Info
+            )
 
         return False

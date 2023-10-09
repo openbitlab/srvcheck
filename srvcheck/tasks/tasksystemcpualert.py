@@ -1,4 +1,4 @@
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from . import Task, hours, minutes
 
 CPU_LIMIT = 90
@@ -18,7 +18,8 @@ class TaskSystemCpuAlert(Task):
         if usage.cpuUsage > CPU_LIMIT:
             return self.notify(
                 "CPU usage is above %d%% (%d%%) %s"
-                % (CPU_LIMIT, usage.cpuUsage, Emoji.Cpu)
+                % (CPU_LIMIT, usage.cpuUsage, Emoji.Cpu),
+                level=NotificationLevel.Warning,
             )
 
         return False

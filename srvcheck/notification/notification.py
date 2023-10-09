@@ -1,10 +1,8 @@
 class NotificationLevel:
     NotDeclared = 0
-    Debug = 1
-    Info = 2
-    Warning = 3
-    Error = 4
-    Critical = 5
+    Info = 1
+    Warning = 2
+    Error = 3
 
 
 class Emoji:
@@ -46,9 +44,7 @@ class Notification:
 
     def append(self, s, level=NotificationLevel.NotDeclared):
         for x in self.providers:
-            if level < x.LOG_LEVEL and level != NotificationLevel.NotDeclared:
-                continue
-            x.append(self.name + " " + s)
+            x.append(self.name + " " + s, level)
 
     def flush(self):
         for x in self.providers:
@@ -56,10 +52,8 @@ class Notification:
 
     def send(self, st, level=NotificationLevel.NotDeclared):
         for x in self.providers:
-            if level < x.LOG_LEVEL and level != NotificationLevel.NotDeclared:
-                continue
-            x.send(x.format(self.name, st))
+            x.send(x.format(self.name, st), level)
 
-    def sendPhoto(self, photo):
+    def sendPhoto(self, photo, level=NotificationLevel.NotDeclared):
         for x in self.providers:
-            x.sendPhoto(photo)
+            x.sendPhoto(photo, level)
