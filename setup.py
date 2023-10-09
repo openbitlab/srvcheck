@@ -20,6 +20,7 @@ setup(
         "console_scripts": [
             "srvcheck=srvcheck.main:main",
             "srvcheck-defaultconf=srvcheck.main:defaultConf",
+            "srvcheck-updateinstall=srvcheck.main:updateInstall",
         ],
     },
     zip_safe=False,
