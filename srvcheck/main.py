@@ -37,6 +37,14 @@ ConfSet.addItem(ConfItem("chain.service", None, str, "node service name"))
 ConfSet.addItem(ConfItem("tasks.govAdmin", None, str, "Proposal voter nickname"))
 
 
+def defaultConf():
+    print(ConfSet.help())
+
+
+def updateInstall():
+    pass
+
+
 def addTasks(services):
     # Create the list of tasks
     tasks = []
@@ -49,10 +57,6 @@ def addTasks(services):
         if task.isPluggable(services):
             tasks.append(task)
     return tasks
-
-
-def defaultConf():
-    print(ConfSet.help())
 
 
 class Services:
