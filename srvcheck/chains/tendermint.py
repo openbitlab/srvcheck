@@ -177,9 +177,9 @@ class TaskTendermintProposalVotingCheck(Task):
         c = len(proposalsNotVoted)
         if c > 0:
             proposalsNotVotedStr = str([int(p) for p in proposalsNotVoted])
-            strOut = f"proposal{'s' if c > 2 else ''}"
+            strOut = f"governance proposal{'s' if c > 2 else ''}"
             return self.notify(
-                f"Validator is not voting on governance {strOut} {proposalsNotVotedStr} {Emoji.Proposal}"
+                f"Validator is not voting on {strOut} {proposalsNotVotedStr} {Emoji.Proposal}"
             )
         return False
 
