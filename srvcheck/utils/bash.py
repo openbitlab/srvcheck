@@ -51,3 +51,8 @@ class Bash(object):
         if self.stdout:
             return self.stdout.strip().decode(encoding="UTF-8")
         return ""
+
+    def error(self):
+        if self.stderr:
+            return self.stderr.strip().decode(encoding="UTF-8")
+        return ""
