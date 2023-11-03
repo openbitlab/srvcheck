@@ -373,7 +373,7 @@ class Tendermint(Chain):
         return self.rpcCall("status")["sync_info"]["catching_up"]
 
     def getLatestProposals(self):
-        cmd = self.s.chain.getNodeBinary()
+        cmd = self.getNodeBinary()
         proposals = json.loads(
             Bash(cmd + " q gov proposals --reverse --output json").value()
         )["proposals"]
