@@ -1,6 +1,4 @@
-import configparser
 import json
-import re
 
 from dateutil import parser
 
@@ -104,7 +102,7 @@ class TaskTendermintNewProposal(Task):
 
     @staticmethod
     def isPluggable(services):
-        return True
+        return services.conf.exists("chain.service")
 
     def getProposalTitle(self, proposal):
         if "id" in proposal:
@@ -156,6 +154,47 @@ class TaskTendermintNewProposal(Task):
             nProposal[0]["proposal_id"]
         ):
             self.notifyAboutLatestProposals(nProposal, "proposal_id")
+        return False
+    
+
+class TaskTendermintProposalVotingCheck(Task):
+    def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(6)):
+        super().__init__("TaskTendermintProposalVotingCheck", services, checkEvery, notifyEvery)
+        self.prev = None
+        self.validator_address = self.s.conf.getOrDefault("chain.validatorAddress")
+
+    @staticmethod
+    def isPluggable(services):
+        return services.conf.exists("chain.validatorAddress") and services.conf.exists("chain.service")
+    
+    def getValidatorProposalVote(self, proposalId):
+        cmd = self.s.chain.getNodeBinary()
+        stderr = Bash(cmd + f" q gov vote {proposalId} {self.validator_address}").error()
+        if f"voter: {self.validator_address} not found for proposal" in stderr:
+            return proposalId
+        return None    
+    
+    def getProposalId(self, proposal):
+        if "id" in proposal:
+            return proposal["id"]
+        elif "proposal_id" in proposal:
+            return proposal["proposal_id"]
+
+    def run(self):
+        proposals = self.s.chain.getLatestProposals()
+        proposalsNotVoted = []
+        for p in proposals:
+            pId = self.getProposalId(p)
+            notVoted = self.getValidatorProposalVote(pId)
+            if notVoted:
+                proposalsNotVoted.append(notVoted)
+        c = len(proposalsNotVoted)
+        if c > 0:
+            proposalsNotVotedStr = str([int(p) for p in proposalsNotVoted])
+            strOut = f"governance proposal{'s' if c > 2 else ''}"
+            return self.notify(
+                f"Validator is not voting on {strOut} {proposalsNotVotedStr} {Emoji.Proposal}"
+            )
         return False
 
 
@@ -260,6 +299,7 @@ class Tendermint(Chain):
         TaskTendermintPositionChanged,
         TaskTendermintHealthError,
         TaskTendermintNewProposal,
+        TaskTendermintProposalVotingCheck,
     ]
 
     @staticmethod
@@ -331,15 +371,10 @@ class Tendermint(Chain):
         return self.rpcCall("status")["sync_info"]["catching_up"]
 
     def getLatestProposals(self):
-        serv = self.conf.getOrDefault("chain.service")
-        if serv:
-            c = configparser.ConfigParser()
-            c.read(f"/etc/systemd/system/{serv}")
-            cmd = re.split(" ", c["Service"]["ExecStart"])[0]
-            proposals = json.loads(
-                Bash(cmd + " q gov proposals --reverse --output json").value()
-            )["proposals"]
-            return [
-                p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-            ]
-        raise Exception("No service file name specified!")
+        cmd = self.getNodeBinary()
+        proposals = json.loads(
+            Bash(cmd + " q gov proposals --reverse --output json").value()
+        )["proposals"]
+        return [
+            p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
+        ]

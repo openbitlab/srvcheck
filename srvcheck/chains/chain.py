@@ -1,4 +1,6 @@
 import requests
+import configparser
+import re
 
 from ..utils import ConfItem, ConfSet
 
@@ -92,3 +94,10 @@ class Chain:
     def isSynching(self):
         """Returns true if the node is synching"""
         raise Exception("Abstract isSynching()")
+    
+    def getNodeBinary(self):
+        c = configparser.ConfigParser()
+        serviceName = self.conf.getOrDefault("chain.service")
+        c.read(f"/etc/systemd/system/{serviceName}")
+        cmd = re.split(" ", c["Service"]["ExecStart"])[0]
+        return cmd
