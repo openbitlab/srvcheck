@@ -4,7 +4,7 @@ import re
 
 from dateutil import parser
 
-from ..notification import Emoji
+from ..notification import Emoji, NotificationLevel
 from ..tasks import Task, hours, minutes, seconds
 from ..utils import Bash, ConfItem, ConfSet
 from .chain import Chain
@@ -17,6 +17,14 @@ ConfSet.addItem(
         5,
         int,
         description="Percentage of block missed for notification trigger",
+    )
+)
+ConfSet.addItem(
+    ConfItem(
+        "chain.criticalThresholdNotsigned",
+        20,
+        int,
+        description="Percentage of block missed for error notification trigger",
     )
 )
 
@@ -34,6 +42,9 @@ class TaskTendermintBlockMissed(Task):
         )
 
         self.THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault("chain.thresholdNotsigned")
+        self.CRITICAL_THRESHOLD_NOTSIGNED = self.s.conf.getOrDefault(
+            "chain.criticalThresholdNotsigned"
+        )
         self.prev = None
         self.prevMissed = None
 
@@ -48,6 +59,9 @@ class TaskTendermintBlockMissed(Task):
             self.prev = nblockh - self.BLOCK_WINDOW
 
         blocksChecked = nblockh - self.prev
+        if blocksChecked <= 0:
+            return False
+
         validatorAddress = self.s.chain.getValidatorAddress()
         missed = 0
         start = self.prev
@@ -66,12 +80,17 @@ class TaskTendermintBlockMissed(Task):
             start += 1
 
         self.prev = nblockh
-        if (100 * missed / blocksChecked) >= self.THRESHOLD_NOTSIGNED and (
+        missed_perc = 100 * missed / blocksChecked
+        if missed_perc >= self.THRESHOLD_NOTSIGNED and (
             self.prevMissed is None or self.prevMissed != lastMissed
         ):
             self.prevMissed = lastMissed
             return self.notify(
-                f"{missed} not signed blocks in the latest {blocksChecked} {Emoji.BlockMiss}"
+                f"{missed_perc:.1f}% not signed blocks in the latest {blocksChecked} "
+                + f"({missed}) {Emoji.BlockMiss}",
+                level=NotificationLevel.Error
+                if missed_perc > self.CRITICAL_THRESHOLD_NOTSIGNED
+                else NotificationLevel.Warning,
             )
 
         return False
@@ -85,7 +104,7 @@ class TaskTendermintNewProposal(Task):
 
     @staticmethod
     def isPluggable(services):
-        return True
+        return services.conf.exists("chain.service")
 
     def getProposalTitle(self, proposal):
         if "id" in proposal:
@@ -115,7 +134,7 @@ class TaskTendermintNewProposal(Task):
             self.prev = proposals
             if self.admin_gov:
                 out += f" {self.admin_gov}"
-            return self.notify(out)
+            return self.notify(out, level=NotificationLevel.Warning)
 
     def run(self):
         nProposal = self.s.chain.getLatestProposals()
@@ -130,7 +149,7 @@ class TaskTendermintNewProposal(Task):
                     out += f"{self.getProposalTitle(nProposal[-1])} {Emoji.Proposal}"
                 if self.admin_gov:
                     out += f" {self.admin_gov}"
-                return self.notify(out)
+                return self.notify(out, level=NotificationLevel.Warning)
         elif "id" in self.prev[0]:
             self.notifyAboutLatestProposals(nProposal, "id")
         elif "proposal_id" in self.prev[0] and int(self.prev[0]["proposal_id"]) < int(
@@ -138,23 +157,20 @@ class TaskTendermintNewProposal(Task):
         ):
             self.notifyAboutLatestProposals(nProposal, "proposal_id")
         return False
-
+    
 
 class TaskTendermintProposalVotingCheck(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(6)):
         super().__init__("TaskTendermintProposalVotingCheck", services, checkEvery, notifyEvery)
         self.prev = None
         self.validator_address = self.s.conf.getOrDefault("chain.validatorAddress")
-        self.serviceName = self.s.conf.getOrDefault("chain.service")
 
     @staticmethod
     def isPluggable(services):
         return services.conf.exists("chain.validatorAddress") and services.conf.exists("chain.service")
     
     def getValidatorProposalVote(self, proposalId):
-        c = configparser.ConfigParser()
-        c.read(f"/etc/systemd/system/{self.serviceName}")
-        cmd = re.split(" ", c["Service"]["ExecStart"])[0]
+        cmd = self.s.chain.getNodeBinary()
         stderr = Bash(cmd + f" q gov vote {proposalId} {self.validator_address}").error()
         if f"voter: {self.validator_address} not found for proposal" in stderr:
             return proposalId
@@ -203,7 +219,10 @@ class TaskTendermintPositionChanged(Task):
             self.prev = npos
 
         if not self.s.chain.isStaking():
-            return self.notify(f"out from the active set {Emoji.NoLeader}")
+            return self.notify(
+                f"out from the active set {Emoji.NoLeader}",
+                level=NotificationLevel.Warning,
+            )
 
         if npos != self.prev:
             prev = self.prev
@@ -211,11 +230,13 @@ class TaskTendermintPositionChanged(Task):
 
             if npos > prev:
                 return self.notify(
-                    f"position decreased from {prev} to {npos} {Emoji.PosDown}"
+                    f"position decreased from {prev} to {npos} {Emoji.PosDown}",
+                    level=NotificationLevel.Warning,
                 )
             else:
                 return self.notify(
-                    f"position increased from {prev} to {npos} {Emoji.PosUp}"
+                    f"position increased from {prev} to {npos} {Emoji.PosUp}",
+                    level=NotificationLevel.Warning,
                 )
 
         return False
@@ -265,7 +286,9 @@ class TaskTendermintHealthError(Task):
             self.s.chain.getHealth()
             return False
         except:
-            return self.notify(f"health error! {Emoji.Health}")
+            return self.notify(
+                f"health error! {Emoji.Health}", level=NotificationLevel.Error
+            )
 
 
 class Tendermint(Chain):
@@ -278,7 +301,7 @@ class Tendermint(Chain):
         TaskTendermintPositionChanged,
         TaskTendermintHealthError,
         TaskTendermintNewProposal,
-        TaskTendermintProposalVotingCheck
+        TaskTendermintProposalVotingCheck,
     ]
 
     @staticmethod
@@ -350,15 +373,10 @@ class Tendermint(Chain):
         return self.rpcCall("status")["sync_info"]["catching_up"]
 
     def getLatestProposals(self):
-        serv = self.conf.getOrDefault("chain.service")
-        if serv:
-            c = configparser.ConfigParser()
-            c.read(f"/etc/systemd/system/{serv}")
-            cmd = re.split(" ", c["Service"]["ExecStart"])[0]
-            proposals = json.loads(
-                Bash(cmd + " q gov proposals --reverse --output json").value()
-            )["proposals"]
-            return [
-                p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-            ]
-        raise Exception("No service file name specified!")
+        cmd = self.s.chain.getNodeBinary()
+        proposals = json.loads(
+            Bash(cmd + " q gov proposals --reverse --output json").value()
+        )["proposals"]
+        return [
+            p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
+        ]

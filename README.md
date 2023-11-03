@@ -92,7 +92,7 @@ The install script can be customized with these flags:
 install --help
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
      --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
- -a  --validator-address <address> enable checks on block production (substrate) or checks on governance proposal votes (tendermint)
+ -a  --validator-address <address> enable checks on block production, governance proposals and other account related informations
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
      --endpoint <url:port> node local rpc address
