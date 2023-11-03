@@ -177,25 +177,31 @@ class TaskTendermintNewProposal(Task):
         ):
             self.notifyAboutLatestProposals(nProposal, "proposal_id")
         return False
-    
+
 
 class TaskTendermintProposalVotingCheck(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(6)):
-        super().__init__("TaskTendermintProposalVotingCheck", services, checkEvery, notifyEvery)
+        super().__init__(
+            "TaskTendermintProposalVotingCheck", services, checkEvery, notifyEvery
+        )
         self.prev = None
         self.validator_address = self.s.conf.getOrDefault("chain.validatorAddress")
 
     @staticmethod
     def isPluggable(services):
-        return services.conf.exists("chain.validatorAddress") and services.conf.exists("chain.service")
-    
+        return services.conf.exists("chain.validatorAddress") and services.conf.exists(
+            "chain.service"
+        )
+
     def getValidatorProposalVote(self, proposalId):
         cmd = self.s.chain.getNodeBinary()
-        stderr = Bash(cmd + f" q gov vote {proposalId} {self.validator_address}").error()
+        stderr = Bash(
+            cmd + f" q gov vote {proposalId} {self.validator_address}"
+        ).error()
         if f"voter: {self.validator_address} not found for proposal" in stderr:
             return proposalId
-        return None    
-    
+        return None
+
     def getProposalId(self, proposal):
         if "id" in proposal:
             return proposal["id"]
@@ -397,6 +403,4 @@ class Tendermint(Chain):
         proposals = json.loads(
             Bash(cmd + " q gov proposals --reverse --output json").value()
         )["proposals"]
-        return [
-            p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-        ]
+        return [p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]

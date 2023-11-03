@@ -20,9 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import requests
 import configparser
 import re
+
+import requests
 
 from ..utils import ConfItem, ConfSet
 
@@ -116,7 +117,7 @@ class Chain:
     def isSynching(self):
         """Returns true if the node is synching"""
         raise Exception("Abstract isSynching()")
-    
+
     def getNodeBinary(self):
         c = configparser.ConfigParser()
         serviceName = self.conf.getOrDefault("chain.service")
