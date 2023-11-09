@@ -16,6 +16,7 @@ print_help () {
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
      --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
  -a  --validator-address <address> enable checks on block production, governance proposals and other account related informations
+     --beacon-endpoint <url:port> consensus client rpc endpoint
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
      --endpoint <url:port> node local rpc address
@@ -83,6 +84,10 @@ install_monitor () {
     if [ ! -z "$endpoint" ]
     then
         sed -i -e "s,^endpoint =.*,endpoint = $endpoint,g" $config_file
+    fi
+    if [ ! -z "$beaconEndpoint" ]
+    then
+        sed -i -e "s,^beaconEndpoint =.*,beaconEndpoint = $beaconEndpoint,g" $config_file
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -271,6 +276,17 @@ case $1 in
             exit 1
         else
 	        endpoint="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --beacon-endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        beaconEndpoint="$2"
         fi
         shift # past argument
         shift # past value
