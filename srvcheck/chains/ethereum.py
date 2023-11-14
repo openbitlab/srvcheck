@@ -24,11 +24,11 @@ import json
 import requests
 
 from ..notification import Emoji, NotificationLevel
-from ..tasks import Task, hours, minutes
-from ..utils import Bash, ConfItem, ConfSet
+from ..tasks import Task, hours
+from ..utils import ConfItem, ConfSet
 from .chain import Chain
 
-ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))
+ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))       # TODO handle multiple validators
 ConfSet.addItem(ConfItem("chain.beaconEndpoint", description="Consensus client endpoint"))
 
 
@@ -46,7 +46,33 @@ class TaskEthereumHealthError(Task):
             self.s.chain.getHealth()
             return False
         except Exception:
-            return self.notify(f"Consensus client health error! {Emoji.Health}", NotificationLevel.Error)
+            return self.notify(f"beacon node health error! {Emoji.Health}", NotificationLevel.Error)
+
+
+class TaskEthereumLowPeerError(Task):
+    def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(10)):
+        super().__init__("TaskEthereumLowPeerError", services, checkEvery, notifyEvery)
+        self.minPeers = 3
+
+    @staticmethod
+    def isPluggable(services):
+        return True
+
+    def run(self):
+        p = self.s.chain.getBeaconNodePeerCount()
+
+        if p == 0:
+            return self.notify(
+                f"beacon node has 0 peers {Emoji.Peers}",
+                level=NotificationLevel.Error,
+            )
+        elif p < self.minPeers:
+            return self.notify(
+                f"beacon node has only {p} peers {Emoji.Peers}",
+                level=NotificationLevel.Warning,
+            )
+
+        return False
 
 
 class Ethereum(Chain):
@@ -56,13 +82,14 @@ class Ethereum(Chain):
     EP = "http://localhost:8545/"         # execution client
     CC = "http://localhost:5052/eth/v1/"  # consensus client
     CUSTOM_TASKS = [
-        TaskEthereumHealthError
+        TaskEthereumHealthError,
+        TaskEthereumLowPeerError
     ]
 
     def __init__(self, conf):
         super().__init__(conf)
         if conf.exists("chain.beaconEndpoint"):
-            self.EP = conf.getOrDefault("chain.beaconEndpoint")
+            self.CC = f"{conf.getOrDefault('chain.beaconEndpoint')}/eth/v1/"
 
     @staticmethod
     def detect(conf):
@@ -75,14 +102,14 @@ class Ethereum(Chain):
         raise Exception("Abstract getLatestVersion()")
 
     def getVersion(self):
-        raise Exception("Abstract getVersion()")
+        out = requests.get(f"{self.CC}/node/version")
+        return json.loads(out.text)["data"]["version"]
 
     def getHealth(self):
         status = requests.get(f"{self.CC}/node/health").status_code
         return status != 503 and status != 400
 
     def getHeight(self):
-        self.EP = self.EC
         return self.rpcCall("eth_blockNumber")
 
     def getSlot(self):
@@ -90,13 +117,21 @@ class Ethereum(Chain):
         return json.loads(out.text)["data"][0]["header"]["message"]["slot"]
 
     def getEpoch(self):
-        raise Exception("Abstract getEpoch()")
+        out = requests.get(f"{self.CC}/beacon/states/finalized/finality_checkpoints")
+        return json.loads(out.text)["data"]["current_justified"]["epoch"]
 
     def getBlockHash(self):
-        raise Exception("Abstract getBlockHash()")
+        return self.rpcCall("eth_getBlockByNumber", ["latest", False])["hash"]
 
     def getNetwork(self):
-        raise Exception("Abstract getNetwork()")
+        return self.rpcCall("net_version")
+
+    def getPeerCount(self):
+        return int(self.rpcCall("net_peerCount"))
+
+    def getBeaconNodePeerCount(self):
+        out = requests.get(f"{self.CC}/node/peer_count")
+        return int(json.loads(out.text)["data"]["connected"])
     
     def isStaking(self):
         raise Exception("Abstract isStaking()")
