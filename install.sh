@@ -19,6 +19,7 @@ print_help () {
      --beacon-endpoint <url:port> consensus client rpc endpoint
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+ -d  --docker <container_id> id of the container to monitor [required if not using service]
      --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed
      --gov enable checks on new governance proposals (tendermint)
@@ -26,7 +27,7 @@ print_help () {
  -n  --name <name> monitor name [default is the server hostname]
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
- -s  --service <name> service name of the node to monitor [required]
+ -s  --service <name> service name of the node to monitor [required if not using docker]
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation"
@@ -53,6 +54,7 @@ install_monitor () {
     sed -i -e "s/^commit =.*/commit = $(curl https://api.github.com/repos/openbitlab/srvcheck/git/refs/heads/main -s | jq .object.sha -r | head -c 7)/" $config_file
     sed -i -e "s/^name =.*/name = $name/" $config_file
     sed -i -e "s/^service =.*/service = $service/" $config_file
+    sed -i -e "s/^docker =.*/docker = $docker/" $config_file
     if [ ! -z "$block_time" ]
     then
         sed -i -e "s/^blockTime =.*/blockTime = $block_time/" $config_file
@@ -269,6 +271,17 @@ case $1 in
         shift # past argument
         shift # past value
     ;;
+    -d|--docker)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            docker="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     --endpoint)
         if [[ -z $2 ]]
         then
@@ -309,7 +322,7 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ -z $chat_id || -z $api_token || -z $service ]]
+if [[ -z $chat_id || -z $api_token || [-z $service  && -z $docker ]]]
 then
     print_help
     exit 1

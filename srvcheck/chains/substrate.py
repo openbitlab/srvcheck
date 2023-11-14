@@ -474,19 +474,22 @@ class Substrate(Chain):
         return False
 
     def getExpectedBlocks(self, since=60):
-        serv = self.conf.getOrDefault("chain.service")
-        if serv:
-            blocks = (
-                Bash(
-                    f"journalctl -u {serv} --no-pager --since '{since} min ago' | grep -Eo "
-                    + "'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g"
-                )
-                .value()
-                .split("\n")
+        if self.conf.exists("chain.service"):
+            s = self.conf.getOrDefault("chain.service")
+            cmd = f"journalctl -u {s} --no-pager --since '{since} min ago'"
+        elif self.conf.exists("chain.docker"):
+            containerId = self.conf.getOrDefault("chain.docker")
+            cmd = f"docker logs --since 1h {containerId}"
+        blocks = (
+            Bash(
+                f"{cmd} | grep -Eo "
+                + "'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g"
             )
-            blocks = [int(b) for b in blocks if b != ""]
-            return blocks
-        return []
+            .value()
+            .split("\n")
+        )
+        blocks = [int(b) for b in blocks if b != ""]
+        return blocks
 
     def getBlockAuthor(self, block):
         return self.checkAuthoredBlock(block)
