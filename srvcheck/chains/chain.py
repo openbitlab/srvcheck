@@ -121,12 +121,12 @@ class Chain:
 
     def getNodeBinary(self):
         cmd = ""
-        if self.conf.exists("chain.service"):
+        if self.conf.getOrDefault("chain.service"):
             c = configparser.ConfigParser()
             serviceName = self.conf.getOrDefault("chain.service")
             c.read(f"/etc/systemd/system/{serviceName}")
             cmd = re.split(" ", c["Service"]["ExecStart"])[0]
-        elif self.conf.exists("chain.docker"):
+        elif self.conf.getOrDefault("chain.docker"):
             containerId = self.conf.getOrDefault("chain.docker")
             cmd = Bash("docker inspect -f '{{ .Path }}' " + containerId).value()
         return cmd

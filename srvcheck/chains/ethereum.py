@@ -127,7 +127,7 @@ class Ethereum(Chain):
         return self.rpcCall("net_version")
 
     def getPeerCount(self):
-        return int(self.rpcCall("net_peerCount"))
+        return int(self.rpcCall("net_peerCount"), 16)
 
     def getBeaconNodePeerCount(self):
         out = requests.get(f"{self.CC}/node/peer_count")

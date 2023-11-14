@@ -474,10 +474,10 @@ class Substrate(Chain):
         return False
 
     def getExpectedBlocks(self, since=60):
-        if self.conf.exists("chain.service"):
+        if self.conf.getOrDefault("chain.service"):
             s = self.conf.getOrDefault("chain.service")
             cmd = f"journalctl -u {s} --no-pager --since '{since} min ago'"
-        elif self.conf.exists("chain.docker"):
+        elif self.conf.getOrDefault("chain.docker"):
             containerId = self.conf.getOrDefault("chain.docker")
             cmd = f"docker logs --since 1h {containerId}"
         blocks = (
