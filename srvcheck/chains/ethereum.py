@@ -22,9 +22,11 @@
 
 import json
 import requests
+import struct
 
+from binascii import unhexlify
 from ..notification import Emoji, NotificationLevel
-from ..tasks import Task, hours
+from ..tasks import Task, hours, minutes
 from ..utils import ConfItem, ConfSet
 from .chain import Chain
 
@@ -76,11 +78,85 @@ class TaskEthereumLowPeerError(Task):
 
 
 class TaskEthereumAttestationsCheck(Task):
-    pass
+    def __init__(self, services, checkEvery=minutes(5), notifyEvery=hours(1)):
+        super().__init__("TaskEthereumAttestationsCheck", services, checkEvery, notifyEvery)
+        self.prev = {}
+        self.prevEpoc = None
+
+    @staticmethod
+    def isPluggable(services):
+        c = services.chain.getValidatorActiveCount()
+        return services.conf.exists("chain.validatorAddress") and c > 0
+    
+    def getAggregationBits(self, slot, committeeIndex):
+        attestations = self.s.chain.getSlotAttestations(slot)
+        for att in attestations:
+            if att["data"]["index"] == committeeIndex:
+                aggregationBitsHex = att["aggregation_bits"]
+                bin = struct.unpack('<32B', unhexlify(aggregationBitsHex[2:]))
+                binStr = ""
+                for b in bin:
+                    binStr += str(bin(b)[::-1])[:-2]
+                print(binStr)
+                # TODO check string
+                return binStr
+
+    def run(self):
+        ep = self.s.chain.getEpoch()
+
+        if self.prevEpoch is None:
+            self.prevEpoch = ep
+
+        if self.prevEpoch != ep:
+            self.prev["count"] += 1
+            validatorActiveIndexes = self.s.chain.isStaking()
+            for i, index in enumerate(validatorActiveIndexes):
+                prevPerformance = 100
+                if not self.prev[index]:
+                    self.prev[index]["miss"] = 0
+                    self.prev[index]["count"] = 0
+                validator = self.s.chain.getValidatorCommitteeIndexInEpoch(index, ep)
+                bits = self.getAggregationBits(validator["slot"], validator["indexCommittee"])
+                if bits[validator["indexInCommittee"]] == "0":
+                    self.prev[index]["miss"] += 1
+                self.prev[index]["miss"] += 1
+                out = ""
+                if self.prev[index]["count"] > 0 and self.prev[index]["count"] % 12 == 0:
+                    diffMiss = self.prev[index]["miss_last_12_slots"] - self.prev[index]["miss"]
+                    diffCount = self.prev[index]["count_last_12_slots"] - self.prev[index]["count"]
+                    performance = diffMiss / diffCount * 100
+                    if performance < 90:
+                        if prevPerformance != 100:
+                            out += "\n\n"
+                        out += f"validator {index} performance: {performance:.2f} % "
+                        out += f"({diffMiss} missed out the {diffCount} slots) {Emoji.BlockMiss}"
+                        prevPerformance = performance
+                    self.prev[index]["miss_last_12_slots"] = self.prev[index]["miss"]
+                    self.prev[index]["count_last_12_slots"] = self.prev[index]["count"]
+            self.prevEpoch = ep
+            if out != "":
+                return self.notify(
+                    out,
+                    level=NotificationLevel.Info,
+                )
+        return False
 
 
 class TaskEthereumBlockProductionCheck(Task):
-    pass
+    def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(1)):
+        super().__init__("TaskEthereumBlockProductionCheck", services, checkEvery, notifyEvery)
+        self.prev = {}
+
+    @staticmethod
+    def isPluggable(services):
+        c = services.chain.getValidatorActiveCount()
+        return services.conf.exists("chain.validatorAddress") and c > 0
+
+    def run(self):
+        validatorActiveIndexes = self.s.chain.isStaking()
+        for i, index in enumerate(validatorActiveIndexes):
+            pass
+        return False
 
 
 class TaskValidatorBalanceCheck(Task):
@@ -90,12 +166,12 @@ class TaskValidatorBalanceCheck(Task):
 
     @staticmethod
     def isPluggable(services):
-        validatorsActive = [s for s in services.chain.isStaking() if s == "yes"]
-        return services.conf.exists("chain.validatorAddress") and validatorsActive > 0
+        c = services.chain.getValidatorActiveCount()
+        return services.conf.exists("chain.validatorAddress") and c > 0
 
     def run(self):
-        validatorIndexes = self.conf.getOrDefault("chain.validatorAddress")
-        for i, index in enumerate(validatorIndexes.split(", ")):
+        validatorActiveIndexes = self.s.chain.isStaking()
+        for i, index in enumerate(validatorActiveIndexes):
             prevBalance = self.prev[str(index)]
             self.prev[str(index)] = self.s.chain.getValidatorRewards()
 
@@ -103,7 +179,7 @@ class TaskValidatorBalanceCheck(Task):
             out += f"balance: {self.prev[str(index)]} ETH\n"
             out += f"rewards in the latest 24hr: {self.prev[str(index)] - prevBalance} ETH "
             out += f"{Emoji.ActStake}"
-            if len(validatorIndexes) - 1 > i:
+            if len(validatorActiveIndexes) - 1 > i:
                 out += "\n\n"
 
         return self.notify(
@@ -119,8 +195,8 @@ class Ethereum(Chain):
     TYPE = "ethereum"
     NAME = "ethereum"
     BLOCKTIME = 15
-    EP = "http://localhost:8545/"         # execution client
-    CC = "http://localhost:5052/eth/v1/"  # consensus client
+    EP = "http://localhost:8545/" # execution client
+    CC = "http://localhost:5052/" # consensus client
     CUSTOM_TASKS = [
         TaskEthereumHealthError,
         TaskEthereumLowPeerError,
@@ -133,7 +209,7 @@ class Ethereum(Chain):
     def __init__(self, conf):
         super().__init__(conf)
         if conf.exists("chain.beaconEndpoint"):
-            self.CC = f"{conf.getOrDefault('chain.beaconEndpoint')}/eth/v1/"
+            self.CC = f"{conf.getOrDefault('chain.beaconEndpoint')}"
 
     @staticmethod
     def detect(conf):
@@ -146,22 +222,22 @@ class Ethereum(Chain):
         raise Exception("Abstract getLatestVersion()")
 
     def getVersion(self):
-        out = requests.get(f"{self.CC}/node/version")
+        out = requests.get(f"{self.CC}/eth/v1/node/version")
         return json.loads(out.text)["data"]["version"]
 
     def getHealth(self):
-        status = requests.get(f"{self.CC}/node/health").status_code
+        status = requests.get(f"{self.CC}/eth/v1/node/health").status_code
         return status != 503 and status != 400
 
     def getHeight(self):
         return self.rpcCall("eth_blockNumber")
 
     def getSlot(self):
-        out = requests.get(f"{self.CC}/beacon/headers")
+        out = requests.get(f"{self.CC}/eth/v1/beacon/headers")
         return json.loads(out.text)["data"][0]["header"]["message"]["slot"]
 
     def getEpoch(self):
-        out = requests.get(f"{self.CC}/beacon/states/finalized/finality_checkpoints")
+        out = requests.get(f"{self.CC}/eth/v1/beacon/states/finalized/finality_checkpoints")
         return json.loads(out.text)["data"]["current_justified"]["epoch"]
 
     def getBlockHash(self):
@@ -174,33 +250,36 @@ class Ethereum(Chain):
         return int(self.rpcCall("net_peerCount"), 16)
 
     def getBeaconNodePeerCount(self):
-        out = requests.get(f"{self.CC}/node/peer_count")
+        out = requests.get(f"{self.CC}/eth/v1/node/peer_count")
         return int(json.loads(out.text)["data"]["connected"])
     
     def isStaking(self):
         validatorStatus = self.isValidator()
-        return ["yes" if s == "active_ongoing" else "no" for s in validatorStatus]
+        return [k for k, v in validatorStatus.items() if "active" in v]
 
     def isValidator(self):
         validatorIndexes = self.conf.getOrDefault("chain.validatorAddress")
         try:
             if validatorIndexes:
-                s = []
+                validators = {}
                 for index in validatorIndexes.split(", "):
-                    out = requests.get(f"{self.CC}/beacon/states/head/validators/{index}")
-                    s.append(json.loads(out.text)["data"]["status"])
-                return s 
+                    out = requests.get(f"{self.CC}/eth/v1/beacon/states/head/validators/{index}")
+                    validators[str(index)] = json.loads(out.text)["data"]["status"]
+                return validators
             else:
                 return False
         except:
             return False
 
     def isSynching(self):
-        out = requests.get(f"{self.CC}/node/syncing")
+        out = requests.get(f"{self.CC}/eth/v1/node/syncing")
         return json.loads(out.text)["data"]["is_syncing"]
     
+    def getValidatorActiveCount(self):
+        return len([s for s in self.isStaking()])
+    
     def getWithdrawalCredentials(self, validatorIndex):
-        out = requests.get(f"{self.CC}/beacon/states/head/validators/{validatorIndex}")
+        out = requests.get(f"{self.CC}/eth/v1/beacon/states/head/validators/{validatorIndex}")
         return json.loads(out.text)["data"]["validator"]["withdrawal_credentials"]
     
     def getAddressBalance(self, address):
@@ -208,7 +287,7 @@ class Ethereum(Chain):
         return int(balance) * 10 ** -18
     
     def getValidatorBalance(self, validatorIndex):
-        out = requests.get(f"{self.CC}/beacon/states/head/validators/{validatorIndex}")
+        out = requests.get(f"{self.CC}/eth/v1/beacon/states/head/validators/{validatorIndex}")
         return int(json.loads(out.text)["data"]["balance"]) * 10 ** -9
 
     def getValidatorRewards(self, validatorIndex):
@@ -217,3 +296,23 @@ class Ethereum(Chain):
             withdrawalAddress = withdrawalCredentials[:2] + withdrawalCredentials[26:]
             return self.getAddressBalance(withdrawalAddress)
         return self.getValidatorBalance(validatorIndex)
+
+    def getValidatorCommitteeIndexInEpoch(self, validatorIndex, epoch):
+            out = requests.get(f"{self.CC}/eth/v1/beacon/states/head/committees?epoch={epoch}")
+            committeeEpochData = json.loads(out.text)["data"]
+            for committee in committeeEpochData:
+                try:
+                    index = committee.index(validatorIndex)
+                    val = {}
+                    val["indexCommittee"] = committee["index"]
+                    val["indexInCommittee"] = index
+                    val["slot"] = committee["slot"]
+                    return val
+                except:
+                    pass
+            else:
+                return -1
+
+    def getSlotAttestations(self, slot):
+        out = requests.get(f"{self.CC}/eth/v2/beacon/blocks/{slot}")
+        return json.loads(out.text)["data"]["message"]["body"]["attestations"]
