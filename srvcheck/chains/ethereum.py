@@ -28,7 +28,7 @@ from ..tasks import Task, hours
 from ..utils import ConfItem, ConfSet
 from .chain import Chain
 
-ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))       # TODO handle multiple validators
+ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validators indexes"))
 ConfSet.addItem(ConfItem("chain.beaconEndpoint", description="Consensus client endpoint"))
 
 
@@ -75,6 +75,22 @@ class TaskEthereumLowPeerError(Task):
         return False
 
 
+class TaskEthereumAttestationsCheck(Task):
+    pass
+
+
+class TaskEthereumBlockProductionCheck(Task):
+    pass
+
+
+class TaskValidatorBalanceCheck(Task):
+    pass
+
+
+class TaskEthereumAttestationsCheck(Task):
+    pass
+
+
 class Ethereum(Chain):
     TYPE = "ethereum"
     NAME = "ethereum"
@@ -83,7 +99,11 @@ class Ethereum(Chain):
     CC = "http://localhost:5052/eth/v1/"  # consensus client
     CUSTOM_TASKS = [
         TaskEthereumHealthError,
-        TaskEthereumLowPeerError
+        TaskEthereumLowPeerError,
+        TaskEthereumAttestationsCheck,
+        TaskEthereumBlockProductionCheck,
+        TaskValidatorBalanceCheck,
+        TaskEthereumAttestationsCheck,
     ]
 
     def __init__(self, conf):
@@ -134,10 +154,23 @@ class Ethereum(Chain):
         return int(json.loads(out.text)["data"]["connected"])
     
     def isStaking(self):
-        raise Exception("Abstract isStaking()")
+        validatorStatus = self.isValidator()
+        return ["yes" if s == "active_ongoing" else "no" for s in validatorStatus]
 
     def isValidator(self):
-        raise Exception("Abstract isValidator()")
+        validatorIndexes = self.conf.getOrDefault("chain.validatorAddress")
+        try:
+            if validatorIndexes:
+                s = []
+                for index in validatorIndexes.split(", "):
+                    out = requests.get(f"{self.CC}/beacon/states/head/validators/{index}")
+                    s.append(json.loads(out.text)["data"]["status"])
+                return s 
+            else:
+                return False
+        except:
+            return False
+
 
     def isSynching(self):
         out = requests.get(f"{self.CC}/node/syncing")
