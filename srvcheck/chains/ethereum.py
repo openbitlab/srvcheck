@@ -84,10 +84,34 @@ class TaskEthereumBlockProductionCheck(Task):
 
 
 class TaskValidatorBalanceCheck(Task):
-    pass
+    def __init__(self, services, checkEvery=hours(24), notifyEvery=hours(24)):
+        super().__init__("TaskValidatorBalanceCheck", services, checkEvery, notifyEvery)
+        self.prev = {}
 
+    @staticmethod
+    def isPluggable(services):
+        validatorsActive = [s for s in services.chain.isStaking() if s == "yes"]
+        return services.conf.exists("chain.validatorAddress") and validatorsActive > 0
 
-class TaskEthereumAttestationsCheck(Task):
+    def run(self):
+        validatorIndexes = self.conf.getOrDefault("chain.validatorAddress")
+        for i, index in enumerate(validatorIndexes.split(", ")):
+            prevBalance = self.prev[str(index)]
+            self.prev[str(index)] = self.s.chain.getValidatorRewards()
+
+            out = f"validator index {index}:\n"
+            out += f"balance: {self.prev[str(index)]} ETH\n"
+            out += f"rewards in the latest 24hr: {self.prev[str(index)] - prevBalance} ETH "
+            out += f"{Emoji.ActStake}"
+            if len(validatorIndexes) - 1 > i:
+                out += "\n\n"
+
+        return self.notify(
+            out,
+            level=NotificationLevel.Info,
+        )
+
+class TaskValidatorBalanceChart(Task):
     pass
 
 
@@ -103,7 +127,7 @@ class Ethereum(Chain):
         TaskEthereumAttestationsCheck,
         TaskEthereumBlockProductionCheck,
         TaskValidatorBalanceCheck,
-        TaskEthereumAttestationsCheck,
+        TaskValidatorBalanceChart,
     ]
 
     def __init__(self, conf):
@@ -171,7 +195,25 @@ class Ethereum(Chain):
         except:
             return False
 
-
     def isSynching(self):
         out = requests.get(f"{self.CC}/node/syncing")
         return json.loads(out.text)["data"]["is_syncing"]
+    
+    def getWithdrawalCredentials(self, validatorIndex):
+        out = requests.get(f"{self.CC}/beacon/states/head/validators/{validatorIndex}")
+        return json.loads(out.text)["data"]["validator"]["withdrawal_credentials"]
+    
+    def getAddressBalance(self, address):
+        balance = self.rpcCall("eth_getBalance", [address, "latest"])
+        return int(balance) * 10 ** -18
+    
+    def getValidatorBalance(self, validatorIndex):
+        out = requests.get(f"{self.CC}/beacon/states/head/validators/{validatorIndex}")
+        return int(json.loads(out.text)["data"]["balance"]) * 10 ** -9
+
+    def getValidatorRewards(self, validatorIndex):
+        withdrawalCredentials = self.getWithdrawalCredentials(self, validatorIndex)
+        if withdrawalCredentials[:4] == "0x01":
+            withdrawalAddress = withdrawalCredentials[:2] + withdrawalCredentials[26:]
+            return self.getAddressBalance(withdrawalAddress)
+        return self.getValidatorBalance(validatorIndex)
