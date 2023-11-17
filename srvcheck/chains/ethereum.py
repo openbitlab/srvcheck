@@ -127,6 +127,7 @@ class TaskEthereumAttestationsCheck(Task):
             self.prev[str(validatorIndex)]["count"] = 0
 
     def getOutput(self, index, first):
+        out = ""
         if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 12 == 0:
             diffMiss = self.prev[str(index)]["miss_last_12_slots"] - self.prev[str(index)]["miss"]
             diffCount = self.prev[str(index)]["count_last_12_slots"] - self.prev[str(index)]["count"]
@@ -138,6 +139,7 @@ class TaskEthereumAttestationsCheck(Task):
                 out += f"({diffMiss} missed out the {diffCount} slots) {Emoji.BlockMiss}"
             self.prev[str(index)]["miss_last_12_slots"] = self.prev[str(index)]["miss"]
             self.prev[str(index)]["count_last_12_slots"] = self.prev[str(index)]["count"]
+        return out
 
     def run(self):
         ep = self.s.chain.getEpoch()
@@ -149,6 +151,7 @@ class TaskEthereumAttestationsCheck(Task):
         print("Prev epoch: ", self.prevEpoch)
         if self.prevEpoch != ep:
             validatorActiveIndexes = self.s.chain.isStaking()
+            out = ""
             for index in validatorActiveIndexes:
                 first = True
                 self.initializeValidatorData(index)
@@ -158,7 +161,7 @@ class TaskEthereumAttestationsCheck(Task):
                     self.prev[str(index)]["miss"] += 1 if miss else 0
                     self.prev[str(index)]["count"] += 1
                     print("Validator: ", validator)
-                    out = self.getOutput(index, first)
+                    out += self.getOutput(index, first)
                     first = False
             print("Prev: ", self.prev)
             self.prevEpoch = ep
