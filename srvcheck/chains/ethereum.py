@@ -96,6 +96,7 @@ class TaskEthereumAttestationsCheck(Task):
                 sleep(60)
             else:
                 break
+        bitsArr = []
         for att in attestations:
             if att["data"]["index"] == committeeIndex:
                 aggregationBitsHex = att["aggregation_bits"]
@@ -108,7 +109,8 @@ class TaskEthereumAttestationsCheck(Task):
                     else:
                         binPadded = str(bin(b))[2:]
                     binStr += str(binPadded[::-1])
-                return binStr[:-4]
+                bitsArr.append(binStr[:-4])
+        return bitsArr
 
     def run(self):
         ep = self.s.chain.getEpoch()
@@ -126,29 +128,30 @@ class TaskEthereumAttestationsCheck(Task):
                     self.prev[str(index)] = {}
                     self.prev[str(index)]["miss"] = 0
                     self.prev[str(index)]["count"] = 0
-                validatorData = self.s.chain.getValidatorCommitteeIndexInEpoch(index, ep)
-                missed = True
-                for validator in validatorData:
+                validator = self.s.chain.getValidatorCommitteeIndexInEpoch(index, ep)
+                if validator:
                     bits = self.getAggregationBits(validator["slot"], validator["indexCommittee"])
-                    if bits[validator["indexInCommittee"]] != "0":
-                        missed = False
-                if missed:
-                    self.prev[str(index)]["miss"] += 1
-                self.prev[str(index)]["count"] += 1
-                print("Validator: ", validatorData)
-                out = ""
-                if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 12 == 0:
-                    diffMiss = self.prev[str(index)]["miss_last_12_slots"] - self.prev[str(index)]["miss"]
-                    diffCount = self.prev[str(index)]["count_last_12_slots"] - self.prev[str(index)]["count"]
-                    performance = diffMiss / diffCount * 100
-                    if performance < 90:
-                        if prevPerformance != 100:
-                            out += "\n\n"
-                        out += f"validator {index} performance: {performance:.2f} % "
-                        out += f"({diffMiss} missed out the {diffCount} slots) {Emoji.BlockMiss}"
-                        prevPerformance = performance
-                    self.prev[str(index)]["miss_last_12_slots"] = self.prev[str(index)]["miss"]
-                    self.prev[str(index)]["count_last_12_slots"] = self.prev[str(index)]["count"]
+                    missed = True
+                    for bit in bits:
+                        if bit[validator["indexInCommittee"]] != "0":
+                            missed = False
+                    if missed:
+                        self.prev[str(index)]["miss"] += 1
+                    self.prev[str(index)]["count"] += 1
+                    print("Validator: ", validator)
+                    out = ""
+                    if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 12 == 0:
+                        diffMiss = self.prev[str(index)]["miss_last_12_slots"] - self.prev[str(index)]["miss"]
+                        diffCount = self.prev[str(index)]["count_last_12_slots"] - self.prev[str(index)]["count"]
+                        performance = diffMiss / diffCount * 100
+                        if performance < 90:
+                            if prevPerformance != 100:
+                                out += "\n\n"
+                            out += f"validator {index} performance: {performance:.2f} % "
+                            out += f"({diffMiss} missed out the {diffCount} slots) {Emoji.BlockMiss}"
+                            prevPerformance = performance
+                        self.prev[str(index)]["miss_last_12_slots"] = self.prev[str(index)]["miss"]
+                        self.prev[str(index)]["count_last_12_slots"] = self.prev[str(index)]["count"]
             print("Prev: ", self.prev)
             self.prevEpoch = ep
             if out != "":
@@ -318,19 +321,17 @@ class Ethereum(Chain):
     def getValidatorCommitteeIndexInEpoch(self, validatorIndex, epoch):
         out = requests.get(f"{self.CC}/eth/v1/beacon/states/head/committees?epoch={epoch}")
         committeeEpochData = json.loads(out.text)["data"]
-        data = []
+        val = {}
         for committee in committeeEpochData:
             try:
                 index = committee["validators"].index(validatorIndex)
-                val = {}
                 val["indexCommittee"] = committee["index"]
                 val["indexInCommittee"] = index
                 val["slot"] = committee["slot"]
-                data.append(val)
+                break
             except:
                 pass
-        else:
-            return data
+        return val
 
     def getSlotAttestations(self, slot):
         out = requests.get(f"{self.CC}/eth/v2/beacon/blocks/{slot}")
