@@ -199,13 +199,13 @@ class TaskValidatorBalanceCheck(Task):
                 newBalance = False
             self.prev[str(index)] = self.s.chain.getValidatorRewards(index)
 
-            out = f"validator index {index}:\n"
-            out += f"balance: {self.prev[str(index)]} ETH\n"
+            out = f"\nvalidator index {index}:\n"
+            out += f"balance: {self.prev[str(index)]} ETH"
             if newBalance:
-                out += f"rewards in the latest 24hr: {self.prev[str(index)] - prevBalance} ETH "
+                out += f"\nrewards in the latest 24hr: {self.prev[str(index)] - prevBalance} ETH "
             out += f"{Emoji.ActStake}"
             if len(validatorActiveIndexes) - 1 > i:
-                out += "\n\n"
+                out += "\n"
 
         return self.notify(
             out,
