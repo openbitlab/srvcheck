@@ -111,6 +111,33 @@ class TaskEthereumAttestationsCheck(Task):
                     binStr += str(binPadded[::-1])
                 bitsArr.append(binStr[:-4])
         return bitsArr
+    
+    def checkAttestationMissed(self, validator):
+        bits = self.getAggregationBits(validator["slot"], validator["indexCommittee"])
+        missed = True
+        for bit in bits:
+            if bit[validator["indexInCommittee"]] != "0":
+                missed = False
+        return missed
+
+    def initializeValidatorData(self, validatorIndex):
+        if str(validatorIndex) not in self.prev:
+            self.prev[str(validatorIndex)] = {}
+            self.prev[str(validatorIndex)]["miss"] = 0
+            self.prev[str(validatorIndex)]["count"] = 0
+
+    def getOutput(self, index, first):
+        if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 12 == 0:
+            diffMiss = self.prev[str(index)]["miss_last_12_slots"] - self.prev[str(index)]["miss"]
+            diffCount = self.prev[str(index)]["count_last_12_slots"] - self.prev[str(index)]["count"]
+            performance = diffMiss / diffCount * 100
+            if performance < 90:
+                if not first:
+                    out += "\n\n"
+                out += f"validator {index} performance: {performance:.2f} % "
+                out += f"({diffMiss} missed out the {diffCount} slots) {Emoji.BlockMiss}"
+            self.prev[str(index)]["miss_last_12_slots"] = self.prev[str(index)]["miss"]
+            self.prev[str(index)]["count_last_12_slots"] = self.prev[str(index)]["count"]
 
     def run(self):
         ep = self.s.chain.getEpoch()
@@ -122,36 +149,17 @@ class TaskEthereumAttestationsCheck(Task):
         print("Prev epoch: ", self.prevEpoch)
         if self.prevEpoch != ep:
             validatorActiveIndexes = self.s.chain.isStaking()
-            for i, index in enumerate(validatorActiveIndexes):
-                prevPerformance = 100
-                if str(index) not in self.prev:
-                    self.prev[str(index)] = {}
-                    self.prev[str(index)]["miss"] = 0
-                    self.prev[str(index)]["count"] = 0
+            for index in validatorActiveIndexes:
+                first = True
+                self.initializeValidatorData(index)
                 validator = self.s.chain.getValidatorCommitteeIndexInEpoch(index, ep)
                 if validator:
-                    bits = self.getAggregationBits(validator["slot"], validator["indexCommittee"])
-                    missed = True
-                    for bit in bits:
-                        if bit[validator["indexInCommittee"]] != "0":
-                            missed = False
-                    if missed:
-                        self.prev[str(index)]["miss"] += 1
+                    miss = self.checkAttestationMissed(validator)
+                    self.prev[str(index)]["miss"] += 1 if miss else 0
                     self.prev[str(index)]["count"] += 1
                     print("Validator: ", validator)
-                    out = ""
-                    if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 12 == 0:
-                        diffMiss = self.prev[str(index)]["miss_last_12_slots"] - self.prev[str(index)]["miss"]
-                        diffCount = self.prev[str(index)]["count_last_12_slots"] - self.prev[str(index)]["count"]
-                        performance = diffMiss / diffCount * 100
-                        if performance < 90:
-                            if prevPerformance != 100:
-                                out += "\n\n"
-                            out += f"validator {index} performance: {performance:.2f} % "
-                            out += f"({diffMiss} missed out the {diffCount} slots) {Emoji.BlockMiss}"
-                            prevPerformance = performance
-                        self.prev[str(index)]["miss_last_12_slots"] = self.prev[str(index)]["miss"]
-                        self.prev[str(index)]["count_last_12_slots"] = self.prev[str(index)]["count"]
+                    out = self.getOutput(index, first)
+                    first = False
             print("Prev: ", self.prev)
             self.prevEpoch = ep
             if out != "":
@@ -173,9 +181,6 @@ class TaskEthereumBlockProductionCheck(Task):
         return services.conf.exists("chain.validatorAddress") and c > 0
 
     def run(self):
-        validatorActiveIndexes = self.s.chain.isStaking()
-        for i, index in enumerate(validatorActiveIndexes):
-            pass
         return False
 
 
@@ -200,10 +205,10 @@ class TaskValidatorBalanceCheck(Task):
             self.prev[str(index)] = self.s.chain.getValidatorRewards(index)
 
             out = f"\nvalidator index {index}:\n"
-            out += f"balance: {self.prev[str(index)]} ETH"
+            out += f"Total balance: {self.prev[str(index)]} ETH"
             if newBalance:
-                out += f"\nrewards in the latest 24hr: {self.prev[str(index)] - prevBalance} ETH "
-            out += f"{Emoji.ActStake}"
+                out += f"\nRewards in the latest 24hr: {self.prev[str(index)] - prevBalance} ETH"
+            out += f" {Emoji.ActStake}"
             if len(validatorActiveIndexes) - 1 > i:
                 out += "\n"
 
