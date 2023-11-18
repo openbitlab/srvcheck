@@ -25,7 +25,6 @@ import requests
 import struct
 
 from binascii import unhexlify
-from time import sleep
 from ..notification import Emoji, NotificationLevel
 from ..tasks import Task, hours, minutes
 from ..utils import ConfItem, ConfSet
@@ -110,36 +109,29 @@ class TaskEthereumAttestationsCheck(Task):
     
     def checkAttestationMissed(self, validator):
         bits = self.getAggregationBits(validator["slot"], validator["indexCommittee"])
-        if bits:
-            missed = True
-            for bit in bits:
-                if bit[validator["indexInCommittee"] + 1] != "0":
-                    missed = False
-            return missed
-        else:
-            return None
+        return self.s.chain.checkMissedBit(validator["indexCommittee"], bits)
 
     def initializeValidatorData(self, validatorIndex):
         if str(validatorIndex) not in self.prev:
             self.prev[str(validatorIndex)] = {}
             self.prev[str(validatorIndex)]["miss"] = 0
             self.prev[str(validatorIndex)]["count"] = 0
-            self.prev[str(validatorIndex)]["miss_last_12_slots"] = 0
-            self.prev[str(validatorIndex)]["count_last_12_slots"] = 0
+            self.prev[str(validatorIndex)]["miss_last_n_slots"] = 0
+            self.prev[str(validatorIndex)]["count_last_n_slots"] = 0
 
     def getOutput(self, index, first):
         out = ""
         if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 12 == 0:
-            diffMiss = self.prev[str(index)]["miss"] - self.prev[str(index)]["miss_last_12_slots"]
-            diffCount = self.prev[str(index)]["count"] - self.prev[str(index)]["count_last_12_slots"]
+            diffMiss = self.prev[str(index)]["miss"] - self.prev[str(index)]["miss_last_n_slots"]
+            diffCount = self.prev[str(index)]["count"] - self.prev[str(index)]["count_last_n_slots"]
             performance = diffMiss / diffCount * 100
             if performance < 90:
                 if not first:
                     out += "\n\n"
                 out += f"Validator {index} attestations performance: {performance:.2f} % "
                 out += f"({diffMiss} missed out the {diffCount} attestations) {Emoji.BlockMiss}"
-            self.prev[str(index)]["miss_last_12_slots"] = self.prev[str(index)]["miss"]
-            self.prev[str(index)]["count_last_12_slots"] = self.prev[str(index)]["count"]
+            self.prev[str(index)]["miss_last_n_slots"] = self.prev[str(index)]["miss"]
+            self.prev[str(index)]["count_last_n_slots"] = self.prev[str(index)]["count"]
         return out
 
     def run(self):
@@ -155,7 +147,7 @@ class TaskEthereumAttestationsCheck(Task):
             out = ""
             for index in validatorActiveIndexes:
                 first = True
-                self.initializeValidatorData(index)
+                self.prev = self.s.chain.initializeValidatorData(self.prev, index)
                 validator = self.s.chain.getValidatorAttestationDuty(index, ep)
                 if validator:
                     miss = self.checkAttestationMissed(validator)
@@ -187,11 +179,38 @@ class TaskEthereumBlockProductionCheck(Task):
         c = services.chain.getValidatorActiveCount()
         return services.conf.exists("chain.validatorAddress") and c > 0
 
+    def getSlotProposer(self, slot):
+        out = requests.get(f"{self.CC}/eth/v2/beacon/blocks/{slot}")
+        print("Status code attestations request: ", out.status_code)
+        if out.status_code == 404:
+            return "Not available"
+        return json.loads(out.text)["data"]["message"]["proposer_index"]
+
     def run(self):
         ep = self.s.chain.getEpoch()
 
         if self.prevEpoch is None:
             self.prevEpoch = ep
+        
+        if self.prevEpoch != ep:
+            validatorActiveIndexes = self.s.chain.isStaking()
+            out = ""
+            for index in validatorActiveIndexes:
+                first = True
+                validatorSlot = self.s.chain.getValidatorProposerDuty(index, ep)
+                if validatorSlot != -1:
+                    miss = self.getSlotProposer(validatorSlot) == index
+                    self.prev[str(index)] = True if miss else False
+                    if not first:
+                        out += "\n\n"
+                    out += f"Validator {index} missed block proposal duty! {Emoji.BlockMiss}"
+                    first = False
+            self.prevEpoch = ep
+            if out != "":
+                return self.notify(
+                    out,
+                    level=NotificationLevel.Info,
+                )
         return False
 
 
@@ -206,14 +225,6 @@ class TaskEthereumSyncCommitteeCheck(Task):
     def isPluggable(services):
         c = services.chain.getValidatorActiveCount()
         return services.conf.exists("chain.validatorAddress") and c > 0
-    
-    def initializeValidatorData(self, validatorIndex):
-        if str(validatorIndex) not in self.prev:
-            self.prev[str(validatorIndex)] = {}
-            self.prev[str(validatorIndex)]["miss"] = 0
-            self.prev[str(validatorIndex)]["count"] = 0
-            self.prev[str(validatorIndex)]["miss_last_5_slots"] = 0
-            self.prev[str(validatorIndex)]["count_last_5_slots"] = 0
 
     def getSyncCommitteeBitsHex(self, slot):
         out = requests.get(f"{self.CC}/eth/v2/beacon/blocks/{slot}")
@@ -225,16 +236,16 @@ class TaskEthereumSyncCommitteeCheck(Task):
     def getOutput(self, index, first):
         out = ""
         if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 5 == 0:
-            diffMiss = self.prev[str(index)]["miss"] - self.prev[str(index)]["miss_last_5_slots"]
-            diffCount = self.prev[str(index)]["count"] - self.prev[str(index)]["count_last_5_slots"]
+            diffMiss = self.prev[str(index)]["miss"] - self.prev[str(index)]["miss_last_n_slots"]
+            diffCount = self.prev[str(index)]["count"] - self.prev[str(index)]["count_last_n_slots"]
             performance = diffMiss / diffCount * 100
             if performance < 90:
                 if not first:
                     out += "\n\n"
                 out += f"Validator {index} sync committee performance: {performance:.2f} % "
                 out += f"({diffMiss} missed out the {diffCount} syncs) {Emoji.BlockMiss}"
-            self.prev[str(index)]["miss_last_5_slots"] = self.prev[str(index)]["miss"]
-            self.prev[str(index)]["count_last_5_slots"] = self.prev[str(index)]["count"]
+            self.prev[str(index)]["miss_last_n_slots"] = self.prev[str(index)]["miss"]
+            self.prev[str(index)]["count_last_n_slots"] = self.prev[str(index)]["count"]
         return out
 
     def run(self):
@@ -252,7 +263,7 @@ class TaskEthereumSyncCommitteeCheck(Task):
             out = ""
             for index in validatorActiveIndexes:
                 first = True
-                self.initializeValidatorData(index)
+                self.prev = self.s.chain.initializeValidatorData(self.prev, index)
                 validatorIndexInCommittee = self.s.chain.getValidatorSyncDuty(index, ep)
                 if validatorIndexInCommittee != -1:
                     slot = self.s.chain.getSlot()
@@ -463,3 +474,12 @@ class Ethereum(Chain):
                 binPadded = str(bin(b))[2:]
             binStr += str(binPadded[::-1])
         bitsArr.append(binStr[:-4])
+
+    def initializeValidatorData(validator, validatorIndex):
+        if str(validatorIndex) not in validator:
+            validator[str(validatorIndex)] = {}
+            validator[str(validatorIndex)]["miss"] = 0
+            validator[str(validatorIndex)]["count"] = 0
+            validator[str(validatorIndex)]["miss_last_n_slots"] = 0
+            validator[str(validatorIndex)]["count_last_n_slots"] = 0
+        return validator
