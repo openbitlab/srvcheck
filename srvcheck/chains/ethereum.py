@@ -89,54 +89,55 @@ class TaskEthereumAttestationsCheck(Task):
         c = services.chain.getValidatorActiveCount()
         return services.conf.exists("chain.validatorAddress") and c > 0
     
+    def getSlotAttestations(self, slot):
+        out = requests.get(f"{self.CC}/eth/v2/beacon/blocks/{slot}")
+        print("Status code attestations request: ", out.status_code)
+        if out.status_code == 404:
+            return "Not available"
+        return json.loads(out.text)["data"]["message"]["body"]["attestations"]
+    
     def getAggregationBits(self, slot, committeeIndex):
-        while True:
-            attestations = self.s.chain.getSlotAttestations(slot)
-            if attestations == "Not ready yet":
-                sleep(60)
-            else:
-                break
+        attestations = self.getSlotAttestations(slot)
+        if attestations == "Not available":
+                return None
         bitsArr = []
         for att in attestations:
             if att["data"]["index"] == committeeIndex:
-                aggregationBitsHex = att["aggregation_bits"]
-                binRes = struct.unpack('<32B', unhexlify(aggregationBitsHex[2:]))
-                binStr = ""
-                for b in binRes:
-                    if len(str(bin(b))) != 10:
-                        binS = str(bin(b))[2:]
-                        binPadded = "".join(["0" for i in range(len(binS), 8)]) + binS
-                    else:
-                        binPadded = str(bin(b))[2:]
-                    binStr += str(binPadded[::-1])
-                bitsArr.append(binStr[:-4])
+                print("Hex bits: ", att["aggregation_bits"])
+                bitsArr.append(self.s.chain.convertBitsHexBin(att["aggregation_bits"]))
+        print("Bits: ", bitsArr)
         return bitsArr
     
     def checkAttestationMissed(self, validator):
         bits = self.getAggregationBits(validator["slot"], validator["indexCommittee"])
-        missed = True
-        for bit in bits:
-            if bit[validator["indexInCommittee"]] != "0":
-                missed = False
-        return missed
+        if bits:
+            missed = True
+            for bit in bits:
+                if bit[validator["indexInCommittee"] + 1] != "0":
+                    missed = False
+            return missed
+        else:
+            return None
 
     def initializeValidatorData(self, validatorIndex):
         if str(validatorIndex) not in self.prev:
             self.prev[str(validatorIndex)] = {}
             self.prev[str(validatorIndex)]["miss"] = 0
             self.prev[str(validatorIndex)]["count"] = 0
+            self.prev[str(validatorIndex)]["miss_last_12_slots"] = 0
+            self.prev[str(validatorIndex)]["count_last_12_slots"] = 0
 
     def getOutput(self, index, first):
         out = ""
         if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 12 == 0:
-            diffMiss = self.prev[str(index)]["miss_last_12_slots"] - self.prev[str(index)]["miss"]
-            diffCount = self.prev[str(index)]["count_last_12_slots"] - self.prev[str(index)]["count"]
+            diffMiss = self.prev[str(index)]["miss"] - self.prev[str(index)]["miss_last_12_slots"]
+            diffCount = self.prev[str(index)]["count"] - self.prev[str(index)]["count_last_12_slots"]
             performance = diffMiss / diffCount * 100
             if performance < 90:
                 if not first:
                     out += "\n\n"
-                out += f"validator {index} performance: {performance:.2f} % "
-                out += f"({diffMiss} missed out the {diffCount} slots) {Emoji.BlockMiss}"
+                out += f"Validator {index} attestations performance: {performance:.2f} % "
+                out += f"({diffMiss} missed out the {diffCount} attestations) {Emoji.BlockMiss}"
             self.prev[str(index)]["miss_last_12_slots"] = self.prev[str(index)]["miss"]
             self.prev[str(index)]["count_last_12_slots"] = self.prev[str(index)]["count"]
         return out
@@ -155,9 +156,11 @@ class TaskEthereumAttestationsCheck(Task):
             for index in validatorActiveIndexes:
                 first = True
                 self.initializeValidatorData(index)
-                validator = self.s.chain.getValidatorCommitteeIndexInEpoch(index, ep)
+                validator = self.s.chain.getValidatorAttestationDuty(index, ep)
                 if validator:
                     miss = self.checkAttestationMissed(validator)
+                    if miss is None:
+                        continue
                     self.prev[str(index)]["miss"] += 1 if miss else 0
                     self.prev[str(index)]["count"] += 1
                     print("Validator: ", validator)
@@ -177,6 +180,7 @@ class TaskEthereumBlockProductionCheck(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(1)):
         super().__init__("TaskEthereumBlockProductionCheck", services, checkEvery, notifyEvery)
         self.prev = {}
+        self.prevEpoch = None
 
     @staticmethod
     def isPluggable(services):
@@ -184,7 +188,90 @@ class TaskEthereumBlockProductionCheck(Task):
         return services.conf.exists("chain.validatorAddress") and c > 0
 
     def run(self):
+        ep = self.s.chain.getEpoch()
+
+        if self.prevEpoch is None:
+            self.prevEpoch = ep
         return False
+
+
+class TaskEthereumSyncCommitteeCheck(Task):
+    def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(1)):
+        super().__init__("TaskEthereumSyncCommitteeCheck", services, checkEvery, notifyEvery)
+        self.prev = {}
+        self.prevEpoch = None
+        self.prevSlot = None
+
+    @staticmethod
+    def isPluggable(services):
+        c = services.chain.getValidatorActiveCount()
+        return services.conf.exists("chain.validatorAddress") and c > 0
+    
+    def initializeValidatorData(self, validatorIndex):
+        if str(validatorIndex) not in self.prev:
+            self.prev[str(validatorIndex)] = {}
+            self.prev[str(validatorIndex)]["miss"] = 0
+            self.prev[str(validatorIndex)]["count"] = 0
+            self.prev[str(validatorIndex)]["miss_last_5_slots"] = 0
+            self.prev[str(validatorIndex)]["count_last_5_slots"] = 0
+
+    def getSyncCommitteeBitsHex(self, slot):
+        out = requests.get(f"{self.CC}/eth/v2/beacon/blocks/{slot}")
+        print("Status code attestations request: ", out.status_code)
+        if out.status_code == 404:
+            return "Not available"
+        return json.loads(out.text)["data"]["message"]["body"]["sync_aggregate"]["sync_committee_bits"]
+
+    def getOutput(self, index, first):
+        out = ""
+        if self.prev[str(index)]["count"] > 0 and self.prev[str(index)]["count"] % 5 == 0:
+            diffMiss = self.prev[str(index)]["miss"] - self.prev[str(index)]["miss_last_5_slots"]
+            diffCount = self.prev[str(index)]["count"] - self.prev[str(index)]["count_last_5_slots"]
+            performance = diffMiss / diffCount * 100
+            if performance < 90:
+                if not first:
+                    out += "\n\n"
+                out += f"Validator {index} sync committee performance: {performance:.2f} % "
+                out += f"({diffMiss} missed out the {diffCount} syncs) {Emoji.BlockMiss}"
+            self.prev[str(index)]["miss_last_5_slots"] = self.prev[str(index)]["miss"]
+            self.prev[str(index)]["count_last_5_slots"] = self.prev[str(index)]["count"]
+        return out
+
+    def run(self):
+        ep = self.s.chain.getEpoch()
+        slot = self.s.chain.getSlot()
+
+        if self.prevEpoch is None:
+            self.prevEpoch = ep
+
+        if self.prevSlot is None:
+            self.prevSlot = slot
+
+        if self.prevEpoch != ep:
+            validatorActiveIndexes = self.s.chain.isStaking()
+            out = ""
+            for index in validatorActiveIndexes:
+                first = True
+                self.initializeValidatorData(index)
+                validatorIndexInCommittee = self.s.chain.getValidatorSyncDuty(index, ep)
+                if validatorIndexInCommittee != -1:
+                    slot = self.s.chain.getSlot()
+                    for s in range(self.prevSlot, slot):
+                        hexBits = self.getSyncCommitteeBitsHex(s)
+                        if hexBits == "Not available":
+                            continue
+                        bitsArr = self.s.chain.convertBitsHexBin([hexBits])
+                        miss = self.s.chain.checkMissedBit(validatorIndexInCommittee, bitsArr)
+                        self.prev[str(index)]["miss"] += 1 if miss else 0
+                        self.prev[str(index)]["count"] += 1
+                    out += self.getOutput(index, first)
+                    first = False
+            self.prevEpoch = ep
+            if out != "":
+                return self.notify(
+                    out,
+                    level=NotificationLevel.Info,
+                )
 
 
 class TaskValidatorBalanceCheck(Task):
@@ -207,7 +294,7 @@ class TaskValidatorBalanceCheck(Task):
                 newBalance = False
             self.prev[str(index)] = self.s.chain.getValidatorRewards(index)
 
-            out = f"\nvalidator index {index}:\n"
+            out = f"\nValidator index {index}:\n"
             out += f"Total balance: {self.prev[str(index)]} ETH"
             if newBalance:
                 out += f"\nRewards in the latest 24hr: {self.prev[str(index)] - prevBalance} ETH"
@@ -232,6 +319,7 @@ class Ethereum(Chain):
         TaskEthereumLowPeerError,
         TaskEthereumAttestationsCheck,
         TaskEthereumBlockProductionCheck,
+        TaskEthereumSyncCommitteeCheck,
         TaskValidatorBalanceCheck,
     ]
 
@@ -326,24 +414,52 @@ class Ethereum(Chain):
             return self.getAddressBalance(withdrawalAddress) + self.getValidatorBalance(validatorIndex)
         return self.getValidatorBalance(validatorIndex)
 
-    def getValidatorCommitteeIndexInEpoch(self, validatorIndex, epoch):
-        out = requests.get(f"{self.CC}/eth/v1/beacon/states/head/committees?epoch={epoch}")
+    def getValidatorAttestationDuty(self, validatorIndex, epoch):
+        d = [validatorIndex]
+        out = requests.post(f"{self.CC}/eth/v1/validator/duties/attester/?epoch={epoch}", json=d)
         committeeEpochData = json.loads(out.text)["data"]
         val = {}
-        for committee in committeeEpochData:
-            try:
-                index = committee["validators"].index(validatorIndex)
-                val["indexCommittee"] = committee["index"]
-                val["indexInCommittee"] = index
-                val["slot"] = committee["slot"]
-                break
-            except:
-                pass
+        val["indexCommittee"] = committeeEpochData["committee_index"]
+        val["indexInCommittee"] = committeeEpochData["validator_committee_index"]
+        val["slot"] = committeeEpochData["slot"]
         return val
+    
+    def getValidatorProposerDuty(self, validatorIndex, epoch):
+        d = [validatorIndex]
+        out = requests.get(f"{self.CC}/eth/v1/validator/duties/proposer/?epoch={epoch}", json=d)
+        proposersEpochData = json.loads(out.text)["data"]
+        val = list(filter(lambda x: x["validator_index"] == validatorIndex, proposersEpochData))
+        if len(val) > 0:
+            return val[0]["slot"]
+        return -1
 
-    def getSlotAttestations(self, slot):
-        out = requests.get(f"{self.CC}/eth/v2/beacon/blocks/{slot}")
-        print("Status code attestations request: ", out.status_code)
-        if out.status_code == 404:
-            return "Not ready yet"
-        return json.loads(out.text)["data"]["message"]["body"]["attestations"]
+    def getValidatorSyncDuty(self, validatorIndex, epoch):
+        d = [validatorIndex]
+        out = requests.post(f"{self.CC}/eth/v1/validator/duties/sync/?epoch={epoch}", json=d)
+        syncEpochData = json.loads(out.text)["data"]
+        if len(syncEpochData) > 0:
+            return syncEpochData["validator_sync_committee_indices"]
+        return -1
+    
+    def checkMissedBit(self, validatorIndexInCommittee, binBits=None):
+        if binBits:
+            missed = True
+            for bit in binBits:
+                if bit[validatorIndexInCommittee] != "0":
+                    missed = False
+            return missed
+        else:
+            return None
+        
+    def convertBitsHexBin(self, hexBits):
+        bitsArr = []
+        binRes = struct.unpack('<32B', unhexlify(hexBits[2:]))
+        binStr = ""
+        for b in binRes:
+            if len(str(bin(b))) != 10:
+                binS = str(bin(b))[2:]
+                binPadded = "".join(["0" for i in range(len(binS), 8)]) + binS
+            else:
+                binPadded = str(bin(b))[2:]
+            binStr += str(binPadded[::-1])
+        bitsArr.append(binStr[:-4])
