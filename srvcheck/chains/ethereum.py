@@ -66,16 +66,16 @@ def initializeValidatorData(validator, validatorIndex):
         validator[str(validatorIndex)]["count"] = 0
         validator[str(validatorIndex)]["miss_last_n_slots"] = 0
         validator[str(validatorIndex)]["count_last_n_slots"] = 0
+        validator[str(validatorIndex)]["inclusions"] = []
     return validator
 
 def fixUrl(url):
     parts = [p for i, p in enumerate(url.split("/")) if p != "" or i < 2]
     return "/".join(parts)
 
-def getOutput(validator, first, strOut):
+def getOutput(validator, first, strOut, index):
     out = ""
-    typeOut = strOut.split(' ')[-1] 
-    mod = 5 if typeOut == "syncs" else 12
+    mod = 5 if strOut == "syncs" else 12
     if validator["count"] > 0 and validator["count"] % mod == 0:
         diffMiss = validator["miss"] - validator["miss_last_n_slots"]
         diffCount = validator["count"] - validator["count_last_n_slots"]
@@ -83,10 +83,15 @@ def getOutput(validator, first, strOut):
         if performance < 90:
             if not first:
                 out += "\n\n"
-            out += f"{strOut} performance: {performance:.2f} % "
-            out += f"({diffMiss} missed out the {diffCount} {typeOut}) {Emoji.BlockMiss}"
+            out += f"Validator {index} {strOut} performance: {performance:.2f} % "
+            out += f"({diffMiss} missed out the {diffCount} {strOut}) {Emoji.BlockMiss}"
+            distances = len([d for d in validator["inclusions"] if d > 1])
+            if distances > 0:
+                out += f"\n{distances} times with inclusion distance greater than 1 {Emoji.Slow}"
         validator["miss_last_n_slots"] = validator["miss"]
         validator["count_last_n_slots"] = validator["count"]
+    if validator["count"] % (mod * 10) == 0:
+        validator = initializeValidatorData(validator, index)
     return validator, out
 
 
@@ -151,12 +156,14 @@ class TaskEthereumAttestationsCheck(Task):
         bitsArr = []
         for att in attestations:
             if att["data"]["index"] == committeeIndex:
+                print("Attestation hex bits: ", att["aggregation_bits"])
                 bitsArr.append(att["aggregation_bits"])
         bitsArr = convertBitsHexBin(bitsArr)
+        print(f"Attestation Bits for slot {slot}:", bitsArr)
         return bitsArr
     
-    def checkAttestationMissed(self, validator):
-        bits = self.getAggregationBits(validator["slot"], validator["indexCommittee"])
+    def checkAttestationMissed(self, validator, tries):
+        bits = self.getAggregationBits(int(validator["slot"]) + tries, validator["indexCommittee"])
         return checkMissedBit(int(validator["indexInCommittee"]), bits)
 
     def run(self):
@@ -165,6 +172,8 @@ class TaskEthereumAttestationsCheck(Task):
         if self.prevEpoch is None:
             self.prevEpoch = ep
 
+        print("Epoch: ", ep)
+        print("Prev epoch: ", self.prevEpoch)
         if self.prevEpoch != ep:
             validatorActiveIndexes = self.s.chain.isStaking()
             out = ""
@@ -173,15 +182,23 @@ class TaskEthereumAttestationsCheck(Task):
                 self.prev = initializeValidatorData(self.prev, index)
                 validator = self.s.chain.getValidatorAttestationDuty(index, ep)
                 if validator:
-                    miss = self.checkAttestationMissed(validator)
+                    i = 1
+                    while True:
+                        miss = self.checkAttestationMissed(validator, i)
+                        if not miss or i > 30:
+                            break
+                        i += 1
+                    print(f"Inclusion distance: {i}")
                     if miss is None:
                         continue
                     self.prev[str(index)]["miss"] += 1 if miss else 0
                     self.prev[str(index)]["count"] += 1
-                    outStr = f"Validator {index} attestation"
-                    self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, outStr)
+                    self.prev[str(index)]["inclusions"].append(i)
+                    print("Validator: ", validator)
+                    self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, "attestation", index)
                     out += outStr
                     first = False
+            print("Prev: ", self.prev)
             self.prevEpoch = ep
             if out != "":
                 return self.notify(
@@ -214,6 +231,7 @@ class TaskEthereumBlockProductionCheck(Task):
             for index in validatorActiveIndexes:
                 first = True
                 validatorSlot = self.s.chain.getValidatorProposerDuty(index, ep)
+                print("Validator Proposer Duty: ", validatorSlot)
                 if validatorSlot != -1:
                     miss = self.s.chain.getSlotProposer(validatorSlot) == index
                     self.prev[str(index)] = True if miss else False
@@ -259,13 +277,16 @@ class TaskEthereumSyncCommitteeCheck(Task):
                 first = True
                 self.prev = initializeValidatorData(self.prev, index)
                 validatorIndexInCommittee = self.s.chain.getValidatorSyncDuty(index, ep)
+                print("Validator sync committee duty: ", validatorIndexInCommittee)
                 if validatorIndexInCommittee != -1:
                     slot = self.s.chain.getSlot()
                     for s in range(self.prevSlot, slot):
                         hexBits = self.s.chain.getSyncCommitteeBitsHex(s)
+                        print("Sync committee hex bits: ", hexBits)
                         if hexBits == "Not available":
                             continue
                         bitsArr = convertBitsHexBin([hexBits])
+                        print("Sync committee bits: ", bitsArr)
                         miss = checkMissedBit(validatorIndexInCommittee, bitsArr)
                         self.prev[str(index)]["miss"] += 1 if miss else 0
                         self.prev[str(index)]["count"] += 1
@@ -361,8 +382,8 @@ class Ethereum(Chain):
         return json.loads(out.text)["data"][0]["header"]["message"]["slot"]
 
     def getEpoch(self):
-        out = requests.get(fixUrl(f"{self.CC}/eth/v1/beacon/states/finalized/finality_checkpoints"))
-        return json.loads(out.text)["data"]["current_justified"]["epoch"]
+        out = requests.get(fixUrl(f"{self.CC}/eth/v1/beacon/states/head/finality_checkpoints"))
+        return int(json.loads(out.text)["data"]["current_justified"]["epoch"])
 
     def getBlockHash(self):
         return self.rpcCall("eth_getBlockByNumber", ["latest", False])["hash"]
@@ -433,6 +454,7 @@ class Ethereum(Chain):
     
     def getSlotAttestations(self, slot):
         out = requests.get(fixUrl(f"{self.CC}/eth/v2/beacon/blocks/{slot}"))
+        print(f"Status code attestations request for slot {slot}: ", out.status_code)
         if out.status_code == 404:
             return "Not available"
         return json.loads(out.text)["data"]["message"]["body"]["attestations"]
@@ -448,6 +470,7 @@ class Ethereum(Chain):
     
     def getSlotProposer(self, slot):
         out = requests.get(fixUrl(f"{self.CC}/eth/v2/beacon/blocks/{slot}"))
+        print("Status code attestations request: ", out.status_code)
         if out.status_code == 404:
             return "Not available"
         return json.loads(out.text)["data"]["message"]["proposer_index"]
@@ -462,6 +485,7 @@ class Ethereum(Chain):
 
     def getSyncCommitteeBitsHex(self, slot):
         out = requests.get(fixUrl(f"{self.CC}/eth/v2/beacon/blocks/{slot}"))
+        print("Status code attestations request: ", out.status_code)
         if out.status_code == 404:
             return "Not available"
         return json.loads(out.text)["data"]["message"]["body"]["sync_aggregate"]["sync_committee_bits"]
