@@ -27,6 +27,11 @@ from .ethereum import (
 )
 
 
+def getPrometheusMetricValue(metrics, metric_name):
+    metric = list(filter(lambda x: metric_name in x, metrics.split("\n")))[-1]
+    return metric.split(" ")[-1]
+
+
 class Ssv(Ethereum):
     TYPE = "dvt"
     EP_METRICS = "http://localhost:15000"
@@ -46,5 +51,5 @@ class Ssv(Ethereum):
 
     def getHealth(self):
         out = requests.get(f"{self.EP_METRICS}/metrics")
-        ssvStatus = list(filter(lambda x: "ssv_node_status" in x, out.text.split("\n")))[-1]
-        return ssvStatus.split(" ")[-1]
+        ssvStatus = getPrometheusMetricValue(out.text, "ssv_node_status")
+        return ssvStatus
