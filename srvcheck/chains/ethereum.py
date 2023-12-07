@@ -167,44 +167,44 @@ class TaskEthereumAttestationsCheck(Task):
         return checkMissedBit(int(validator["indexInCommittee"]), bits)
 
     def run(self):
-        ep = self.s.chain.getEpoch()
+        # ep = self.s.chain.getEpoch()
 
-        if self.prevEpoch is None:
-            self.prevEpoch = ep
+        # if self.prevEpoch is None:
+        #     self.prevEpoch = ep
 
-        print("Epoch: ", ep)
-        print("Prev epoch: ", self.prevEpoch)
-        if self.prevEpoch != ep:
-            validatorActiveIndexes = self.s.chain.isStaking()
-            out = ""
-            for index in validatorActiveIndexes:
-                first = True
-                self.prev = initializeValidatorData(self.prev, index)
-                validator = self.s.chain.getValidatorAttestationDuty(index, ep)
-                if validator:
-                    i = 1
-                    while True:
-                        miss = self.checkAttestationMissed(validator, i)
-                        if not miss or i > 30:
-                            break
-                        i += 1
-                    print(f"Inclusion distance: {i}")
-                    if miss is None:
-                        continue
-                    self.prev[str(index)]["miss"] += 1 if miss else 0
-                    self.prev[str(index)]["count"] += 1
-                    self.prev[str(index)]["inclusions"].append(i)
-                    print("Validator: ", validator)
-                    self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, "attestation", index)
-                    out += outStr
-                    first = False
-            print("Prev: ", self.prev)
-            self.prevEpoch = ep
-            if out != "":
-                return self.notify(
-                    out,
-                    level=NotificationLevel.Info,
-                )
+        # print("Epoch: ", ep)
+        # print("Prev epoch: ", self.prevEpoch)
+        # if self.prevEpoch != ep:
+        #     validatorActiveIndexes = self.s.chain.isStaking()
+        #     out = ""
+        #     for index in validatorActiveIndexes:
+        #         first = True
+        #         self.prev = initializeValidatorData(self.prev, index)
+        #         validator = self.s.chain.getValidatorAttestationDuty(index, ep)
+        #         if validator:
+        #             i = 0
+        #             while True:
+        #                 miss = self.checkAttestationMissed(validator, i)
+        #                 if not miss or i > 30:
+        #                     break
+        #                 i += 1
+        #             print(f"Inclusion distance: {i}")
+        #             if miss is None:
+        #                 continue
+        #             self.prev[str(index)]["miss"] += 1 if miss else 0
+        #             self.prev[str(index)]["count"] += 1
+        #             self.prev[str(index)]["inclusions"].append(i)
+        #             print("Validator: ", validator)
+        #             self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, "attestation", index)
+        #             out += outStr
+        #             first = False
+        #     print("Prev: ", self.prev)
+        #     self.prevEpoch = ep
+        #     if out != "":
+        #         return self.notify(
+        #             out,
+        #             level=NotificationLevel.Info,
+        #         )
         return False
 
 
@@ -220,31 +220,31 @@ class TaskEthereumBlockProductionCheck(Task):
         return services.conf.exists("chain.validatorAddress") and c > 0
 
     def run(self):
-        ep = self.s.chain.getEpoch()
+        # ep = self.s.chain.getEpoch()
 
-        if self.prevEpoch is None:
-            self.prevEpoch = ep
+        # if self.prevEpoch is None:
+        #     self.prevEpoch = ep
         
-        if self.prevEpoch != ep:
-            validatorActiveIndexes = self.s.chain.isStaking()
-            out = ""
-            for index in validatorActiveIndexes:
-                first = True
-                validatorSlot = self.s.chain.getValidatorProposerDuty(index, ep)
-                print("Validator Proposer Duty: ", validatorSlot)
-                if validatorSlot != -1:
-                    miss = self.s.chain.getSlotProposer(validatorSlot) == index
-                    self.prev[str(index)] = True if miss else False
-                    if not first:
-                        out += "\n\n"
-                    out += f"Validator {index} missed block proposal duty! {Emoji.BlockMiss}"
-                    first = False
-            self.prevEpoch = ep
-            if out != "":
-                return self.notify(
-                    out,
-                    level=NotificationLevel.Info,
-                )
+        # if self.prevEpoch != ep:
+        #     validatorActiveIndexes = self.s.chain.isStaking()
+        #     out = ""
+        #     for index in validatorActiveIndexes:
+        #         first = True
+        #         validatorSlot = self.s.chain.getValidatorProposerDuty(index, ep)
+        #         print("Validator Proposer Duty: ", validatorSlot)
+        #         if validatorSlot != -1:
+        #             miss = self.s.chain.getSlotProposer(validatorSlot) == index
+        #             self.prev[str(index)] = True if miss else False
+        #             if not first:
+        #                 out += "\n\n"
+        #             out += f"Validator {index} missed block proposal duty! {Emoji.BlockMiss}"
+        #             first = False
+        #     self.prevEpoch = ep
+        #     if out != "":
+        #         return self.notify(
+        #             out,
+        #             level=NotificationLevel.Info,
+        #         )
         return False
 
 
@@ -261,45 +261,46 @@ class TaskEthereumSyncCommitteeCheck(Task):
         return services.conf.exists("chain.validatorAddress") and c > 0
 
     def run(self):
-        ep = self.s.chain.getEpoch()
-        slot = self.s.chain.getSlot()
+        # ep = self.s.chain.getEpoch()
+        # slot = self.s.chain.getSlot()
 
-        if self.prevEpoch is None:
-            self.prevEpoch = ep
+        # if self.prevEpoch is None:
+        #     self.prevEpoch = ep
 
-        if self.prevSlot is None:
-            self.prevSlot = slot
+        # if self.prevSlot is None:
+        #     self.prevSlot = slot
 
-        if self.prevEpoch != ep:
-            validatorActiveIndexes = self.s.chain.isStaking()
-            out = ""
-            for index in validatorActiveIndexes:
-                first = True
-                self.prev = initializeValidatorData(self.prev, index)
-                validatorIndexInCommittee = self.s.chain.getValidatorSyncDuty(index, ep)
-                print("Validator sync committee duty: ", validatorIndexInCommittee)
-                if validatorIndexInCommittee != -1:
-                    slot = self.s.chain.getSlot()
-                    for s in range(self.prevSlot, slot):
-                        hexBits = self.s.chain.getSyncCommitteeBitsHex(s)
-                        print("Sync committee hex bits: ", hexBits)
-                        if hexBits == "Not available":
-                            continue
-                        bitsArr = convertBitsHexBin([hexBits])
-                        print("Sync committee bits: ", bitsArr)
-                        miss = checkMissedBit(validatorIndexInCommittee, bitsArr)
-                        self.prev[str(index)]["miss"] += 1 if miss else 0
-                        self.prev[str(index)]["count"] += 1
-                    outStr = f"Validator {index} syncs"
-                    self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, outStr)
-                    out += outStr
-                    first = False
-            self.prevEpoch = ep
-            if out != "":
-                return self.notify(
-                    out,
-                    level=NotificationLevel.Info,
-                )
+        # if self.prevEpoch != ep:
+        #     validatorActiveIndexes = self.s.chain.isStaking()
+        #     out = ""
+        #     for index in validatorActiveIndexes:
+        #         first = True
+        #         self.prev = initializeValidatorData(self.prev, index)
+        #         validatorIndexInCommittee = self.s.chain.getValidatorSyncDuty(index, ep)
+        #         print("Validator sync committee duty: ", validatorIndexInCommittee)
+        #         if validatorIndexInCommittee != -1:
+        #             slot = self.s.chain.getSlot()
+        #             for s in range(self.prevSlot, slot):
+        #                 hexBits = self.s.chain.getSyncCommitteeBitsHex(s)
+        #                 print("Sync committee hex bits: ", hexBits)
+        #                 if hexBits == "Not available":
+        #                     continue
+        #                 bitsArr = convertBitsHexBin([hexBits])
+        #                 print("Sync committee bits: ", bitsArr)
+        #                 miss = checkMissedBit(validatorIndexInCommittee, bitsArr)
+        #                 self.prev[str(index)]["miss"] += 1 if miss else 0
+        #                 self.prev[str(index)]["count"] += 1
+        #             outStr = f"Validator {index} syncs"
+        #             self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, outStr)
+        #             out += outStr
+        #             first = False
+        #     self.prevEpoch = ep
+        #     if out != "":
+        #         return self.notify(
+        #             out,
+        #             level=NotificationLevel.Info,
+        #         )
+        return False
 
 
 class TaskValidatorBalanceCheck(Task):
