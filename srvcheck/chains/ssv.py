@@ -53,3 +53,29 @@ class Ssv(Ethereum):
         out = requests.get(f"{self.EP_METRICS}/metrics")
         ssvStatus = getPrometheusMetricValue(out.text, "ssv_node_status")
         return ssvStatus
+
+    def getBeaconStatus(self):
+        out = requests.get(f"{self.EP_METRICS}/metrics")
+        beaconStatus = getPrometheusMetricValue(out.text, "ssv_beacon_status")
+        return beaconStatus
+
+    def getECStatus(self):
+        out = requests.get(f"{self.EP_METRICS}/metrics")
+        ecStatus = getPrometheusMetricValue(out.text, "ssv_eth1_status")
+        return ecStatus
+
+#Counter metrics
+    def getPeers(self):
+        out = requests.get(f"{self.EP_METRICS}/metrics")
+        peers = getPrometheusMetricValue(out.text, "ssv_p2p_all_connected_peers")
+        return peers
+
+    def getSubmittedRoles(self, role):
+        out = requests.get(f"{self.EP_METRICS}/metrics")
+        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_submitted{role='"+role+"'}")
+        return submitted
+
+    def getFailedRoles(self, role):
+        out = requests.get(f"{self.EP_METRICS}/metrics")
+        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_failed{role='" + role + "'}")
+        return submitted
