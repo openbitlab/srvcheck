@@ -21,11 +21,93 @@
 # SOFTWARE.
 
 import requests
+from ..tasks import Task, hours, minutes, seconds
+from ..notification import Emoji, NotificationLevel
 
 from .ethereum import (
     Ethereum
 )
 
+def TaskSSVCheckSubmissionATTESTER(Task):
+    def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
+        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
+        self.prevFailed = None
+        self.prevSubmitted = None
+
+        super().__init__(
+            "TaskSSVCheckSubmissionATTESTER",
+            services,
+            checkEvery=checkEvery,
+            notifyEvery=notifyEvery,
+        )
+
+    @staticmethod
+    def isPluggable(services):
+        return True
+
+    def run(self):
+        failed = self.s.chain.getFailedRoles("ATTESTER")
+        success = self.s.chain.getSubmittedRoles("ATTESTER")
+
+        if not self.prev:
+            self.prev = failed
+            self.prevSubmitted = success
+            return False
+
+        total = failed - self.prev + success - self.prevSubmitted
+        downtime = ((failed - self.prev) / total) * 100
+        if downtime > 10:
+            return self.notify(
+                f"Node operator missed " + f"{downtime}%" + "of attester submissions!"
+                + f"{Emoji.BlockMiss}",
+                level=NotificationLevel.Error
+            )
+        return False
+
+class TaskSSVCheckStatus(Task):
+    def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
+        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
+
+        super().__init__(
+            "TaskSSVCheckStatus",
+            services,
+            checkEvery=seconds(self.BLOCK_TIME),
+            notifyEvery=notifyEvery,
+        )
+
+    @staticmethod
+    def isPluggable(services):
+        return True
+
+    def run(self):
+        ec = self.s.chain.getECStatus()
+        if int(ec) != 2:
+            return self.notify(
+                f"Execution client is not available!"
+                + f"{Emoji.Health}",
+                level=NotificationLevel.Error
+            )
+        bn = self.s.chain.BeaconStatus()
+        if int(bn) != 2:
+            return self.notify(
+                f"Beacon client is not available!"
+                + f"{Emoji.Health}",
+                level=NotificationLevel.Error
+            )
+        health = self.s.chain.getHealth()
+        if int(health) == 1:
+            return self.notify(
+                f"SSV node unhealthy!"
+                + f"{Emoji.Health}",
+                level=NotificationLevel.Error
+            )
+        if int(health) == 0:
+            return self.notify(
+                f"SSV node down!"
+                + f"{Emoji.Health}",
+                level=NotificationLevel.Error
+            )
+        return False
 
 def getPrometheusMetricValue(metrics, metric_name):
     metric = list(filter(lambda x: metric_name in x, metrics.split("\n")))[-1]
@@ -65,17 +147,17 @@ class Ssv(Ethereum):
         return ecStatus
 
 #Counter metrics
-    def getPeers(self):
+    def getPeerCount(self):
         out = requests.get(f"{self.EP_METRICS}/metrics")
         peers = getPrometheusMetricValue(out.text, "ssv_p2p_all_connected_peers")
-        return peers
+        return int(peers)
 
     def getSubmittedRoles(self, role):
         out = requests.get(f"{self.EP_METRICS}/metrics")
         submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_submitted{role='"+role+"'}")
-        return submitted
+        return int(submitted)
 
     def getFailedRoles(self, role):
         out = requests.get(f"{self.EP_METRICS}/metrics")
         submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_failed{role='" + role + "'}")
-        return submitted
+        return int(submitted)
