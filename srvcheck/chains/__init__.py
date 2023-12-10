@@ -52,6 +52,6 @@ CHAINS = [
     Polkasama,
     T3rn,
     BridgeHubPolka,
-    Ethereum,
     Ssv,
+    Ethereum,
 ]
