@@ -21,14 +21,40 @@
 # SOFTWARE.
 
 import requests
-from ..tasks import Task, hours, minutes, seconds
+from ..tasks import Task, minutes, seconds
 from ..notification import Emoji, NotificationLevel
+from .ethereum import Ethereum
+from ..utils import Bash
 
-from .ethereum import (
-    Ethereum
-)
 
-def TaskSSVCheckSubmissionATTESTER(Task):
+class TaskSSVCheckAttestationsMiss(Task):
+    def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(30)):
+        super().__init__("TaskSSVCheckAttestationsMiss", services, checkEvery, notifyEvery)
+        self.prev = {}
+        self.prevEpoch = None
+
+    @staticmethod
+    def isPluggable(services):
+        c = len(services.chain.getValidators())
+        return c > 0
+
+    def run(self):
+        ep = self.s.chain.getEpoch()
+
+        if self.prevEpoch is None:
+            self.prevEpoch = ep
+
+        print("Epoch: ", ep)
+        print("Prev epoch: ", self.prevEpoch)
+        if self.prevEpoch != ep:
+            validators = self.s.chain.getValidators()
+            print("Active validators: ", validators)
+            for v in validators:
+                attestationsSubmitted = [d for d in self.s.chain.getValidatorDuties(v) if "successfully submitted attestation" in d]
+                print("Logs: ", attestationsSubmitted)
+        return False
+
+class TaskSSVCheckSubmissionATTESTER(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
         self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
         self.prevFailed = None
@@ -71,7 +97,7 @@ class TaskSSVCheckBNStatus(Task):
         super().__init__(
             "TaskSSVCheckBNStatus",
             services,
-            checkEvery=seconds(self.BLOCK_TIME),
+            checkEvery=seconds(self.s.chain.BLOCKTIME),
             notifyEvery=notifyEvery,
         )
 
@@ -91,12 +117,11 @@ class TaskSSVCheckBNStatus(Task):
 
 class TaskSSVCheckECStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
-        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
 
         super().__init__(
             "TaskSSVCheckECStatus",
             services,
-            checkEvery=seconds(self.BLOCK_TIME),
+            checkEvery=seconds(self.s.chain.BLOCKTIME),
             notifyEvery=notifyEvery,
         )
 
@@ -116,12 +141,11 @@ class TaskSSVCheckECStatus(Task):
 
 class TaskSSVCheckStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
-        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
 
         super().__init__(
             "TaskSSVCheckStatus",
             services,
-            checkEvery=seconds(self.BLOCK_TIME),
+            checkEvery=seconds(self.s.chain.BLOCKTIME),
             notifyEvery=notifyEvery,
         )
 
@@ -154,7 +178,7 @@ class Ssv(Ethereum):
     TYPE = "dvt"
     EP_METRICS = "http://localhost:15000"
     CUSTOM_TASKS = [
-        
+        TaskSSVCheckAttestationsMiss
     ]
 
     def __init__(self, conf):
@@ -207,3 +231,21 @@ class Ssv(Ethereum):
         out = requests.get(f"{self.EP_METRICS}/metrics")
         submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_failed{role=\"" + role + "\"}")
         return int(submitted)
+
+    def getValidatorDuties(self, validatorPubKey):
+        if self.conf.getOrDefault("chain.service"):
+            s = self.conf.getOrDefault("chain.service")
+            cmd = f"journalctl -u {s} --no-pager --since '30 min ago'"
+        elif self.conf.getOrDefault("chain.docker"):
+            containerId = self.conf.getOrDefault("chain.docker")
+            cmd = f"docker logs --since 30m {containerId}"
+        duties = (
+            Bash(
+                f"{cmd} | grep duty | grep {validatorPubKey} | "
+                + "awk -F'Validator'  '{ print $2 }'"
+            )
+            .value()
+            .split("\n")
+        )
+        logs = [duties.strip() for b in duties if b != ""]
+        return logs
