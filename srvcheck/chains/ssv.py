@@ -187,6 +187,11 @@ class Ssv(Ethereum):
         out = list(filter(lambda x: "ssv:validator:v2:status" in x, out.split("\n")))
         return list(map(lambda x: x.split("pubKey=\"")[1].split("\"")[0], out))
 
+    def getValidatorStatus(self, validatorPubKey):
+        out = requests.get(f"{self.EP_METRICS}/metrics")
+        status = getPrometheusMetricValue(out.text, "ssv:validator:v2:status{pubKey=\""+validatorPubKey+"\"}")
+        return int(status)
+
 #Counter metrics
     def getPeerCount(self):
         out = requests.get(f"{self.EP_METRICS}/metrics")
@@ -195,10 +200,10 @@ class Ssv(Ethereum):
 
     def getSubmittedRoles(self, role):
         out = requests.get(f"{self.EP_METRICS}/metrics")
-        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_submitted{role='"+role+"'}")
+        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_submitted{role=\""+role+"\"}")
         return int(submitted)
 
     def getFailedRoles(self, role):
         out = requests.get(f"{self.EP_METRICS}/metrics")
-        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_failed{role='" + role + "'}")
+        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_failed{role=\"" + role + "\"}")
         return int(submitted)
