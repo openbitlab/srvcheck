@@ -180,12 +180,6 @@ class TaskSSVCheckStatus(Task):
                 + f"{Emoji.Health}",
                 level=NotificationLevel.Error
             )
-        # if int(health) == 0:
-        #     return self.notify(
-        #         f"SSV node down!"
-        #         + f"{Emoji.Health}",
-        #         level=NotificationLevel.Error
-        #     )
         return False
 
 def getPrometheusMetricValue(metrics, metric_name):
