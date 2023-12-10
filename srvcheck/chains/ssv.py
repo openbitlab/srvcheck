@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import requests
+import requests, json
 from ..tasks import Task, minutes, seconds
 from ..notification import Emoji, NotificationLevel
 from .ethereum import Ethereum
@@ -28,7 +28,7 @@ from ..utils import Bash
 
 
 class TaskSSVCheckAttestationsMiss(Task):
-    def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(30)):
+    def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
         super().__init__("TaskSSVCheckAttestationsMiss", services, checkEvery, notifyEvery)
         self.prev = {}
         self.prevEpoch = None
@@ -47,18 +47,41 @@ class TaskSSVCheckAttestationsMiss(Task):
         print("Epoch: ", ep)
         print("Prev epoch: ", self.prevEpoch)
         if self.prevEpoch != ep:
+            submitted = 0
             validators = self.s.chain.getValidators()
             print("Active validators: ", validators)
+            out = ""
             for v in validators:
-                attestationsSubmitted = [d for d in self.s.chain.getValidatorDuties(v) if "successfully submitted attestation" in d]
-                print("Logs: ", attestationsSubmitted)
+                attestationsSubmitted = [json.loads(d.split("\t")[-1]) for d in self.s.chain.getValidatorDuties(v) if "successfully submitted attestation" in d]
+                diff = ep - self.prevEpoch
+                for i in range(diff):
+                    for attestation in attestationsSubmitted[::-1]:
+                        slot = attestation["slot"]
+                        print("Slot: ", slot)
+                        print("Slot Epoch: ", self.s.chain.getSlotEpoch(slot))
+                        if (ep - i - 1) == self.s.chain.getSlotEpoch(slot):
+                            print("Submitted")
+                            submitted += 1
+                            break
+                print("Diff: ", diff)
+                print("Submitted: ", submitted)
+                if submitted != diff:
+                    performance = submitted / diff * 100
+                    if out != "":
+                        out += "\n"
+                    out += f"validator {v} missed {submitted} out of {diff} attestations! ({performance:.2f} %)"
+            print("Message: ", out)
+            self.prevEpoch = ep
+            if out != "":
+                out += f" {Emoji.BlockMiss}"
+                return self.notify(out, level=NotificationLevel.Info)
         return False
 
 class TaskSSVCheckSubmissionATTESTER(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
-        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
         self.prevFailed = None
         self.prevSubmitted = None
+        self.prev = None
 
         super().__init__(
             "TaskSSVCheckSubmissionATTESTER",
@@ -92,12 +115,10 @@ class TaskSSVCheckSubmissionATTESTER(Task):
 
 class TaskSSVCheckBNStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
-        self.BLOCK_TIME = services.conf.getOrDefault("chain.blockTime")
-
         super().__init__(
             "TaskSSVCheckBNStatus",
             services,
-            checkEvery=seconds(self.s.chain.BLOCKTIME),
+            checkEvery=seconds(services.chain.BLOCKTIME),
             notifyEvery=notifyEvery,
         )
 
@@ -106,7 +127,7 @@ class TaskSSVCheckBNStatus(Task):
         return True
 
     def run(self):
-        bn = self.s.chain.BeaconStatus()
+        bn = self.s.chain.getBeaconStatus()
         if int(bn) != 2:
             return self.notify(
                 f"Beacon client is not available!"
@@ -117,11 +138,10 @@ class TaskSSVCheckBNStatus(Task):
 
 class TaskSSVCheckECStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
-
         super().__init__(
             "TaskSSVCheckECStatus",
             services,
-            checkEvery=seconds(self.s.chain.BLOCKTIME),
+            checkEvery=seconds(services.chain.BLOCKTIME),
             notifyEvery=notifyEvery,
         )
 
@@ -141,11 +161,10 @@ class TaskSSVCheckECStatus(Task):
 
 class TaskSSVCheckStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
-
         super().__init__(
             "TaskSSVCheckStatus",
             services,
-            checkEvery=seconds(self.s.chain.BLOCKTIME),
+            checkEvery=seconds(services.chain.BLOCKTIME),
             notifyEvery=notifyEvery,
         )
 
@@ -155,18 +174,18 @@ class TaskSSVCheckStatus(Task):
 
     def run(self):
         health = self.s.chain.getHealth()
-        if int(health) == 1:
+        if int(health) != 1:
             return self.notify(
                 f"SSV node unhealthy!"
                 + f"{Emoji.Health}",
                 level=NotificationLevel.Error
             )
-        if int(health) == 0:
-            return self.notify(
-                f"SSV node down!"
-                + f"{Emoji.Health}",
-                level=NotificationLevel.Error
-            )
+        # if int(health) == 0:
+        #     return self.notify(
+        #         f"SSV node down!"
+        #         + f"{Emoji.Health}",
+        #         level=NotificationLevel.Error
+        #     )
         return False
 
 def getPrometheusMetricValue(metrics, metric_name):
@@ -178,7 +197,11 @@ class Ssv(Ethereum):
     TYPE = "dvt"
     EP_METRICS = "http://localhost:15000"
     CUSTOM_TASKS = [
-        TaskSSVCheckAttestationsMiss
+        TaskSSVCheckAttestationsMiss,
+        TaskSSVCheckStatus,
+        TaskSSVCheckBNStatus,
+        TaskSSVCheckECStatus,
+        TaskSSVCheckSubmissionATTESTER,
     ]
 
     def __init__(self, conf):
@@ -208,8 +231,8 @@ class Ssv(Ethereum):
 
     def getValidators(self):
         out = requests.get(f"{self.EP_METRICS}/metrics")
-        out = list(filter(lambda x: "ssv:validator:v2:status" in x, out.split("\n")))
-        return list(map(lambda x: x.split("pubKey=\"")[1].split("\"")[0], out))
+        out = list(filter(lambda x: "ssv:validator:v2:status" in x, out.text.split("\n")))
+        return list(map(lambda x: x.split("pubKey=\"")[1].split("\"")[0], out[2:]))
 
     def getValidatorStatus(self, validatorPubKey):
         out = requests.get(f"{self.EP_METRICS}/metrics")
@@ -232,13 +255,13 @@ class Ssv(Ethereum):
         submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_failed{role=\"" + role + "\"}")
         return int(submitted)
 
-    def getValidatorDuties(self, validatorPubKey):
+    def getValidatorDuties(self, validatorPubKey, minutes=60):
         if self.conf.getOrDefault("chain.service"):
             s = self.conf.getOrDefault("chain.service")
-            cmd = f"journalctl -u {s} --no-pager --since '30 min ago'"
+            cmd = f"journalctl -u {s} --no-pager --since '{minutes} min ago'"
         elif self.conf.getOrDefault("chain.docker"):
             containerId = self.conf.getOrDefault("chain.docker")
-            cmd = f"docker logs --since 30m {containerId}"
+            cmd = f"docker logs --since {minutes}m {containerId}"
         duties = (
             Bash(
                 f"{cmd} | grep duty | grep {validatorPubKey} | "
@@ -247,5 +270,5 @@ class Ssv(Ethereum):
             .value()
             .split("\n")
         )
-        logs = [duties.strip() for b in duties if b != ""]
+        logs = [b.strip() for b in duties if b != ""]
         return logs

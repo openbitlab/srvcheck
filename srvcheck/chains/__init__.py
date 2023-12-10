@@ -35,6 +35,7 @@ from .t3rn import T3rn  # noqa: F401
 from .tendermint import Tendermint  # noqa: F401
 from .tezos import Tezos  # noqa: F401
 from .ethereum import Ethereum  # noqa: F401
+from .ssv import Ssv  # noqa: F401
 
 CHAINS = [
     Substrate,
@@ -52,4 +53,5 @@ CHAINS = [
     T3rn,
     BridgeHubPolka,
     Ethereum,
+    Ssv,
 ]

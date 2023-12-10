@@ -382,6 +382,10 @@ class Ethereum(Chain):
         out = requests.get(fixUrl(f"{self.CC}/eth/v1/beacon/headers"))
         return json.loads(out.text)["data"][0]["header"]["message"]["slot"]
 
+    def getSlotEpoch(self, slot):
+        out = requests.get(fixUrl(f"{self.CC}/eth/v2/beacon/blocks/{slot}"))
+        return int(json.loads(out.text)["data"]["message"]["body"]["attestations"][0]["data"]["source"]["epoch"])
+
     def getEpoch(self):
         out = requests.get(fixUrl(f"{self.CC}/eth/v1/beacon/states/head/finality_checkpoints"))
         return int(json.loads(out.text)["data"]["current_justified"]["epoch"])
