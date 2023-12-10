@@ -182,6 +182,11 @@ class Ssv(Ethereum):
         ecStatus = getPrometheusMetricValue(out.text, "ssv_eth1_status")
         return ecStatus
 
+    def getValidators(self):
+        out = requests.get(f"{self.EP_METRICS}/metrics")
+        out = list(filter(lambda x: "ssv:validator:v2:status" in x, out.split("\n")))
+        return list(map(lambda x: x.split("pubKey=\"")[1].split("\"")[0], out))
+
 #Counter metrics
     def getPeerCount(self):
         out = requests.get(f"{self.EP_METRICS}/metrics")
