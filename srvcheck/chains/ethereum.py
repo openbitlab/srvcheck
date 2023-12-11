@@ -109,7 +109,10 @@ class TaskEthereumHealthError(Task):
             self.s.chain.getHealth()
             return False
         except Exception:
-            return self.notify(f"beacon node health error! {Emoji.Health}", NotificationLevel.Error)
+            return self.notify(
+                f"beacon node health error! {Emoji.Health}",
+                NotificationLevel.Error
+            )
 
 
 class TaskEthereumLowPeerError(Task):
@@ -163,7 +166,8 @@ class TaskEthereumAttestationsCheck(Task):
         return bitsArr
     
     def checkAttestationMissed(self, validator, tries):
-        bits = self.getAggregationBits(int(validator["slot"]) + tries, validator["indexCommittee"])
+        slot = int(validator["slot"]) + tries
+        bits = self.getAggregationBits(slot, validator["indexCommittee"])
         return checkMissedBit(int(validator["indexInCommittee"]), bits)
 
     def run(self):
@@ -195,7 +199,12 @@ class TaskEthereumAttestationsCheck(Task):
         #             self.prev[str(index)]["count"] += 1
         #             self.prev[str(index)]["inclusions"].append(i)
         #             print("Validator: ", validator)
-        #             self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, "attestation", index)
+        #             self.prev[str(index)], outStr = getOutput(
+        #                   self.prev[str(index)], 
+        #                   first,
+        #                   "attestation",
+        #                   index
+        #             )
         #             out += outStr
         #             first = False
         #     print("Prev: ", self.prev)
@@ -291,7 +300,11 @@ class TaskEthereumSyncCommitteeCheck(Task):
         #                 self.prev[str(index)]["miss"] += 1 if miss else 0
         #                 self.prev[str(index)]["count"] += 1
         #             outStr = f"Validator {index} syncs"
-        #             self.prev[str(index)], outStr = getOutput(self.prev[str(index)], first, outStr)
+        #             self.prev[str(index)], outStr = getOutput(
+        #                  self.prev[str(index)],
+        #                  first,
+        #                  outStr
+        #             )
         #             out += outStr
         #             first = False
         #     self.prevEpoch = ep
@@ -413,7 +426,8 @@ class Ethereum(Chain):
             if validatorIndexes:
                 validators = {}
                 for index in validatorIndexes.split(", "):
-                    out = requests.get(fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/{index}"))
+                    url = fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/{index}")
+                    out = requests.get(url)
                     validators[str(index)] = json.loads(out.text)["data"]["status"]
                 return validators
             else:
@@ -429,7 +443,8 @@ class Ethereum(Chain):
         return len([s for s in self.isStaking()])
     
     def getWithdrawalCredentials(self, validatorIndex):
-        out = requests.get(fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/{validatorIndex}"))
+        url = fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/{validatorIndex}")
+        out = requests.get(url)
         return json.loads(out.text)["data"]["validator"]["withdrawal_credentials"]
     
     def getAddressBalance(self, address):
@@ -437,14 +452,16 @@ class Ethereum(Chain):
         return int(balance, 16) * 10 ** -18
     
     def getValidatorBalance(self, validatorIndex):
-        out = requests.get(fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/{validatorIndex}"))
+        url = fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/{validatorIndex}")
+        out = requests.get(url)
         return int(json.loads(out.text)["data"]["balance"]) * 10 ** -9
 
     def getValidatorRewards(self, validatorIndex):
         withdrawalCredentials = self.getWithdrawalCredentials(validatorIndex)
         if withdrawalCredentials[:4] == "0x01":
-            withdrawalAddress = withdrawalCredentials[:2] + withdrawalCredentials[26:]
-            return self.getAddressBalance(withdrawalAddress) + self.getValidatorBalance(validatorIndex)
+            withdrawalAddr = withdrawalCredentials[:2] + withdrawalCredentials[26:]
+            withdrawalAddrBalance = self.getAddressBalance(withdrawalAddr)
+            return withdrawalAddrBalance + self.getValidatorBalance(validatorIndex)
         return self.getValidatorBalance(validatorIndex)
 
     def getValidatorAttestationDuty(self, validatorIndex, epoch):
@@ -493,4 +510,5 @@ class Ethereum(Chain):
         print("Status code attestations request: ", out.status_code)
         if out.status_code == 404:
             return "Not available"
-        return json.loads(out.text)["data"]["message"]["body"]["sync_aggregate"]["sync_committee_bits"]
+        jsonOut = json.loads(out.text)
+        return jsonOut["data"]["message"]["body"]["sync_aggregate"]["sync_committee_bits"]

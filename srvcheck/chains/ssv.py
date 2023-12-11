@@ -60,7 +60,11 @@ class TaskSSVCheckAttestationsMiss(Task):
             print("Active validators: ", validators)
             out = ""
             for v in validators:
-                attestationsSubmitted = [json.loads(d.split("\t")[-1]) for d in self.s.chain.getValidatorDuties(v) if "successfully submitted attestation" in d]
+                attestationsSubmitted = [
+                    json.loads(d.split("\t")[-1]) 
+                    for d in self.s.chain.getValidatorDuties(v)
+                    if "successfully submitted attestation" in d
+                ]
                 diff = ep - self.prevEpoch
                 for i in range(diff):
                     for attestation in attestationsSubmitted[::-1]:
@@ -77,7 +81,8 @@ class TaskSSVCheckAttestationsMiss(Task):
                     performance = submitted / diff * 100
                     if out != "":
                         out += "\n"
-                    out += f"validator {v} missed {submitted} out of {diff} attestations! ({performance:.2f} %)"
+                    out += f"validator {v} missed {submitted} out of {diff} attestations!"
+                    out += f" ({performance:.2f} %)"
             print("Message: ", out)
             self.prevEpoch = ep
             if out != "":
@@ -116,8 +121,8 @@ class TaskSSVCheckSubmissionATTESTER(Task):
         downtime = ((failed - self.prev) / total) * 100
         if downtime > 10:
             return self.notify(
-                f"Node operator missed " + f"{downtime}%" + "of attester submissions!"
-                + f"{Emoji.BlockMiss}",
+                f"node operator missed {downtime:.2f} % of attester submissions!"
+                + f" {Emoji.BlockMiss}",
                 level=NotificationLevel.Error
             )
         return False
@@ -140,8 +145,7 @@ class TaskSSVCheckBNStatus(Task):
         bn = self.s.chain.getBeaconStatus()
         if int(bn) != 2:
             return self.notify(
-                f"Beacon client is not available!"
-                + f"{Emoji.Health}",
+                f"beacon client is not available! {Emoji.Health}",
                 level=NotificationLevel.Error
             )
         return False
@@ -164,8 +168,7 @@ class TaskSSVCheckECStatus(Task):
         ec = self.s.chain.getECStatus()
         if int(ec) != 2:
             return self.notify(
-                f"Execution client is not available!"
-                + f"{Emoji.Health}",
+                f"execution client is not available! {Emoji.Health}",
                 level=NotificationLevel.Error
             )
         return False
@@ -188,8 +191,7 @@ class TaskSSVCheckStatus(Task):
         health = self.s.chain.getHealth()
         if int(health) != 1:
             return self.notify(
-                f"SSV node unhealthy!"
-                + f"{Emoji.Health}",
+                f"SSV node unhealthy! {Emoji.Health}",
                 level=NotificationLevel.Error
             )
         return False
@@ -210,8 +212,7 @@ class TaskSSVDKGHealth(Task):
             return False
         except:
             return self.notify(
-                f"SSV DKG client unhealthy!"
-                + f"{Emoji.Health}",
+                f"SSV DKG client unhealthy! {Emoji.Health}",
                 level=NotificationLevel.Error
             )
 
@@ -231,7 +232,7 @@ class Ssv(Ethereum):
     def __init__(self, conf):
         super().__init__(conf)
         if conf.exists("chain.dkgEndpoint"):
-            self.DKG = f"{conf.getOrDefault('chain.dkgEndpoint')}"
+            self.DKG = conf.getOrDefault('chain.dkgEndpoint')
 
     @staticmethod
     def detect(conf):
@@ -262,7 +263,8 @@ class Ssv(Ethereum):
 
     def getValidatorStatus(self, validatorPubKey):
         out = requests.get(f"{self.EP_METRICS}/metrics")
-        status = getPrometheusMetricValue(out.text, "ssv:validator:v2:status{pubKey=\""+validatorPubKey+"\"}")
+        metricStr = "ssv:validator:v2:status{pubKey=\""+validatorPubKey+"\"}"
+        status = getPrometheusMetricValue(out.text, metricStr)
         return int(status)
 
 #Counter metrics
@@ -273,12 +275,14 @@ class Ssv(Ethereum):
 
     def getSubmittedRoles(self, role):
         out = requests.get(f"{self.EP_METRICS}/metrics")
-        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_submitted{role=\""+role+"\"}")
+        metricStr = "ssv_validator_roles_submitted{role=\""+role+"\"}"
+        submitted = getPrometheusMetricValue(out.text, metricStr)
         return int(submitted)
 
     def getFailedRoles(self, role):
         out = requests.get(f"{self.EP_METRICS}/metrics")
-        submitted = getPrometheusMetricValue(out.text, "ssv_validator_roles_failed{role=\"" + role + "\"}")
+        metricStr = "ssv_validator_roles_failed{role=\"" + role + "\"}"
+        submitted = getPrometheusMetricValue(out.text, metricStr)
         return int(submitted)
 
     def getValidatorDuties(self, validatorPubKey, minutes=60):
