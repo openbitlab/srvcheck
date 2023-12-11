@@ -20,6 +20,7 @@ print_help () {
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
  -d  --docker <container_id> id of the container to monitor [required if not using service]
+     --dkg-endpoint <url:port> ssv dkg endpoint
      --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed
      --gov enable checks on new governance proposals (tendermint)
@@ -90,6 +91,10 @@ install_monitor () {
     if [ ! -z "$beaconEndpoint" ]
     then
         sed -i -e "s,^beaconEndpoint =.*,beaconEndpoint = $beaconEndpoint,g" $config_file
+    fi
+    if [ ! -z "$dkgEndpoint" ]
+    then
+        sed -i -e "s,^dkgEndpoint =.*,dkgEndpoint = $dkgEndpoint,g" $config_file
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -278,6 +283,17 @@ case $1 in
             exit 1
         else
             docker="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --dkg-endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        dkgEndpoint="$2"
         fi
         shift # past argument
         shift # past value

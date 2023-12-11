@@ -21,10 +21,18 @@
 # SOFTWARE.
 
 import requests, json
+
 from ..tasks import Task, minutes, seconds
 from ..notification import Emoji, NotificationLevel
 from .ethereum import Ethereum
-from ..utils import Bash
+from ..utils import Bash, ConfSet, ConfItem
+
+ConfSet.addItem(ConfItem("chain.dkgEndpoint", description="Ssv dkg client endpoint"))
+
+
+def getPrometheusMetricValue(metrics, metric_name):
+    metric = list(filter(lambda x: metric_name in x, metrics.split("\n")))[-1]
+    return metric.split(" ")[-1]
 
 
 class TaskSSVCheckAttestationsMiss(Task):
@@ -77,6 +85,7 @@ class TaskSSVCheckAttestationsMiss(Task):
                 return self.notify(out, level=NotificationLevel.Info)
         return False
 
+
 class TaskSSVCheckSubmissionATTESTER(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
         self.prevFailed = None
@@ -113,6 +122,7 @@ class TaskSSVCheckSubmissionATTESTER(Task):
             )
         return False
 
+
 class TaskSSVCheckBNStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
         super().__init__(
@@ -135,6 +145,7 @@ class TaskSSVCheckBNStatus(Task):
                 level=NotificationLevel.Error
             )
         return False
+
 
 class TaskSSVCheckECStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
@@ -159,6 +170,7 @@ class TaskSSVCheckECStatus(Task):
             )
         return False
 
+
 class TaskSSVCheckStatus(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(5)):
         super().__init__(
@@ -182,9 +194,26 @@ class TaskSSVCheckStatus(Task):
             )
         return False
 
-def getPrometheusMetricValue(metrics, metric_name):
-    metric = list(filter(lambda x: metric_name in x, metrics.split("\n")))[-1]
-    return metric.split(" ")[-1]
+
+class TaskSSVDKGHealth(Task):
+    def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
+        super().__init__("TaskSSVDKGHealth", services, checkEvery, notifyEvery)
+
+    @staticmethod
+    def isPluggable(services):
+        return services.conf.exists("chain.dkgEndpoint")
+
+    def run(self):
+        try:
+            res = requests.get(self.s.chain.DKG)
+            print(res.status_code)
+            return False
+        except:
+            return self.notify(
+                f"SSV DKG client unhealthy!"
+                + f"{Emoji.Health}",
+                level=NotificationLevel.Error
+            )
 
 
 class Ssv(Ethereum):
@@ -196,10 +225,13 @@ class Ssv(Ethereum):
         TaskSSVCheckBNStatus,
         TaskSSVCheckECStatus,
         TaskSSVCheckSubmissionATTESTER,
+        TaskSSVDKGHealth,
     ]
 
     def __init__(self, conf):
         super().__init__(conf)
+        if conf.exists("chain.dkgEndpoint"):
+            self.DKG = f"{conf.getOrDefault('chain.dkgEndpoint')}"
 
     @staticmethod
     def detect(conf):

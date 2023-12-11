@@ -96,6 +96,7 @@ install --help
      --beacon-endpoint <url:port> consensus client rpc endpoint
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+     --dkg-endpoint <url:port> ssv dkg endpoint
      --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed     
      --gov enable checks on new governance proposals (tendermint)
