@@ -66,7 +66,7 @@ class TaskSSVCheckAttestationsMiss(Task):
                     for d in self.s.chain.getValidatorDuties(v)
                     if "successfully submitted attestation" in d
                 ]
-                diff = ep - self.prevEpoch
+                diff = ep - 1 - self.prevEpoch
                 for i in range(diff - 1):
                     for attestation in attestationsSubmitted[::-1]:
                         slot = attestation["slot"]
@@ -84,7 +84,7 @@ class TaskSSVCheckAttestationsMiss(Task):
                         out += "\n"
                     out += f"validator {v} missed {missed} attestations in the last hour!"
                     out += f" ({performance:.2f} %)"
-            self.prevEpoch = ep
+            self.prevEpoch = ep - 1
             if out != "":
                 out += f" {Emoji.BlockMiss}"
                 return self.notify(out, level=NotificationLevel.Info)
@@ -140,7 +140,7 @@ class TaskSSVCheckSyncCommitteeMiss(Task):
                             out += "\n"
                         out += f"validator {v} missed {missed} sync committee in the last epoch!"
                         out += f" ({performance:.2f} %)"
-            self.prevEpoch = ep
+            self.prevEpoch = ep - 1
             if out != "":
                 out += f" {Emoji.BlockMiss}"
                 return self.notify(out, level=NotificationLevel.Info)
@@ -192,7 +192,7 @@ class TaskSSVCheckProposalMiss(Task):
                         if out != "":
                             out += "\n"
                         out += f"validator {v} missed block proposal duty in the last epoch!"
-            self.prevEpoch = ep
+            self.prevEpoch = ep - 1
             if out != "":
                 out += f" {Emoji.BlockMiss}"
                 return self.notify(out, level=NotificationLevel.Info)
@@ -311,7 +311,7 @@ class TaskSSVDKGHealth(Task):
 
     @staticmethod
     def isPluggable(services):
-        return services.conf.exists("chain.dkgEndpoint")
+        return services.conf.getOrDefault("chain.dkgEndpoint") != None
 
     def run(self):
         try:
