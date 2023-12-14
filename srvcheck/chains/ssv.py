@@ -46,16 +46,17 @@ class TaskSSVCheckAttestationsMiss(Task):
         return c > 0
 
     def run(self):
+        debug = "ATTESTATION -"
         ep = self.s.chain.getEpoch()
 
         if self.prevEpoch is None:
             self.prevEpoch = ep
 
-        print("ATTESTATION - Epoch: ", ep)
-        print("ATTESTATION - Prev epoch: ", self.prevEpoch)
+        print(f"{debug} Epoch: ", ep)
+        print(f"{debug} Prev epoch: ", self.prevEpoch)
         if self.prevEpoch != ep:
             validators = self.s.chain.getValidators()
-            print("ATTESTATION - Active validators: ", validators)
+            print(f"{debug} Active validators: ", validators)
             out = ""
             for v in validators:            
                 submitted = 0
@@ -68,13 +69,13 @@ class TaskSSVCheckAttestationsMiss(Task):
                 for i in range(diff - 1):
                     for attestation in attestationsSubmitted[::-1]:
                         slot = attestation["slot"]
-                        print(f"ATTESTATION - Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
+                        print(f"{debug} Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
                         if (ep - i - 1) == self.s.chain.getSlotEpoch(slot):
-                            print("ATTESTATION - Submitted\n")
+                            print(f"{debug} Submitted\n")
                             submitted += 1
                             break
-                print("ATTESTATION - Diff: ", diff)
-                print("ATTESTATION - Submitted: ", submitted)
+                print(f"{debug} Diff: ", diff)
+                print(f"{debug} Submitted: ", submitted)
                 missed = diff - submitted
                 if missed > 0:
                     performance = submitted / diff * 100
@@ -101,16 +102,17 @@ class TaskSSVCheckSyncCommitteeMiss(Task):
         return c > 0
 
     def run(self):
+        debug = "SYNC COMMITTEE -"
         ep = self.s.chain.getEpoch()
 
         if self.prevEpoch is None:
             self.prevEpoch = ep
 
-        print("SYNC COMMITTEE - Epoch: ", ep)
-        print("SYNC COMMITTEE - Prev epoch: ", self.prevEpoch)
+        print(f"{debug} Epoch: ", ep)
+        print(f"{debug} Prev epoch: ", self.prevEpoch)
         if self.prevEpoch != ep:
             validators = self.s.chain.getValidators()
-            print("SYNC COMMITTEE - Active validators: ", validators)
+            print(f"{debug} Active validators: ", validators)
             out = ""
             for v in validators:
                 submitted = 0
@@ -122,14 +124,14 @@ class TaskSSVCheckSyncCommitteeMiss(Task):
                         for d in self.s.chain.getValidatorDuties(v)
                         if "successfully submitted sync committee" in d
                     ]
-                    for attestation in syncCommitteeSubmitted[::-1]:
-                        slot = attestation["slot"]
-                        print(f"SYNC COMMITTEE - Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
+                    for syncCommittee in syncCommitteeSubmitted[::-1]:
+                        slot = syncCommittee["slot"]
+                        print(f"{debug} Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
                         if (ep - 1) == self.s.chain.getSlotEpoch(slot):
-                            print("SYNC COMMITTEE - Submitted\n")
+                            print(f"{debug} Submitted\n")
                             submitted += 1
                             break
-                    print("SYNC COMMITTEE - Submitted: ", submitted)
+                    print(f"{debug} Submitted: ", submitted)
                     missed = self.SLOTS_IN_EPOCH - submitted
                     if missed > 0:
                         performance = submitted / self.SLOTS_IN_EPOCH * 100
@@ -137,6 +139,58 @@ class TaskSSVCheckSyncCommitteeMiss(Task):
                             out += "\n"
                         out += f"validator {v} missed {missed} sync committee in the last epoch!"
                         out += f" ({performance:.2f} %)"
+            self.prevEpoch = ep
+            if out != "":
+                out += f" {Emoji.BlockMiss}"
+                return self.notify(out, level=NotificationLevel.Info)
+        return False
+    
+
+class TaskSSVCheckProposalMiss(Task):
+    def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(5)):
+        super().__init__("TaskSSVCheckProposalMiss", services, checkEvery, notifyEvery)
+        self.prevEpoch = None
+
+    @staticmethod
+    def isPluggable(services):
+        c = len(services.chain.getValidators())
+        return c > 0
+
+    def run(self):
+        debug = "BLOCK PROPOSER -"
+        ep = self.s.chain.getEpoch()
+
+        if self.prevEpoch is None:
+            self.prevEpoch = ep
+
+        print(f"{debug} Epoch: ", ep)
+        print(f"{debug} Prev epoch: ", self.prevEpoch)
+        if self.prevEpoch != ep:
+            validators = self.s.chain.getValidators()
+            print(f"{debug} Active validators: ", validators)
+            out = ""
+            for v in validators:
+                submitted = 0
+                validatorIndex = self.s.chain.getValidatorIndexFromPubKey(v)
+                duty = self.s.chain.getValidatorProposerDuty(validatorIndex, ep - 1)
+                if duty != -1:
+                    blockProposalSubmitted = [
+                        json.loads(d.split("\t")[-1]) 
+                        for d in self.s.chain.getValidatorDuties(v)
+                        if "successfully submitted block proposal" in d
+                    ]
+                    for proposal in blockProposalSubmitted[::-1]:
+                        slot = proposal["slot"]
+                        print(f"{debug} Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
+                        if (ep - 1) == self.s.chain.getSlotEpoch(slot):
+                            print(f"{debug} Submitted\n")
+                            submitted += 1
+                            break
+                    print(f"{debug} Submitted: ", submitted)
+                    if submitted == 0:
+                        if out != "":
+                            out += "\n"
+                        out += f"validator {v} missed block proposal duty in the last epoch!"
             self.prevEpoch = ep
             if out != "":
                 out += f" {Emoji.BlockMiss}"
@@ -281,6 +335,7 @@ class Ssv(Ethereum):
         TaskSSVCheckSubmissionATTESTER,
         TaskSSVDKGHealth,
         TaskSSVCheckSyncCommitteeMiss,
+        TaskSSVCheckProposalMiss,
     ]
 
     def __init__(self, conf):
