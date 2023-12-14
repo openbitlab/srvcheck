@@ -418,7 +418,7 @@ class Ethereum(Chain):
     
     def isStaking(self):
         validatorStatus = self.isValidator()
-        return [k for k, v in validatorStatus.items() if "active" in v]
+        return [k for k, v in validatorStatus.items() if "active" in v] if validatorStatus else []
 
     def isValidator(self):
         validatorIndexes = self.conf.getOrDefault("chain.validatorAddress")
