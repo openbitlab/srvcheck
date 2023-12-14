@@ -16,8 +16,11 @@ print_help () {
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
      --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
  -a  --validator-address <address> enable checks on block production, governance proposals and other account related informations
+     --beacon-endpoint <url:port> consensus client rpc endpoint
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+ -d  --docker <container_id> id of the container to monitor [required if not using service]
+     --dkg-endpoint <url:port> ssv dkg endpoint
      --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed
      --gov enable checks on new governance proposals (tendermint)
@@ -25,7 +28,8 @@ print_help () {
  -n  --name <name> monitor name [default is the server hostname]
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
- -s  --service <name> service name of the node to monitor [required]
+ -s  --service <name> service name of the node to monitor [required if not using docker]
+     --ssv-endpoint <url:port> ssv metrics endpoint
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation"
@@ -52,6 +56,7 @@ install_monitor () {
     sed -i -e "s/^commit =.*/commit = $(curl https://api.github.com/repos/openbitlab/srvcheck/git/refs/heads/main -s | jq .object.sha -r | head -c 7)/" $config_file
     sed -i -e "s/^name =.*/name = $name/" $config_file
     sed -i -e "s/^service =.*/service = $service/" $config_file
+    sed -i -e "s/^docker =.*/docker = $docker/" $config_file
     if [ ! -z "$block_time" ]
     then
         sed -i -e "s/^blockTime =.*/blockTime = $block_time/" $config_file
@@ -83,6 +88,18 @@ install_monitor () {
     if [ ! -z "$endpoint" ]
     then
         sed -i -e "s,^endpoint =.*,endpoint = $endpoint,g" $config_file
+    fi
+    if [ ! -z "$beaconEndpoint" ]
+    then
+        sed -i -e "s,^beaconEndpoint =.*,beaconEndpoint = $beaconEndpoint,g" $config_file
+    fi
+    if [ ! -z "$dkgEndpoint" ]
+    then
+        sed -i -e "s,^dkgEndpoint =.*,dkgEndpoint = $dkgEndpoint,g" $config_file
+    fi
+    if [ ! -z "$ssvMetricsEndpoint" ]
+    then
+        sed -i -e "s,^ssvMetricsEndpoint =.*,ssvMetricsEndpoint = $ssvMetricsEndpoint,g" $config_file
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -264,6 +281,28 @@ case $1 in
         shift # past argument
         shift # past value
     ;;
+    -d|--docker)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            docker="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --dkg-endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        dkgEndpoint="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
     --endpoint)
         if [[ -z $2 ]]
         then
@@ -271,6 +310,28 @@ case $1 in
             exit 1
         else
 	        endpoint="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --ssv-endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        ssvMetricsEndpoint="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --beacon-endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        beaconEndpoint="$2"
         fi
         shift # past argument
         shift # past value
@@ -293,7 +354,7 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ -z $chat_id || -z $api_token || -z $service ]]
+if [[ -z $chat_id || -z $api_token ]] || [[ -z $service && -z $docker ]];
 then
     print_help
     exit 1

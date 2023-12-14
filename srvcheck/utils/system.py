@@ -108,18 +108,25 @@ class System:
         return requests.get("http://zx2c4.com/ip").text.split("\n")[0]
 
     def getServiceUptime(self):
-        serv = self.conf.getOrDefault("chain.service")
-        if serv:
-            return " ".join(
-                Bash(f"systemctl status {serv}")
-                .value()
+        uptime = ""
+        if self.conf.getOrDefault("chain.service"):
+            s = self.conf.getOrDefault("chain.service")
+            out = Bash(f"systemctl status {s}").value()
+            uptime = " ".join(
+                out
                 .split("\n")[2]
                 .split(";")[-1]
                 .strip()
                 .split()[:-1]
             )
-        return "na"
-
+        elif self.conf.getOrDefault("chain.docker"):
+            containerId = self.conf.getOrDefault("chain.docker")
+            cmd = "docker inspect -f '{{ .State.StartedAt }}' " + containerId
+            out = Bash(cmd).value()
+            out = out.split("T")
+            uptime = f"{out[0]} {out[1][:8]}"
+        return uptime
+    
     def getUsage(self):
         """Returns an usage object"""
         u = SystemUsage()

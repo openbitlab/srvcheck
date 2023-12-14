@@ -13,6 +13,8 @@ It supports these ecosystems:
 - **Solana**
 - **Aptos**
 - **Near**
+- **Ethereum**
+- **SSV**
 
 It supports these notification outputs:
 - **stdout**
@@ -61,6 +63,21 @@ And it offers many features thanks to the following tasks:
 - **TaskNearCheckProposal**
 - **TaskNearCheckKicked**
 
+**Ethereum** specific tasks:
+- **TaskEthereumHealthError**
+- **TaskEthereumLowPeerError**
+- **TaskValidatorBalanceCheck**
+
+**SSV** specific tasks:
+- **TaskSSVCheckStatus**
+- **TaskSSVCheckBNStatus**
+- **TaskSSVCheckECStatus**
+- **TaskSSVCheckSubmissionATTESTER**
+- **TaskSSVDKGHealth**
+- **TaskSSVCheckAttestationsMiss**
+- **TaskSSVCheckSyncCommitteeMiss**
+- **TaskSSVCheckProposalMiss**
+
 We suggest adding the binary of the node to the PATH in order to benefit from all the monitor features' 
 
 ## Telegram Bot Setup
@@ -93,8 +110,10 @@ install --help
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
      --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
  -a  --validator-address <address> enable checks on block production, governance proposals and other account related informations
+     --beacon-endpoint <url:port> consensus client rpc endpoint
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+     --dkg-endpoint <url:port> ssv dkg endpoint
      --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed     
      --gov enable checks on new governance proposals (tendermint)
@@ -103,6 +122,7 @@ install --help
      --rel <version> release version installed (required for tendermint chain if git_api is specified)          
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
+     --ssv-endpoint <url:port> ssv metrics endpoint
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation
@@ -163,6 +183,8 @@ name =
 type = 
 ; systemd service name
 service = 
+; docker container id
+docker =
 ; endpoint uri, if different from default
 endpoint = 
 ; block time
@@ -179,6 +201,12 @@ localVersion =
 validatorAddress = 
 ; mount point
 mountPoint = 
+; beacon node endpoint uri
+beaconEndpoint =
+; ssv dkg endpoint uri
+dkgEndpoint = 
+; ssv metrics endpoint uri
+ssvMetricsEndpoint = 
 
 ; task specific settings
 [tasks]

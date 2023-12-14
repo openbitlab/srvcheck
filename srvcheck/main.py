@@ -56,6 +56,7 @@ ConfSet.addItem(
     ConfItem("tasks.disabled", "", str, "comma separated list of disabled tasks")
 )
 ConfSet.addItem(ConfItem("chain.service", None, str, "node service name"))
+ConfSet.addItem(ConfItem("chain.docker", None, str, "docker container id"))
 ConfSet.addItem(ConfItem("tasks.govAdmin", None, str, "Proposal voter nickname"))
 
 
