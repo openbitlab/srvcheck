@@ -67,7 +67,7 @@ class TaskSSVCheckAttestationsMiss(Task):
                     if "successfully submitted attestation" in d
                 ]
                 diff = ep - 1 - self.prevEpoch
-                for i in range(diff - 1):
+                for i in range(diff):
                     for attestation in attestationsSubmitted[::-1]:
                         slot = attestation["slot"]
                         print(f"{debug} Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
@@ -311,7 +311,7 @@ class TaskSSVDKGHealth(Task):
 
     @staticmethod
     def isPluggable(services):
-        return services.conf.getOrDefault("chain.dkgEndpoint") != None
+        return services.conf.getOrDefault("chain.dkgEndpoint") is not None
 
     def run(self):
         try:
@@ -343,7 +343,7 @@ class Ssv(Ethereum):
         super().__init__(conf)
         if conf.exists("chain.dkgEndpoint"):
             self.DKG = conf.getOrDefault('chain.dkgEndpoint')
-        if conf.exists("chain.ssvMetricsEndpoint"):
+        if conf.exists("chain.ssvMetricsEndpoint") and conf.getOrDefault('chain.ssvMetricsEndpoint'):
             self.EP_METRICS = conf.getOrDefault('chain.ssvMetricsEndpoint')
 
     @staticmethod
