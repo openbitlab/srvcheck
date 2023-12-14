@@ -69,19 +69,19 @@ class TaskSSVCheckAttestationsMiss(Task):
                 for i in range(diff):
                     for attestation in attestationsSubmitted[::-1]:
                         slot = attestation["slot"]
-                        print("Slot: ", slot)
-                        print("Slot Epoch: ", self.s.chain.getSlotEpoch(slot))
+                        print(f"Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
                         if (ep - i - 1) == self.s.chain.getSlotEpoch(slot):
-                            print("Submitted")
+                            print("Submitted\n")
                             submitted += 1
                             break
                 print("Diff: ", diff)
                 print("Submitted: ", submitted)
-                if submitted != diff:
+                missed = diff - submitted
+                if missed > 0:
                     performance = submitted / diff * 100
                     if out != "":
                         out += "\n"
-                    out += f"validator {v} missed {submitted} out of {diff} attestations!"
+                    out += f"validator {v} missed {missed} attestations in the last hour!"
                     out += f" ({performance:.2f} %)"
             print("Message: ", out)
             self.prevEpoch = ep
@@ -285,7 +285,7 @@ class Ssv(Ethereum):
         submitted = getPrometheusMetricValue(out.text, metricStr)
         return int(submitted)
 
-    def getValidatorDuties(self, validatorPubKey, minutes=60):
+    def getValidatorDuties(self, validatorPubKey, minutes=120):
         if self.conf.getOrDefault("chain.service"):
             s = self.conf.getOrDefault("chain.service")
             cmd = f"journalctl -u {s} --no-pager --since '{minutes} min ago'"
