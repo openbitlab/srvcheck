@@ -29,6 +29,7 @@ print_help () {
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required if not using docker]
+     --ssv-endpoint <url:port> ssv metrics endpoint
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation"
@@ -95,6 +96,10 @@ install_monitor () {
     if [ ! -z "$dkgEndpoint" ]
     then
         sed -i -e "s,^dkgEndpoint =.*,dkgEndpoint = $dkgEndpoint,g" $config_file
+    fi
+    if [ ! -z "$ssvMetricsEndpoint" ]
+    then
+        sed -i -e "s,^ssvMetricsEndpoint =.*,ssvMetricsEndpoint = $ssvMetricsEndpoint,g" $config_file
     fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
@@ -305,6 +310,17 @@ case $1 in
             exit 1
         else
 	        endpoint="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --ssv-endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        ssvMetricsEndpoint="$2"
         fi
         shift # past argument
         shift # past value

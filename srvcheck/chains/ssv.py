@@ -28,6 +28,7 @@ from .ethereum import Ethereum
 from ..utils import Bash, ConfSet, ConfItem
 
 ConfSet.addItem(ConfItem("chain.dkgEndpoint", description="Ssv dkg client endpoint"))
+ConfSet.addItem(ConfItem("chain.ssvMetricsEndpoint", description="Ssv metrics endpoint"))
 
 
 def getPrometheusMetricValue(metrics, metric_name):
@@ -328,12 +329,12 @@ class Ssv(Ethereum):
     TYPE = "dvt"
     EP_METRICS = "http://localhost:15000"
     CUSTOM_TASKS = [
-        TaskSSVCheckAttestationsMiss,
         TaskSSVCheckStatus,
         TaskSSVCheckBNStatus,
         TaskSSVCheckECStatus,
         TaskSSVCheckSubmissionATTESTER,
         TaskSSVDKGHealth,
+        TaskSSVCheckAttestationsMiss,
         TaskSSVCheckSyncCommitteeMiss,
         TaskSSVCheckProposalMiss,
     ]
@@ -342,6 +343,8 @@ class Ssv(Ethereum):
         super().__init__(conf)
         if conf.exists("chain.dkgEndpoint"):
             self.DKG = conf.getOrDefault('chain.dkgEndpoint')
+        if conf.exists("chain.ssvMetricsEndpoint"):
+            self.EP_METRICS = conf.getOrDefault('chain.ssvMetricsEndpoint')
 
     @staticmethod
     def detect(conf):

@@ -13,6 +13,8 @@ It supports these ecosystems:
 - **Solana**
 - **Aptos**
 - **Near**
+- **Ethereum**
+- **SSV**
 
 It supports these notification outputs:
 - **stdout**
@@ -61,6 +63,21 @@ And it offers many features thanks to the following tasks:
 - **TaskNearCheckProposal**
 - **TaskNearCheckKicked**
 
+**Ethereum** specific tasks:
+- **TaskEthereumHealthError**
+- **TaskEthereumLowPeerError**
+- **TaskValidatorBalanceCheck**
+
+**SSV** specific tasks:
+- **TaskSSVCheckStatus**
+- **TaskSSVCheckBNStatus**
+- **TaskSSVCheckECStatus**
+- **TaskSSVCheckSubmissionATTESTER**
+- **TaskSSVDKGHealth**
+- **TaskSSVCheckAttestationsMiss**
+- **TaskSSVCheckSyncCommitteeMiss**
+- **TaskSSVCheckProposalMiss**
+
 We suggest adding the binary of the node to the PATH in order to benefit from all the monitor features' 
 
 ## Telegram Bot Setup
@@ -105,6 +122,7 @@ install --help
      --rel <version> release version installed (required for tendermint chain if git_api is specified)          
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
+     --ssv-endpoint <url:port> ssv metrics endpoint
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
  -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation
@@ -165,6 +183,8 @@ name =
 type = 
 ; systemd service name
 service = 
+; docker container id
+docker =
 ; endpoint uri, if different from default
 endpoint = 
 ; block time
@@ -181,6 +201,12 @@ localVersion =
 validatorAddress = 
 ; mount point
 mountPoint = 
+; beacon node endpoint uri
+beaconEndpoint =
+; ssv dkg endpoint uri
+dkgEndpoint = 
+; ssv metrics endpoint uri
+ssvMetricsEndpoint = 
 
 ; task specific settings
 [tasks]
