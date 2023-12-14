@@ -443,7 +443,7 @@ class Ethereum(Chain):
         return len([s for s in self.isStaking()])
     
     def getValidatorIndexFromPubKey(self, pubKey):
-        url = fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/{pubKey}")
+        url = fixUrl(f"{self.CC}/eth/v1/beacon/states/head/validators/0x{pubKey}")
         out = requests.get(url)
         return json.loads(out.text)["data"]["index"]
     
