@@ -38,7 +38,6 @@ def getPrometheusMetricValue(metrics, metric_name):
 class TaskSSVCheckAttestationsMiss(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
         super().__init__("TaskSSVCheckAttestationsMiss", services, checkEvery, notifyEvery)
-        self.prev = {}
         self.prevEpoch = None
 
     @staticmethod
@@ -52,30 +51,30 @@ class TaskSSVCheckAttestationsMiss(Task):
         if self.prevEpoch is None:
             self.prevEpoch = ep
 
-        print("Epoch: ", ep)
-        print("Prev epoch: ", self.prevEpoch)
+        print("ATTESTATION - Epoch: ", ep)
+        print("ATTESTATION - Prev epoch: ", self.prevEpoch)
         if self.prevEpoch != ep:
-            submitted = 0
             validators = self.s.chain.getValidators()
-            print("Active validators: ", validators)
+            print("ATTESTATION - Active validators: ", validators)
             out = ""
-            for v in validators:
+            for v in validators:            
+                submitted = 0
                 attestationsSubmitted = [
                     json.loads(d.split("\t")[-1]) 
                     for d in self.s.chain.getValidatorDuties(v)
                     if "successfully submitted attestation" in d
                 ]
                 diff = ep - self.prevEpoch
-                for i in range(diff):
+                for i in range(diff - 1):
                     for attestation in attestationsSubmitted[::-1]:
                         slot = attestation["slot"]
-                        print(f"Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
+                        print(f"ATTESTATION - Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
                         if (ep - i - 1) == self.s.chain.getSlotEpoch(slot):
-                            print("Submitted\n")
+                            print("ATTESTATION - Submitted\n")
                             submitted += 1
                             break
-                print("Diff: ", diff)
-                print("Submitted: ", submitted)
+                print("ATTESTATION - Diff: ", diff)
+                print("ATTESTATION - Submitted: ", submitted)
                 missed = diff - submitted
                 if missed > 0:
                     performance = submitted / diff * 100
@@ -83,7 +82,61 @@ class TaskSSVCheckAttestationsMiss(Task):
                         out += "\n"
                     out += f"validator {v} missed {missed} attestations in the last hour!"
                     out += f" ({performance:.2f} %)"
-            print("Message: ", out)
+            self.prevEpoch = ep
+            if out != "":
+                out += f" {Emoji.BlockMiss}"
+                return self.notify(out, level=NotificationLevel.Info)
+        return False
+
+
+class TaskSSVCheckSyncCommitteeMiss(Task):
+    def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(5)):
+        super().__init__("TaskSSVCheckSyncCommitteeMiss", services, checkEvery, notifyEvery)
+        self.prevEpoch = None
+        self.SLOTS_IN_EPOCH = 31
+
+    @staticmethod
+    def isPluggable(services):
+        c = len(services.chain.getValidators())
+        return c > 0
+
+    def run(self):
+        ep = self.s.chain.getEpoch()
+
+        if self.prevEpoch is None:
+            self.prevEpoch = ep
+
+        print("SYNC COMMITTEE - Epoch: ", ep)
+        print("SYNC COMMITTEE - Prev epoch: ", self.prevEpoch)
+        if self.prevEpoch != ep:
+            validators = self.s.chain.getValidators()
+            print("SYNC COMMITTEE - Active validators: ", validators)
+            out = ""
+            for v in validators:
+                submitted = 0
+                validatorIndex = self.s.chain.getValidatorIndexFromPubKey(v)
+                duty = self.s.chain.getValidatorSyncDuty(validatorIndex, ep - 1)
+                if duty != -1:
+                    syncCommitteeSubmitted = [
+                        json.loads(d.split("\t")[-1]) 
+                        for d in self.s.chain.getValidatorDuties(v)
+                        if "successfully submitted sync committee" in d
+                    ]
+                    for attestation in syncCommitteeSubmitted[::-1]:
+                        slot = attestation["slot"]
+                        print(f"SYNC COMMITTEE - Slot - Epoch: {slot} - {self.s.chain.getSlotEpoch(slot)}")
+                        if (ep - 1) == self.s.chain.getSlotEpoch(slot):
+                            print("SYNC COMMITTEE - Submitted\n")
+                            submitted += 1
+                            break
+                    print("SYNC COMMITTEE - Submitted: ", submitted)
+                    missed = self.SLOTS_IN_EPOCH - submitted
+                    if missed > 0:
+                        performance = submitted / self.SLOTS_IN_EPOCH * 100
+                        if out != "":
+                            out += "\n"
+                        out += f"validator {v} missed {missed} sync committee in the last epoch!"
+                        out += f" ({performance:.2f} %)"
             self.prevEpoch = ep
             if out != "":
                 out += f" {Emoji.BlockMiss}"
@@ -227,6 +280,7 @@ class Ssv(Ethereum):
         TaskSSVCheckECStatus,
         TaskSSVCheckSubmissionATTESTER,
         TaskSSVDKGHealth,
+        TaskSSVCheckSyncCommitteeMiss,
     ]
 
     def __init__(self, conf):
