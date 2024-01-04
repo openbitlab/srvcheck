@@ -44,6 +44,8 @@ class TaskAPT(Task):
 
             subprocess.check_call(["apt", "--version"])
             return True
+        except ModuleNotFoundError:            
+            return False
         except subprocess.CalledProcessError:
             return False
 
