@@ -22,6 +22,8 @@
 
 import configparser
 import re
+import time
+from http.client import RemoteDisconnected
 
 import requests
 
@@ -34,12 +36,22 @@ ConfSet.addItem(ConfItem("chain.ghRepository", None, str, "github repository"))
 ConfSet.addItem(ConfItem("chain.service", None, str, "systemd service name"))
 ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
+MAX_RPC_RETRIES = 3
 
-def rpcCall(url, method, params=[]):
-    d = requests.post(
-        url, json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
-    ).json()
-    return d["result"]
+
+def rpcCall(url, method, params=[], iteration=0):
+    try:
+        d = requests.post(
+            url, json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
+        ).json()
+        return d["result"]
+
+    except RemoteDisconnected as e:
+        if iteration < MAX_RPC_RETRIES:
+            time.sleep(2)
+            return rpcCall(url, method, params, iteration + 1)
+        else:
+            raise (e)
 
 
 def getCall(url, data):
