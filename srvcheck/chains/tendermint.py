@@ -108,9 +108,11 @@ class TaskTendermintBlockMissed(Task):
             return self.notify(
                 f"{missed_perc:.1f}% not signed blocks in the latest {blocksChecked} "
                 + f"({missed}) {Emoji.BlockMiss}",
-                level=NotificationLevel.Error
-                if missed_perc > self.CRITICAL_THRESHOLD_NOTSIGNED
-                else NotificationLevel.Warning,
+                level=(
+                    NotificationLevel.Error
+                    if missed_perc > self.CRITICAL_THRESHOLD_NOTSIGNED
+                    else NotificationLevel.Warning
+                ),
             )
 
         return False

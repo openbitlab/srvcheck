@@ -81,7 +81,10 @@ class TestTaskSystemCpuAlert(unittest.TestCase):
         n.flush()
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
-            n.getFirstEvent()[0], urllib.parse.quote("#CPU usage is above 90% (99%) ⚠ ")
+            n.getFirstEvent()[0],
+            urllib.parse.quote(
+                "#CPU average usage is above 90% (99% in the last 2 checks) ⚠ "
+            ),
         )
 
 
