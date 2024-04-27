@@ -34,6 +34,7 @@ from .substrate import Polkasama, Substrate  # noqa: F401
 from .t3rn import T3rn  # noqa: F401
 from .tendermint import Tendermint  # noqa: F401
 from .tezos import Tezos  # noqa: F401
+from .dirk import Dirk
 
 CHAINS = [
     Substrate,
