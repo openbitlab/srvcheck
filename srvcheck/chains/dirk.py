@@ -65,7 +65,7 @@ class Dirk (Chain):
 	@staticmethod
 	def detect(conf):
 		try:
-			Dirk(conf).getVersion()
+			Dirk(conf).getAttestationSign()
 			return True
 		except:
 			return False
