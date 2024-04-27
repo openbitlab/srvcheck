@@ -8,9 +8,9 @@ from .tezos import Tezos
 from .solana import Solana
 from .aptos import Aptos
 from .near import Near
+from .dirk import Dirk
 
 CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near, Dirk]
-=======
 # MIT License
 
 # Copyright (c) 2021-2023 Openbitlab Team
