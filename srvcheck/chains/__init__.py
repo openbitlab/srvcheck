@@ -8,4 +8,4 @@ from .solana import Solana
 from .aptos import Aptos
 from .near import Near
 
-CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near]
+CHAINS = [Substrate, Tendermint, Tezos, Lisk, Solana, Aptos, Near, Dirk]
