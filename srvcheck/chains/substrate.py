@@ -1,390 +1,538 @@
-from substrateinterface import SubstrateInterface
-from substrateinterface.exceptions import StorageFunctionNotFound
-from srvcheck.tasks.task import hours, minutes
-from .chain import Chain
-from ..tasks import Task
-from ..notification import Emoji
-from ..utils import ConfItem, ConfSet, Bash
+# MIT License
 
-ConfSet.addItem(ConfItem('chain.validatorAddress', description='Validator address'))
+# Copyright (c) 2021-2023 Openbitlab Team
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+from substrateinterface import SubstrateInterface
+from substrateinterface.exceptions import SubstrateRequestException
+from websocket import WebSocketBadStatusException, WebSocketConnectionClosedException
+
+from srvcheck.tasks.task import hours, minutes
+
+from ..notification import Emoji, NotificationLevel
+from ..tasks import Task
+from ..utils import Bash, ConfItem, ConfSet, PlotsConf, SubPlotConf, cropData, savePlots
+from .chain import Chain
+
+ConfSet.addItem(ConfItem("chain.validatorAddress", description="Validator address"))
+
+
+class SubstrateInterfaceWrapper(SubstrateInterface):
+    def query(self, module, storage_function, params=[]):
+        try:
+            return super(SubstrateInterfaceWrapper, self).query(
+                module=module, storage_function=storage_function, params=params
+            )
+        except (  # noqa: F841
+            WebSocketConnectionClosedException,
+            ConnectionRefusedError,
+            WebSocketBadStatusException,
+            BrokenPipeError,
+            SubstrateRequestException,
+        ) as e:
+            self.connect_websocket()
+
+    def rpc_request(self, method, params):
+        try:
+            return super(SubstrateInterfaceWrapper, self).rpc_request(
+                method=method, params=params
+            )
+        except (  # noqa: F841
+            WebSocketConnectionClosedException,
+            ConnectionRefusedError,
+            WebSocketBadStatusException,
+            BrokenPipeError,
+            SubstrateRequestException,
+        ) as e:
+            self.connect_websocket()
+
 
 class TaskSubstrateNewReferenda(Task):
-	def __init__(self, services, checkEvery=hours(1), notifyEvery=60*10*60):
-		super().__init__('TaskSubstrateNewReferenda',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
+    def __init__(self, services, checkEvery=hours(1), notifyEvery=60 * 10 * 60):
+        super().__init__("TaskSubstrateNewReferenda", services, checkEvery, notifyEvery)
+        self.prev = None
 
-	@staticmethod
-	def isPluggable(services):
-		return True
+    @staticmethod
+    def getCount(si):
+        return si.query(
+            module="Referenda", storage_function="ReferendumCount", params=[]
+        ).value
 
-	def run(self):
-		n = self.s.chain.getNetwork()
-		if n not in ['Kusama', 'Polkadot']:
-			return False
+    @staticmethod
+    def isPluggable(services):
+        if services.chain.getNetwork() in ["Kusama", "Polkadot"]:
+            return True
+        return False
 
-		si = self.s.chain.getSubstrateInterface()
-		result = si.query(
-			module='Referenda',
-			storage_function='ReferendumCount',
-			params=[]
-		)
+    def run(self):
+        net = self.s.chain.getNetwork()
+        count = self.getCount(self.s.chain.sub_iface)
 
-		count = result.value
+        if self.prev is None:
+            self.prev = count
+            return False
 
-		if self.prev is None:
-			self.prev = count
-			return False
+        if count > self.prev:
+            self.prev = count
+            return self.notify(
+                f"New referendum found on {net}: {count - 1} {Emoji.Proposal}",
+                level=NotificationLevel.Warning,
+            )
 
-		if count > self.prev:
-			self.prev = count
-			return self.notify(f'New referendum found on {n}: {n, count - 1}')
 
-class TaskRelayChainStuck(Task):
-	def __init__(self, services, checkEvery=30, notifyEvery=60*5):
-		super().__init__('TaskRelayChainStuck',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
+class TaskSubstrateReferendaVotingCheck(Task):
+    def __init__(self, services, checkEvery=hours(1), notifyEvery=60 * 10 * 60):
+        super().__init__(
+            "TaskSubstrateReferendaVotingCheck", services, checkEvery, notifyEvery
+        )
+        self.prev = None
 
-	@staticmethod
-	def isPluggable(services):
-		return services.chain.isParachain()
+    @staticmethod
+    def isPluggable(services):
+        if services.chain.getNetwork() in ["Kusama", "Polkadot"]:
+            return services.conf.exists("chain.validatorAddress")
+        return False
 
-	def run(self):
-		if self.prev is None:
-			self.prev = self.s.chain.getRelayHeight()
-		elif self.prev == self.s.chain.getRelayHeight():
-			return self.notify(f'relay is stuck at block {self.prev} {Emoji.Stuck}')
-		return False
+    def run(self):
+        si = self.s.chain.sub_iface
+        net = self.s.chain.getNetwork()
+        validator = self.s.conf.getOrDefault("chain.validatorAddress")
+        result = si.query_map(
+            module="ConvictionVoting",
+            storage_function="VotingFor",
+            params=[validator],
+            max_results=1000,
+        )
+        count = TaskSubstrateNewReferenda.getCount(si)
 
-class TaskBlockProductionCheck(Task):
-	def __init__(self, services, checkEvery=minutes(20), notifyEvery=minutes(20)):
-		super().__init__('TaskBlockProductionCheck',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
+        vt = {}
+        vtl = []
+        for votes in map(
+            lambda y: list(y.values())[0]["votes"], map(lambda y: y[1].value, result)
+        ):
+            for n, v in votes:
+                vt[n] = v
+                vtl.append(n)
+        nv = []
+        for x in range(count - 16, count):
+            if x in vt:
+                continue
 
-	@staticmethod
-	def isPluggable(services):
-		return services.chain.isParachain()
+            c = si.query(
+                module="Referenda",
+                storage_function="ReferendumInfoFor",
+                params=[x],
+            ).value
+            if "Approved" not in c and "Rejected" not in c:
+                nv.append(x)
 
-	def run(self):
-		if self.s.chain.isCollating():
-			block = self.s.chain.latestBlockProduced()
-			if block > 0:
-				if self.prev is None:
-					self.prev = block
-				elif self.prev == block:
-					return self.notify(f'no block produced in the latest 20 minutes! Last block produced was {self.prev} {Emoji.BlockMiss}')
-				self.prev = block
-		return False
+        if len(nv) > 0:
+            return self.notify(
+                f"Validator {validator} is not voting on {net} "
+                + f"Referenda {str(nv)} {Emoji.Proposal}",
+                level=NotificationLevel.Warning,
+            )
 
-class TaskBlockProductionReport(Task):
-	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
-		super().__init__('TaskBlockProductionReport',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
-		self.prevSession = None
-		self.prevTotalSessions = None
-		self.prevValidatedSessions = None
-		self.lastBlockChecked = None
-		self.totalBlockChecked = 0
-		self.oc = 0
 
-	@staticmethod
-	def isPluggable(services):
-		return True
+class TaskSubstrateRelayChainStuck(Task):
+    def __init__(self, services, checkEvery=30, notifyEvery=60 * 5):
+        super().__init__(
+            "TaskSubstrateRelayChainStuck", services, checkEvery, notifyEvery
+        )
+        self.prev = None
 
-	def run(self):
-		era = self.s.chain.getEra()
-		session = self.s.chain.getSession()
-		if self.prev is None:
-			self.prev = era
-		if self.prevSession is None:
-			self.prevSession = session
-			self.prevValidatedSessions = 0
-			self.prevTotalSessions = 0
+    @staticmethod
+    def isPluggable(services):
+        return services.chain.isParachain()
 
-		if self.s.chain.isStaking():
-			currentBlock = self.s.chain.getHeight()
-			blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked)]
-			for b in blocksToCheck:
-				a = self.s.chain.getBlockAuthor(b)
-				collator = self.s.conf.getOrDefault('chain.validatorAddress')
-				if a.lower() == collator.lower():
-					self.oc += 1
-				self.lastBlockChecked = b
-				self.totalBlockChecked += 1
+    def run(self):
+        if self.prev is None:
+            self.prev = self.s.chain.getRelayHeight()
+        elif self.prev == self.s.chain.getRelayHeight():
+            return self.notify(
+                f"relay is stuck at block {self.prev} {Emoji.Stuck}",
+                level=NotificationLevel.Error,
+            )
+        return False
 
-		if self.prev != era:
-			self.prev = era
-			report = f'validated in {self.prevValidatedSessions} active sessions out of {self.prevTotalSessions} in the last era {Emoji.Leader if self.prevValidatedSessions > 0 else Emoji.NoLeader}\n'
-			self.prevTotalSessions = 0
-			if self.totalBlockChecked > 0:
-				report += f'produced {self.oc} blocks out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
-				self.totalBlockChecked = 0
-				report = f'{report} {Emoji.BlockProd}'
-				self.oc = 0
-				self.prevValidatedSessions = 0
-				return self.notify(report)
 
-		if self.prevSession != session:
-			if self.s.chain.isValidator():
-				self.prevValidatedSessions += 1
-			self.prevTotalSessions += 1
-			self.prevSession = session
-			
-		return False
+class TaskSubstrateBlockProductionReport(Task):
+    def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
+        super().__init__(
+            "TaskSubstrateBlockProductionReport", services, checkEvery, notifyEvery
+        )
+        self.prev = None
+        self.lastBlockChecked = None
+        self.totalBlockChecked = 0
+        self.oc = 0
 
-class TaskBlockProductionReportParachain(Task):
-	def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
-		super().__init__('TaskBlockProductionReport',
-			  services, checkEvery, notifyEvery)
-		self.prev = None
-		self.prevBlock = None
-		self.lastBlockChecked = None
-		self.totalBlockChecked = 0
-		self.oc = 0
+    @staticmethod
+    def isPluggable(services):
+        return not services.chain.isParachain()
 
-	@staticmethod
-	def isPluggable(services):
-		return services.chain.isParachain()
+    def run(self):
+        era = self.s.chain.getEra()
+        if self.prev is None:
+            self.prev = era
 
-	def run(self):
-		s = self.s.chain.getSession()
-		session = s['current'] if isinstance(s, dict) and 'current' in s else s
+        if self.s.chain.isStaking():
+            currentBlock = self.s.chain.getHeight()
+            blocksToCheck = [
+                b
+                for b in self.s.chain.getExpectedBlocks()
+                if b <= currentBlock
+                and (self.lastBlockChecked is None or b > self.lastBlockChecked)
+            ]
+            for b in blocksToCheck:
+                a = self.s.chain.getBlockAuthor(b)
+                collator = self.s.conf.getOrDefault("chain.validatorAddress")
+                if a.lower() == collator.lower():
+                    self.oc += 1
+                self.lastBlockChecked = b
+                self.totalBlockChecked += 1
 
-		if self.prev is None:
-			self.prev = session
+        if self.prev != era:
+            self.s.persistent.timedAdd(
+                self.s.conf.getOrDefault("chain.name") + "_sessionBlocksProduced",
+                self.prev,
+            )
+            self.s.persistent.timedAdd(
+                self.s.conf.getOrDefault("chain.name") + "_blocksChecked",
+                self.totalBlockChecked,
+            )
+            self.prev = era
+            perc = 0
+            if self.totalBlockChecked > 0:
+                perc = self.oc / self.totalBlockChecked * 100
+                self.totalBlockChecked = 0
+                self.s.persistent.timedAdd(
+                    self.s.conf.getOrDefault("chain.name") + "_blocksProduced", self.oc
+                )
+                self.s.persistent.timedAdd(
+                    self.s.conf.getOrDefault("chain.name")
+                    + "_blocksPercentageProduced",
+                    perc,
+                )
+                self.oc = 0
+        return False
 
-		block = 0
-		orb = self.s.chain.moonbeamAssignedOrbiter()
-		if self.s.chain.isCollating():
-			block = self.s.chain.latestBlockProduced()
-			if block > 0:
-				if self.prevBlock is None:
-					self.prevBlock = block
-					self.oc += 1
 
-				if block != self.prevBlock:
-					self.oc += 1
+class TaskSubstrateBlockProductionReportParachain(Task):
+    def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
+        super().__init__(
+            "TaskSubstrateBlockProductionReportParachain",
+            services,
+            checkEvery,
+            notifyEvery,
+        )
+        self.prev = None
+        self.prevBlock = None
+        self.lastBlockChecked = None
+        self.totalBlockChecked = 0
+        self.oc = 0
 
-				self.prevBlock = block
-			elif block == -1:
-				startingRoundBlock = s['first']
-				currentBlock = self.s.chain.getHeight()
-				blocksToCheck = [b for b in self.s.chain.getExpectedBlocks() if b <= currentBlock and (self.lastBlockChecked is None or b > self.lastBlockChecked) and b >= startingRoundBlock]
-				for b in blocksToCheck:
-					a = self.s.chain.getBlockAuthor(b)
-					collator = orb if orb != '0x0' and orb is not None else self.s.conf.getOrDefault('chain.validatorAddress')
-					if a.lower() == collator.lower():
-						self.oc += 1
-					self.lastBlockChecked = b
-					self.totalBlockChecked += 1
+    @staticmethod
+    def isPluggable(services):
+        return services.chain.isParachain()
 
-		if self.prev != session:
-			self.prev = session
-			report = f'{self.oc} block produced last {"round" if isinstance(s, dict) and "current" in s else "session"}'
-			if self.totalBlockChecked > 0:
-				report = f'{report} out of {self.totalBlockChecked} ({self.oc / self.totalBlockChecked * 100:.2f} %)'
-				self.totalBlockChecked = 0
-			report = f'{report} {Emoji.BlockProd}'
-			self.oc = 0
-			if self.s.chain.isValidator():
-				return self.notify(f'will validate during the session {session + 1} {Emoji.Leader}\n{report}')
-			elif orb != '0x0':
-				if orb is None:
-					return self.notify(f'is not the selected orbiter for the session {session + 1} {Emoji.NoOrbiter}\n{report}')
-				else:
-					return self.notify(f'is the selected orbiter for the session {session + 1} {Emoji.Orbiter}\n{report}')
-			elif block != -1:
-				return self.notify(f'will not validate during the session {session + 1} {Emoji.NoLeader}\n{report}')
-			else:
-				return self.notify(report)
-		return False
+    def run(self):
+        session = self.s.chain.getSessionWrapped()
 
-class Substrate (Chain):
-	TYPE = "substrate"
-	NAME = ""
-	BLOCKTIME = 15
-	EP = 'http://localhost:9933/'
-	CUSTOM_TASKS = [TaskRelayChainStuck, TaskSubstrateNewReferenda, TaskBlockProductionCheck, TaskBlockProductionReport, TaskBlockProductionReportParachain]
+        if self.prev is None:
+            self.prev = session
 
-	def __init__(self, conf):
-		super().__init__(conf)
-		self.rpcMethods = super().rpcCall('rpc_methods', [])['methods']
+        if self.s.chain.isCollating():
+            startingRoundBlock = self.s.chain.getStartingRoundBlock()
+            currentBlock = self.s.chain.getHeight()
+            blocksToCheck = [
+                b
+                for b in self.s.chain.getExpectedBlocks()
+                if b <= currentBlock
+                and (self.lastBlockChecked is None or b > self.lastBlockChecked)
+                and b >= startingRoundBlock
+            ]
+            for b in blocksToCheck:
+                a = self.s.chain.getBlockAuthor(b)
+                collator = self.s.conf.getOrDefault("chain.validatorAddress")
+                if a.lower() == collator.lower():
+                    self.oc += 1
+                self.lastBlockChecked = b
+                self.totalBlockChecked += 1
 
-	def rpcCall(self, method, params=[]):
-		if method in self.rpcMethods:
-			return super().rpcCall(method, params)
-		return None
+        if self.prev != session:
+            self.s.persistent.timedAdd(
+                self.s.conf.getOrDefault("chain.name") + "_sessionBlocksProduced",
+                self.prev,
+            )
+            self.s.persistent.timedAdd(
+                self.s.conf.getOrDefault("chain.name") + "_blocksChecked",
+                self.totalBlockChecked,
+            )
+            self.prev = session
+            perc = 0
+            if self.totalBlockChecked > 0:
+                perc = self.oc / self.totalBlockChecked * 100
+                self.totalBlockChecked = 0
+            self.s.persistent.timedAdd(
+                self.s.conf.getOrDefault("chain.name") + "_blocksProduced", self.oc
+            )
+            self.s.persistent.timedAdd(
+                self.s.conf.getOrDefault("chain.name") + "_blocksPercentageProduced",
+                perc,
+            )
+            self.oc = 0
+        return False
 
-	def getSubstrateInterface(self):
-		return SubstrateInterface(url=self.EP)
 
-	@staticmethod
-	def detect(conf):
-		try:
-			Substrate(conf).getVersion()
-			return True
-		except:
-			return False
+class TaskSubstrateBlockProductionReportCharts(Task):
+    def __init__(self, services, checkEvery=hours(24), notifyEvery=hours(24)):
+        super().__init__(
+            "TaskSubstrateBlockProductionReportCharts",
+            services,
+            checkEvery,
+            notifyEvery,
+        )
 
-	def getVersion(self):
-		return self.rpcCall('system_version')
+    @staticmethod
+    def isPluggable(services):
+        return True
 
-	def getHeight(self):
-		return int(self.rpcCall('chain_getHeader', [self.getBlockHash()])['number'], 16)
+    def run(self):
+        pc = PlotsConf()
+        pc.title = self.s.conf.getOrDefault("chain.name") + " - Block production"
 
-	def getBlockHash(self):
-		return self.rpcCall('chain_getBlockHash')
+        sp = SubPlotConf()
+        sp.data = cropData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_blocksProduced", 30
+            )
+        )
+        sp.label = "Produced"
+        sp.data_mod = lambda y: y
+        sp.color = "y"
 
-	def getPeerCount(self):
-		return int(self.rpcCall('system_health')['peers'])
+        sp.label2 = "Produced"
+        sp.data2 = cropData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_blocksChecked", 30
+            )
+        )
+        sp.data_mod2 = lambda y: y
+        sp.color2 = "r"
 
-	def getNetwork(self):
-		return self.rpcCall('system_chain')
+        sp.share_y = True
+        sp.set_bottom_y = True
+        pc.subplots.append(sp)
 
-	def isStaking(self):
-		'''c = self.rpcCall('babe_epochAuthorship')
-		if len(c.keys()) == 0:
-			return False
+        sp = SubPlotConf()
+        sp.data = cropData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_blocksPercentageProduced", 30
+            )
+        )
+        sp.label = "Produced (%)"
+        sp.data_mod = lambda y: y
+        sp.color = "b"
 
-		cc = c[c.keys()[0]]
-		return (len(cc['primary']) + len(cc['secondary']) + len(cc['secondary_vrf'])) > 0'''
-		si = self.getSubstrateInterface()
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		era = self.getEra()
-		result = si.query(module='Staking', storage_function='ErasStakers', params=[era, collator])
-		if result.value["total"] > 0:
-			return True
+        sp.set_bottom_y = True
+        pc.subplots.append(sp)
 
-	def isSynching(self):
-		c = self.rpcCall('system_syncState')['currentBlock']
-		h = self.getHeight()
-		return abs(c - h) > 32
+        pc.fpath = "/tmp/p.png"
 
-	def getRelayHeight(self):
-		si = self.getSubstrateInterface()
-		result = si.query(module='ParachainSystem', storage_function='ValidationData', params=[])
-		return result.value["relay_parent_number"]
+        lastSessions = cropData(
+            self.s.persistent.getN(
+                self.s.conf.getOrDefault("chain.name") + "_sessionBlocksProduced", 30
+            )
+        )
+        if lastSessions and len(lastSessions) >= 3:
+            savePlots(pc, 1, 2)
+            self.s.notification.sendPhoto("/tmp/p.png")
 
-	def getParachainId(self):
-		si = self.getSubstrateInterface()
-		result = si.query(module='ParachainInfo', storage_function='ParachainId', params=[])
-		return result.value
 
-	def isParachain(self):
-		try:
-			self.getParachainId()
-			return True
-		except:
-			return False
+class Substrate(Chain):
+    TYPE = "substrate"
+    NAME = ""
+    BLOCKTIME = 15
+    EP = "http://localhost:9933/"
+    CUSTOM_TASKS = [
+        TaskSubstrateRelayChainStuck,
+        TaskSubstrateNewReferenda,
+        TaskSubstrateReferendaVotingCheck,
+        TaskSubstrateBlockProductionReport,
+        TaskSubstrateBlockProductionReportCharts,
+    ]
 
-	def getSession(self):
-		si = self.getSubstrateInterface()
-		try:
-			# Check session on Moonbase/Moonriver, Mangata
-			result = si.query(module='ParachainStaking', storage_function='Round', params=[])
-			return result.value
-		except StorageFunctionNotFound:
-			# Check session on Shiden/Shibuya
-			result = si.query(module='Session', storage_function='CurrentIndex', params=[])
-			return result.value
+    def __init__(self, conf):
+        super().__init__(conf)
+        self.sub_iface = SubstrateInterfaceWrapper(url=self.EP)
+        self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"][
+            "methods"
+        ]
 
-	def getEra(self):
-		si = self.getSubstrateInterface()
-		try:
-			# Check session on Polkadot/Kusama, Aleph
-			result = si.query(module='Staking', storage_function='ActiveEra', params=[])
-			return result.value['index']
-		except StorageFunctionNotFound:
-			return -1
+    def rpcCall(self, method, params=[]):
+        if method in self.rpcMethods:
+            return self.sub_iface.rpc_request(method, params)["result"]
+        return None
 
-	def isValidator(self):
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		if collator:
-			try:
-				# Check validator on Shiden/Shibuya, Mangata
-				si = self.getSubstrateInterface()
-				result = si.query(module='Session', storage_function='QueuedKeys', params=[])
-				for v in result.value:
-					if v[0].lower() == f'{collator}'.lower():
-						return True
-			except StorageFunctionNotFound:
-				return False
-		return False
+    @staticmethod
+    def detect(conf):
+        try:
+            Substrate(conf).getVersion()
+            return not Substrate(conf).isParachain()
+        except:
+            return False
 
-	def isCollating(self):
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		if collator:
-			si = self.getSubstrateInterface()
-			try:
-				# Check collator on Shiden/Shibuya
-				result = si.query(module='CollatorSelection', storage_function='Candidates', params=[])
-				for c in result.value:
-					if c['who'].lower() == f'{collator}'.lower():
-						return True
-				result = si.query(module='CollatorSelection', storage_function='Invulnerables', params=[])
-				for c in result.value:
-					if c.lower() == f'{collator}'.lower():
-						return True
-			except StorageFunctionNotFound:
-				# Check collator on Moonbase/Moonriver, Mangata
-				c = self.moonbeamAssignedOrbiter()
-				if c != '0x0' and c is not None:
-					collator = c
-				result = si.query(module='ParachainStaking', storage_function='SelectedCandidates', params=[])
-				for c in result.value:
-					if c.lower() == collator.lower():
-						return True
-		return False
+    def getVersion(self):
+        return self.rpcCall("system_version")
 
-	def latestBlockProduced(self):
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		if collator:
-			try:
-				# Check last block produced on Shiden/Shibuya
-				si = self.getSubstrateInterface()
-				result = si.query(module='CollatorSelection', storage_function='LastAuthoredBlock', params=[collator])
-				return result.value
-			except StorageFunctionNotFound:
-				return -1
-		return 0
+    def getHeight(self):
+        return int(self.rpcCall("chain_getHeader", [self.getBlockHash()])["number"], 16)
 
-	def getExpectedBlocks(self):
-		serv = self.conf.getOrDefault('chain.service')
-		if serv:
-			blocks = Bash(f"journalctl -u {serv} --no-pager --since '60 min ago' | grep -Eo 'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g").value().split("\n")
-			blocks = [int(b) for b in blocks if b != '']
-			return blocks
-		return []
+    def getBlockHash(self):
+        return self.rpcCall("chain_getBlockHash")
 
-	def getBlockAuthor(self, block):
-		try:
-			return self.rpcCall('eth_getBlockByNumber', [hex(block), True])['author']
-		except:
-			# Check block author Mangata, Polkadot/Kusama and Aleph Zero
-			return self.checkAuthoredBlock(block)
+    def getPeerCount(self):
+        return int(self.rpcCall("system_health")["peers"])
 
-	def moonbeamAssignedOrbiter(self):
-		collator = self.conf.getOrDefault('chain.validatorAddress')
-		if collator:
-			try:
-				si = self.getSubstrateInterface()
-				result = si.query(module='MoonbeamOrbiters', storage_function='AccountLookupOverride', params=[collator])
-				return result.value
-			except StorageFunctionNotFound:
-				return "0x0"
-		return "0x0"
+    def getNetwork(self):
+        return self.rpcCall("system_chain")
 
-	def getSeals(self, block):
-		seals = Bash("grep -Eo 'Pre-sealed block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog | rev | cut -d ' ' -f1 | rev".format(block)).value().split("\n")
-		return seals
+    def isStaking(self):
+        collator = self.conf.getOrDefault("chain.validatorAddress")
+        era = self.getEra()
+        result = self.sub_iface.query(
+            module="Staking", storage_function="ErasStakers", params=[era, collator]
+        )
+        if result.value["total"] > 0:
+            return True
 
-	def checkAuthoredBlock(self, block):
-		bh = self.rpcCall('chain_getBlockHash', [block])
-		seals = self.getSeals(block)
-		for b in seals:
-			if b == bh:
-				return self.conf.getOrDefault('chain.validatorAddress')
-		return "0x0"
+    def isSynching(self):
+        c = self.rpcCall("system_syncState")["currentBlock"]
+        h = self.getHeight()
+        return abs(c - h) > 32
+
+    def getRelayHeight(self):
+        result = self.sub_iface.query(
+            module="ParachainSystem", storage_function="ValidationData", params=[]
+        )
+        return result.value["relay_parent_number"]
+
+    def getParachainId(self):
+        result = self.sub_iface.query(
+            module="ParachainInfo", storage_function="ParachainId", params=[]
+        )
+        return result.value
+
+    def getNodeName(self):
+        return self.rpcCall("system_name")
+
+    def isParachain(self):
+        try:
+            self.getParachainId()
+            return True
+        except:
+            return False
+
+    def getSession(self):
+        result = self.sub_iface.query(
+            module="Session", storage_function="CurrentIndex", params=[]
+        )
+        return result.value
+
+    def getEra(self):
+        result = self.sub_iface.query(
+            module="Staking", storage_function="ActiveEra", params=[]
+        )
+        return result.value["index"]
+
+    def isValidator(self):
+        collator = self.conf.getOrDefault("chain.validatorAddress")
+        if collator:
+            result = self.sub_iface.query(
+                module="Session", storage_function="QueuedKeys", params=[]
+            )
+            for v in result.value:
+                if v[0].lower() == f"{collator}".lower():
+                    return True
+        return False
+
+    def getExpectedBlocks(self, since=60):
+        serv = self.conf.getOrDefault("chain.service")
+        if serv:
+            blocks = (
+                Bash(
+                    f"journalctl -u {serv} --no-pager --since '{since} min ago' | grep -Eo "
+                    + "'Prepared block for proposing at [0-9]+' | sed 's/[^0-9]'//g"
+                )
+                .value()
+                .split("\n")
+            )
+            blocks = [int(b) for b in blocks if b != ""]
+            return blocks
+        return []
+
+    def getBlockAuthor(self, block):
+        return self.checkAuthoredBlock(block)
+
+    def getSeals(self, block):
+        seals = (
+            Bash(
+                "grep -Eo 'block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog --text | rev | cut -d ' ' -f1 | rev".format(  # noqa: E501
+                    block
+                )
+            )
+            .value()
+            .split("\n")
+        )
+        return seals
+
+    def checkAuthoredBlock(self, block):
+        bh = self.rpcCall("chain_getBlockHash", [block])
+        seals = self.getSeals(block)
+        for b in seals:
+            if b == bh:
+                return self.conf.getOrDefault("chain.validatorAddress")
+        return "0x0"
+
+    def getSessionWrapped(self):
+        return self.getSession()
+
+
+class Polkasama(Substrate):
+    TYPE = "polkasama"
+    EP = "ws://localhost:9944/"
+    BLOCKTIME = 15
+    CUSTOM_TASKS = [
+        TaskSubstrateRelayChainStuck,
+        TaskSubstrateNewReferenda,
+        TaskSubstrateReferendaVotingCheck,
+        TaskSubstrateBlockProductionReport,
+        TaskSubstrateBlockProductionReportCharts,
+    ]
+
+    def __init__(self, conf):
+        super().__init__(conf)
+
+    @staticmethod
+    def detect(conf):
+        try:
+            return Polkasama(conf).getNodeName() == "Parity Polkadot"
+        except:
+            return False

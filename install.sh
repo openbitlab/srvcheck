@@ -14,28 +14,37 @@ install() {
 print_help () {
     echo "Usage: install [options...]
      --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
- -a  --validator-address <address> enable checks on block production
+     --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
+ -a  --validator-address <address> enable checks on block production, governance proposals and other account related informations
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
+     --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed
-     --rel <version> release version installed (required for tendermint chain if git_api is specified)
- -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+     --gov enable checks on new governance proposals (tendermint)
      --mount <mount_point> mount point where the node is installed
  -n  --name <name> monitor name [default is the server hostname]
+     --rel <version> release version installed (required for tendermint chain if git_api is specified)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
-     --gov enable checks on new governance proposals (tendermint)
+ -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+ -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
  -v  --verbose enable verbose installation"
 }
 
 install_monitor () {
+    if pip install --dry-run requests 2>&1 | grep -q "error: externally-managed-environment"; then
+        breaksystem="--break-system-packages"
+    else
+        breaksystem=""
+    fi
+
     config_file="/etc/srvcheck.conf"
     apt -qq update
     apt -qq install git python3-pip -y
     systemctl stop node-monitor.service
     rm -rf /etc/srvcheck.conf
     rm -rf /etc/systemd/system/node-monitor.service
-    pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck --exists-action w --ignore-installed 
+    pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@$branch#egg=srvcheck --exists-action w --ignore-installed  $breaksystem
     wget $verbosity https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/srvcheck.conf -O $config_file ## TODO add args to change service name
     sed -i -e "s/^apiToken =.*/apiToken = \"$api_token\"/" $config_file
     sed -i -e "s/^chatIds =.*/chatIds = [\"$chat_id\"]/" $config_file
@@ -50,6 +59,10 @@ install_monitor () {
     if [ ! -z "$active_set" ]
     then
         sed -i -e "s/^activeSet =.*/activeSet = $active_set/" $config_file
+    fi
+    if [ ! -z "$admin" ]
+    then
+        sed -i -e "s/^govAdmin =.*/govAdmin = $admin/" $config_file
     fi
     if [ ! -z "$git_api" ]
     then
@@ -67,6 +80,10 @@ install_monitor () {
     then
         sed -i -e "s,^mountPoint =.*,mountPoint = $mountPoint,g" $config_file
     fi
+    if [ ! -z "$endpoint" ]
+    then
+        sed -i -e "s,^endpoint =.*,endpoint = $endpoint,g" $config_file
+    fi
     if [[ ! -z "$threshold_notsigned" && ! -z "$block_window" ]]
     then
         sed -i -e "s/^thresholdNotsigned =.*/thresholdNotsigned = $threshold_notsigned/" $config_file
@@ -75,6 +92,12 @@ install_monitor () {
     if [ "$enable_gov" = true ]
     then
         sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
+    fi
+    if [[ ! -z "$info_level_chat" && ! -z "$warning_level_chat" && ! -z "$error_level_chat" ]]
+    then
+        sed -i -e "s/^infoLevelChatId =.*/infoLevelChatId = $info_level_chat/" $config_file
+        sed -i -e "s/^warningLevelChatId =.*/warningLevelChatId = $warning_level_chat/" $config_file
+        sed -i -e "s/^errorLevelChatId =.*/errorLevelChatId = $error_level_chat/" $config_file
     fi
 }
 
@@ -110,6 +133,17 @@ case $1 in
             exit 1
         else
             validatorAddress="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --admin)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+            admin="$2"
         fi
         shift # past argument
         shift # past value
@@ -164,6 +198,21 @@ case $1 in
         shift # past value
         shift # past value
     ;;
+    -tl|--telegram-levels)
+        if [[ -z $2 || -z $3 || -z $4 ]]
+        then
+            print_help
+            exit 1
+        else
+	        info_level_chat="$2"
+            warning_level_chat="$3"
+            error_level_chat="$4"
+        fi
+        shift # past argument
+        shift # past value
+        shift # past value
+        shift # past value
+    ;;
     --git)
         if [[ -z $2 ]]
         then
@@ -211,6 +260,17 @@ case $1 in
             exit 1
         else
             service="$2"
+        fi
+        shift # past argument
+        shift # past value
+    ;;
+    --endpoint)
+        if [[ -z $2 ]]
+        then
+            print_help
+            exit 1
+        else
+	        endpoint="$2"
         fi
         shift # past argument
         shift # past value
