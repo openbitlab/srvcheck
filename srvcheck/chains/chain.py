@@ -25,13 +25,14 @@ import re
 
 import requests
 
-from ..utils import ConfItem, ConfSet
+from ..utils import Bash, ConfItem, ConfSet
 
 ConfSet.addItem(ConfItem("chain.endpoint", None, str, "api endpoint"))
 ConfSet.addItem(ConfItem("chain.blockTime", 10, int, "block time in seconds"))
 ConfSet.addItem(ConfItem("chain.name", None, str, "chain name"))
 ConfSet.addItem(ConfItem("chain.ghRepository", None, str, "github repository"))
 ConfSet.addItem(ConfItem("chain.service", None, str, "systemd service name"))
+ConfSet.addItem(ConfItem("chain.docker", None, str, "docker container id"))
 ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
 
@@ -119,8 +120,13 @@ class Chain:
         raise Exception("Abstract isSynching()")
 
     def getNodeBinary(self):
-        c = configparser.ConfigParser()
-        serviceName = self.conf.getOrDefault("chain.service")
-        c.read(f"/etc/systemd/system/{serviceName}")
-        cmd = re.split(" ", c["Service"]["ExecStart"])[0]
+        cmd = ""
+        if self.conf.getOrDefault("chain.service"):
+            c = configparser.ConfigParser()
+            serviceName = self.conf.getOrDefault("chain.service")
+            c.read(f"/etc/systemd/system/{serviceName}")
+            cmd = re.split(" ", c["Service"]["ExecStart"])[0]
+        elif self.conf.getOrDefault("chain.docker"):
+            containerId = self.conf.getOrDefault("chain.docker")
+            cmd = Bash("docker inspect -f '{{ .Path }}' " + containerId).value()
         return cmd
