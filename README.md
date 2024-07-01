@@ -132,7 +132,7 @@ install --help
 Install with `--git` flag to get alerts on new node releases (in this case [celestia-node](https://github.com/celestiaorg/celestia-node))
 
 ```bash 
-curl -s https://raw.githubusercontent.com/openbitlab/celestia-srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> --git celestiaorg/celestia-node
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> --git celestiaorg/celestia-node
 ```
 
 Install with `--admin` and `--gov` flags to be tagged once new proposals are out

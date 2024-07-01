@@ -107,7 +107,7 @@ install_monitor () {
 }
 
 install_service () {
-    wget -q https://raw.githubusercontent.com/openbitlab/celestia-srvcheck/$branch/conf/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
+    wget -q https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
     sed -i -e "s,^ExecStart=.*,ExecStart=$1,g" /etc/systemd/system/node-monitor.service
     systemctl daemon-reload 
     systemctl start node-monitor
