@@ -24,6 +24,8 @@ from .amplitude import Amplitude  # noqa: F401
 from .aptos import Aptos  # noqa: F401
 from .astar import Astar  # noqa: F401
 from .bridgeHubPolka import BridgeHubPolka  # noqa: F401
+from .celestia import Celestia  # noqa: F401
+from .celestiadas import CelestiaDas  # noqa: F401
 from .chain import Chain  # noqa: F401
 from .lisk import Lisk  # noqa: F401
 from .mangata import Mangata  # noqa: F401
@@ -50,4 +52,6 @@ CHAINS = [
     Polkasama,
     T3rn,
     BridgeHubPolka,
+    Celestia,
+    CelestiaDas,
 ]

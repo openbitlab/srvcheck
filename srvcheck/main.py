@@ -57,6 +57,7 @@ ConfSet.addItem(
 )
 ConfSet.addItem(ConfItem("chain.service", None, str, "node service name"))
 ConfSet.addItem(ConfItem("tasks.govAdmin", None, str, "Proposal voter nickname"))
+ConfSet.addItem(ConfItem("tasks.exporterPort", 9001, int, "Prometheus exporter port"))
 
 
 def addTasks(services):

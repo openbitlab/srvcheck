@@ -52,5 +52,6 @@ setup(
         "packaging==21.3",
         "python-dateutil",
         "matplotlib",
+        "prometheus-client",
     ],
 )

@@ -101,7 +101,7 @@ class TaskAptosValidatorPerformanceCheck(Task):
                 )
             elif int(lastEpoch[3]) / int(lastEpoch[0]) < 0.25:
                 return self.notify(
-                    f"{int(lastEpoch[3])/int(lastEpoch[0]) * 100:.2f}% of proposals failed "
+                    f"{int(lastEpoch[3]) / int(lastEpoch[0]) * 100:.2f}% of proposals failed "
                     + f"{Emoji.BlockMiss}\n{activeStakeOut}",
                     level=NotificationLevel.Error,
                 )

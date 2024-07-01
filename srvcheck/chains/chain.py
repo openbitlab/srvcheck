@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2021-2023 Openbitlab Team
+# Copyright (c) 2021-2024 Openbitlab Team
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import configparser
 import re
 
@@ -35,15 +34,18 @@ ConfSet.addItem(ConfItem("chain.service", None, str, "systemd service name"))
 ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
 
-def rpcCall(url, method, params=[]):
+def rpcCall(url, method, headers=None, params=[]):
     d = requests.post(
-        url, json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
+        url,
+        headers=headers,
+        json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
+        timeout=60,
     ).json()
     return d["result"]
 
 
 def getCall(url, data):
-    return requests.get(url, json=data).json()
+    return requests.get(url, json=data, timeout=60).json()
 
 
 class Chain:
@@ -57,9 +59,9 @@ class Chain:
             self.EP = self.conf.getOrDefault("chain.endpoint")
         self.NAME = self.conf.getOrDefault("chain.name")
 
-    def rpcCall(self, method, params=[]):
+    def rpcCall(self, method, headers=None, params=[]):
         """Calls the RPC method with the given parameters"""
-        return rpcCall(self.EP, method, params)
+        return rpcCall(self.EP, method, headers, params)
 
     def getCall(self, r, data=None):
         """Calls the GET method with the given parameters"""
