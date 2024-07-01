@@ -1,4 +1,4 @@
-# CELESTIA-SRVCHECK
+# SRVCHECK
 
 ![CI Status](https://github.com/openbitlab/srvcheck/actions/workflows/ci.yaml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
