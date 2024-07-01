@@ -68,7 +68,7 @@ class TaskAPT(Task):
         if security_updates:
             return self.notify(
                 f"has {len(security_updates)} security updates pending "
-                + f"({len(updates)+len(security_updates)} pending updates total): "
+                + f"({len(updates) + len(security_updates)} pending updates total): "
                 + f'{", ".join(security_updates)} {Emoji.Floppy}',
                 level=NotificationLevel.Info,
             )

@@ -13,22 +13,23 @@ install() {
 
 print_help () {
     echo "Usage: install [options...]
-     --active-set <active_set_number> number of the validators in the active set (tendermint chain) [default is the number of active validators]
-     --admin <@username> the admin telegram username that is interested to new governance proposals (tendermint)
+     --active-set <active_set_number> number of the validators in the active set [number of active validators provided by default]
+     --admin <@username> the Telegram username that is tagged once new governance proposals are live
  -a  --validator-address <address> enable checks on block production, governance proposals and other account related informations
  -b  --block-time <time> expected block time [default is 60 seconds]
      --branch <name> name of the branch to use for the installation [default is main]
      --endpoint <url:port> node local rpc address
      --git <git_api> git api to query the latest realease version installed
-     --gov enable checks on new governance proposals (tendermint)
-     --mount <mount_point> mount point where the node is installed
+     --gov enable checks on new governance proposals
+     --mount <mount_point> mount point where the node saves data
  -n  --name <name> monitor name [default is the server hostname]
      --rel <version> release version installed (required for tendermint chain if git_api is specified)
      --signed-blocks <max_misses> <blocks_window> max number of blocks not signed in a specified blocks window [default is 5 blocks missed out of the latest 100 blocks]
  -s  --service <name> service name of the node to monitor [required]
  -t  --telegram <chat_id> <token> telegram chat options (id and token) where the alerts will be sent [required]
+ -v  --verbose enable verbose installation
  -tl --telegram-levels <chat_info> <chat_warning> <chat_error> set a different telegram chat ids for different severity
- -v  --verbose enable verbose installation"
+ -e  --exporter <port> enable prometheus exporter on <port> (port optional, default 9001)"
 }
 
 install_monitor () {
@@ -37,7 +38,6 @@ install_monitor () {
     else
         breaksystem=""
     fi
-
     config_file="/etc/srvcheck.conf"
     apt -qq update
     apt -qq install git python3-pip -y
@@ -93,6 +93,11 @@ install_monitor () {
     then
         sed -i -r 's/(.TaskTendermintNewProposal?;|.TaskTendermintNewProposal?;?$)//' $config_file #enable checks on tendermint governance module
     fi
+    if [ "$enable_exporter" = true ]
+    then
+        sed -i -r 's/(.TaskExporter?;|.TaskExporter?;?$)//' $config_file #enable exporter
+        sed -i -e "s/^exporterPort =.*/exporterPort = $exporter_port/" $config_file
+    fi
     if [[ ! -z "$info_level_chat" && ! -z "$warning_level_chat" && ! -z "$error_level_chat" ]]
     then
         sed -i -e "s/^infoLevelChatId =.*/infoLevelChatId = $info_level_chat/" $config_file
@@ -102,7 +107,7 @@ install_monitor () {
 }
 
 install_service () {
-    wget -q https://raw.githubusercontent.com/openbitlab/srvcheck/$branch/conf/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
+    wget -q https://raw.githubusercontent.com/openbitlab/celestia-srvcheck/$branch/conf/node-monitor.service -O /etc/systemd/system/node-monitor.service ## TODO add args to change service name
     sed -i -e "s,^ExecStart=.*,ExecStart=$1,g" /etc/systemd/system/node-monitor.service
     systemctl daemon-reload 
     systemctl start node-monitor
@@ -112,7 +117,7 @@ install_service () {
 POSITIONAL_ARGS=()
 
 enable_gov=false
-
+enable_exporter=false
 while [[ $# -gt 0 ]]; do
 case $1 in
     -n|--name)
@@ -272,6 +277,12 @@ case $1 in
         else
 	        endpoint="$2"
         fi
+        shift # past argument
+        shift # past value
+    ;;
+    --exporter)
+        enable_exporter=true
+	      exporter_port="$2"
         shift # past argument
         shift # past value
     ;;
