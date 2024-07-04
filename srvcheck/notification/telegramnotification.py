@@ -118,7 +118,7 @@ class TelegramNotification(NotificationProvider):
             )
 
     def send(self, st, level):
-        print(level, st.encode("utf-8"))
+        print(level, st.encode("utf-8", 'ignore'))
         cids = self._getChatIdsForLevel(level)
 
         for x in cids:
