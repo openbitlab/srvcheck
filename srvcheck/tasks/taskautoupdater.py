@@ -51,7 +51,7 @@ def versionCompare(v1, v2):
 
 class TaskAutoUpdater(Task):
     def __init__(self, services):
-        super().__init__("TaskAutoUpdater", services, minutes(60), hours(2))
+        super().__init__("TaskAutoUpdater", services, minutes(60), hours(48))
 
     @staticmethod
     def isPluggable(services):
@@ -70,8 +70,23 @@ class TaskAutoUpdater(Task):
         if versionCompare(nTag, srvcheck.__version__) > 0:
             self.notify(f"New monitor version detected: v{nTag}")
             self.s.notification.flush()
-            Bash(
-                "pip install --force-reinstall --break-system-packages "
+
+            pr = Bash("pip install --dry-run requests").value()
+
+            break_system_param = ""
+            if pr.find("error: externally-managed-environment") != -1:
+                break_system_param = "--break-ssytem-packages"
+
+            inst_val = Bash(
+                f"pip install --force-reinstall {break_system_param} "
                 + f"git+https://github.com/openbitlab/srvcheck@v{nTag}"
-            )
-            Bash("systemctl restart node-monitor.service")
+            ).value()
+
+            if inst_val.index("Successfully installed") != -1:
+                self.notify("Srvcheck update succesfully, restarting...")
+                Bash("systemctl restart node-monitor.service")
+            else:
+                self.notify(
+                    "Srvcheck is unable to auto-update itself. Please check the logs."
+                )
+                print(inst_val)
