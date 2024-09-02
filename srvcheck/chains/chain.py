@@ -34,7 +34,7 @@ ConfSet.addItem(ConfItem("chain.service", None, str, "systemd service name"))
 ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
 
-def rpcCall(url, method, headers=None, params=[]):
+def rpcCall(url, method, params=[], headers=None):
     d = requests.post(
         url,
         headers=headers,
@@ -59,9 +59,9 @@ class Chain:
             self.EP = self.conf.getOrDefault("chain.endpoint")
         self.NAME = self.conf.getOrDefault("chain.name")
 
-    def rpcCall(self, method, headers=None, params=[]):
+    def rpcCall(self, method, params=[], headers=None):
         """Calls the RPC method with the given parameters"""
-        return rpcCall(self.EP, method, headers, params)
+        return rpcCall(self.EP, method, params=params, headers=headers)
 
     def getCall(self, r, data=None):
         """Calls the GET method with the given parameters"""

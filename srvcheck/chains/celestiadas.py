@@ -204,14 +204,14 @@ class CelestiaDas(Chain):
         except:
             return False
 
-    def rpcCall(self, method, headers=None, params=[]):
+    def rpcCall(self, method, params=[], headers=None):
         if not self.AUTH_TOKEN:
             cmd = f"{self.BIN} {self.ROLE} auth admin --p2p.network {self.CHAIN_ID}"
             if self.DATA_FOLDER:
                 cmd = f"{cmd} --node.store {self.DATA_FOLDER}"
             self.AUTH_TOKEN = Bash(cmd).value()
         headers = {"Authorization": "Bearer " + self.AUTH_TOKEN}
-        return super().rpcCall(method, headers, params)
+        return super().rpcCall(method, params=params, headers=headers)
 
     def getNetwork(self):
         return self.rpcCall("header.NetworkHead")["header"]["chain_id"]
