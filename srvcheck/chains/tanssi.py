@@ -44,7 +44,7 @@ class Tanssi(Substrate):
         try:
             Tanssi(conf).getVersion()
             return (
-                Tanssi(conf).isParachain() and Tanssi(conf).getNodeName() == "Parachain Collator Template"
+                Tanssi(conf).isParachain() and Tanssi(conf).getNodeName() == "Tanssi Collator"
             )
         except:
             return False
