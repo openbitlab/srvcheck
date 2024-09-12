@@ -21,7 +21,8 @@
 # SOFTWARE.
 
 import requests
-from packaging import version
+from packaging_legacy import version
+# from packaging import version
 
 import srvcheck
 
