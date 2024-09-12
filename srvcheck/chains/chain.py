@@ -34,14 +34,21 @@ ConfSet.addItem(ConfItem("chain.service", None, str, "systemd service name"))
 ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
 
-def rpcCall(url, method, params=[], headers=None):
-    d = requests.post(
-        url,
-        headers=headers,
-        json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
-        timeout=60,
-    ).json()
-    return d["result"]
+def rpcCall(url, method, params=[], headers=None, iteration=0):
+    try:
+        d = requests.post(
+            url,
+            headers=headers,
+            json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
+        ).json()
+        return d["result"]
+
+    except RemoteDisconnected as e:
+        if iteration < MAX_RPC_RETRIES:
+            time.sleep(2)
+            return rpcCall(url, method, params, headers, iteration + 1)
+        else:
+            raise (e)
 
 
 def getCall(url, data):
