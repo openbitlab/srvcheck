@@ -21,6 +21,8 @@
 # SOFTWARE.
 import configparser
 import re
+import time
+from http.client import RemoteDisconnected
 
 import requests
 
@@ -33,6 +35,7 @@ ConfSet.addItem(ConfItem("chain.ghRepository", None, str, "github repository"))
 ConfSet.addItem(ConfItem("chain.service", None, str, "systemd service name"))
 ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
+MAX_RPC_RETRIES = 3
 
 def rpcCall(url, method, params=[], headers=None, iteration=0):
     try:

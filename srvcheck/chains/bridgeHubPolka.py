@@ -47,7 +47,7 @@ class BridgeHubPolka(Substrate):
             BridgeHubPolka(conf).getVersion()
             return (
                 BridgeHubPolka(conf).isParachain()
-                and BridgeHubPolka(conf).getNodeName() == "Polkadot parachain"
+                and BridgeHubPolka(conf).getNodeName() == "polkadot-parachain"
             )
         except:
             return False

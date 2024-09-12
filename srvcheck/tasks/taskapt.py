@@ -27,6 +27,8 @@ from . import Task, hours
 
 
 def indexOf(a, v):
+    if a == None:
+        return -1
     try:
         return a.index(v)
     except ValueError:

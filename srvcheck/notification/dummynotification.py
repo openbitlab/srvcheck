@@ -30,7 +30,7 @@ ConfSet.addItem(
 
 class DummyNotification(NotificationProvider):
     def send(self, st, level):
-        print(level, st)
+        print(level, st.encode("utf-8", "ignore"))
 
     def sendPhoto(self, photo, level):
         print(f"{level} Sending photo: {photo}")
