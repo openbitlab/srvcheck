@@ -22,12 +22,13 @@
 
 import requests
 from packaging_legacy import version
-# from packaging import version
 
 import srvcheck
 
 from ..utils import Bash
 from . import Task, hours, minutes
+
+# from packaging import version
 
 
 def versionCompare(v1, v2):

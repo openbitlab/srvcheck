@@ -22,7 +22,7 @@
 
 import configparser
 
-from packaging import version
+from packaging_legacy import version
 
 from ..notification import Emoji, NotificationLevel
 from ..utils import Bash, ConfSet
