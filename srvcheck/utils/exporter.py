@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2021-2023 Openbitlab Team
+# Copyright (c) 2021-2024 Openbitlab Team
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,18 +19,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from prometheus_client import Counter, Gauge, start_http_server
 
-from .bash import Bash  # noqa: F401
-from .chart import (  # noqa: F401
-    PlotConf,
-    PlotsConf,
-    SubPlotConf,
-    cropData,
-    savePlot,
-    savePlots,
-    setColor,
-)
-from .confset import ConfItem, ConfSet  # noqa: F401
-from .exporter import Exporter  # noqa: F401
-from .persistent import Persistent  # noqa: F401
-from .system import System, SystemUsage, toGB, toMB, toPrettySize  # noqa: F401
+
+class Exporter:
+    metrics = None
+
+    def __init__(self, metrics: dict, port):
+        start_http_server(port)
+        self.metrics = metrics
+
+    def export(self):
+        for m, v in self.metrics.items():
+            if type(m) is Gauge:
+                m.set(v())
+            elif type(m) is Counter:
+                m.inc(int(v()))

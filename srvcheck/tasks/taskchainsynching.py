@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2021-2023 Openbitlab Team
+# Copyright (c) 2021-2024 Openbitlab Team
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,17 +26,36 @@ from . import Task, minutes
 
 class TaskChainSynching(Task):
     def __init__(self, services):
-        super().__init__("TaskChainSynching", services, minutes(1), minutes(30))
-        self.prev = None
+        super().__init__("TaskChainSynching", services, minutes(5), minutes(5))
+        self.prev = False
 
     @staticmethod
     def isPluggable(services):
         return True
 
     def run(self):
+        # TODO: make this code chain agnostic
         if self.s.chain.isSynching():
-            return self.notify(
-                f"chain is synching {Emoji.Slow}", level=NotificationLevel.Info
-            )
+            self.prev = True
+            if self.s.chain.TYPE == "Validator node":
+                return self.notify(
+                    f"chain is synching {Emoji.Slow}", level=NotificationLevel.Info
+                )
+            else:
+                return self.notify(
+                    f"is synching data availability samples {Emoji.Slow}",
+                    level=NotificationLevel.Info,
+                )
+        elif self.prev:
+            self.prev = False
+            if self.s.chain.TYPE == "Validator node":
+                return self.notify(
+                    f"chain synched {Emoji.SyncOk}", level=NotificationLevel.Info
+                )
+            else:
+                return self.notify(
+                    f"synched all data availability samples {Emoji.SyncOk}",
+                    level=NotificationLevel.Info,
+                )
 
         return False

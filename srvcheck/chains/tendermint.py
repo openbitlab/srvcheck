@@ -165,7 +165,7 @@ class TaskTendermintNewProposal(Task):
                 self.prev = nProposal
                 c = len(self.prev)
                 if c > 0:
-                    out = f"got latest proposal{ 's' if c > 1 else '' }: \n"
+                    out = f"got latest proposal{'s' if c > 1 else ''}: \n"
                     for p in nProposal[:-1]:
                         out += f"{self.getProposalTitle(p)}\n"
                     out += f"{self.getProposalTitle(nProposal[-1])} {Emoji.Proposal}"

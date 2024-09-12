@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2021-2023 Openbitlab Team
+# Copyright (c) 2021-2024 Openbitlab Team
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import configparser
 import re
 import time
@@ -38,24 +37,25 @@ ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
 MAX_RPC_RETRIES = 3
 
-
-def rpcCall(url, method, params=[], iteration=0):
+def rpcCall(url, method, params=[], headers=None, iteration=0):
     try:
         d = requests.post(
-            url, json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
+            url,
+            headers=headers,
+            json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
         ).json()
         return d["result"]
 
     except RemoteDisconnected as e:
         if iteration < MAX_RPC_RETRIES:
             time.sleep(2)
-            return rpcCall(url, method, params, iteration + 1)
+            return rpcCall(url, method, params, headers, iteration + 1)
         else:
             raise (e)
 
 
 def getCall(url, data):
-    return requests.get(url, json=data).json()
+    return requests.get(url, json=data, timeout=60).json()
 
 
 class Chain:
@@ -69,9 +69,9 @@ class Chain:
             self.EP = self.conf.getOrDefault("chain.endpoint")
         self.NAME = self.conf.getOrDefault("chain.name")
 
-    def rpcCall(self, method, params=[]):
+    def rpcCall(self, method, params=[], headers=None):
         """Calls the RPC method with the given parameters"""
-        return rpcCall(self.EP, method, params)
+        return rpcCall(self.EP, method, params=params, headers=headers)
 
     def getCall(self, r, data=None):
         """Calls the GET method with the given parameters"""
