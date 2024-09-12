@@ -37,6 +37,7 @@ ConfSet.addItem(ConfItem("chain.localVersion", None, str, "local version"))
 
 MAX_RPC_RETRIES = 3
 
+
 def rpcCall(url, method, params=[], headers=None, iteration=0):
     try:
         d = requests.post(
