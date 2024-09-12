@@ -49,7 +49,7 @@ setup(
         "requests",
         "psutil",
         "substrate-interface",
-        "packaging==21.3",
+        "packaging",
         "python-dateutil",
         "matplotlib",
         "prometheus-client",
