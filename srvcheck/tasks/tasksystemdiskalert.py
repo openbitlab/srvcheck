@@ -65,9 +65,11 @@ class TaskSystemDiskAlert(Task):
                     toGB(usage.diskUsed),
                     Emoji.Disk,
                 ),
-                level=NotificationLevel.Error
-                if is_critical
-                else NotificationLevel.Warning,
+                level=(
+                    NotificationLevel.Error
+                    if is_critical
+                    else NotificationLevel.Warning
+                ),
                 noCheck=True if is_critical else False,
             )
 

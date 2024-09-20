@@ -24,11 +24,13 @@ from ..notification import Emoji, NotificationLevel
 from . import Task, hours, minutes
 
 CPU_LIMIT = 90
+TIME_SERIES_LENGTH = 2
 
 
 class TaskSystemCpuAlert(Task):
     def __init__(self, services):
         super().__init__("TaskSystemCpuAlert", services, minutes(15), hours(2))
+        self.timeSeries = []
 
     @staticmethod
     def isPluggable(services):
@@ -36,11 +38,17 @@ class TaskSystemCpuAlert(Task):
 
     def run(self):
         usage = self.s.system.getUsage()
+        cpuUsage = usage.cpuUsage
 
-        if usage.cpuUsage > CPU_LIMIT:
+        self.timeSeries.append(cpuUsage)
+        self.timeSeries = self.timeSeries[:TIME_SERIES_LENGTH]
+
+        averageCPU = sum(self.timeSeries) / len(self.timeSeries)
+
+        if averageCPU > CPU_LIMIT:
             return self.notify(
-                "CPU usage is above %d%% (%d%%) %s"
-                % (CPU_LIMIT, usage.cpuUsage, Emoji.Cpu),
+                "CPU average usage is above %d%% (%d%% in the last %d checks) %s"
+                % (CPU_LIMIT, averageCPU, TIME_SERIES_LENGTH, Emoji.Cpu),
                 level=NotificationLevel.Warning,
             )
 
