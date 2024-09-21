@@ -370,7 +370,7 @@ class Substrate(Chain):
     TYPE = "substrate"
     NAME = ""
     BLOCKTIME = 15
-    EP = "http://localhost:9933/"
+    EP = "http://localhost:9944/"
     CUSTOM_TASKS = [
         TaskSubstrateRelayChainStuck,
         TaskSubstrateNewReferenda,
