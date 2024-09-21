@@ -8,7 +8,6 @@ Srvcheck helps you monitor blockchain nodes and be promptly informed about unexp
 It supports these ecosystems:
 - **Substrate**
 - **Tendermint**
-- **Lisk**
 - **Tezos**
 - **Solana**
 - **Aptos**
