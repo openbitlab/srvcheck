@@ -33,14 +33,14 @@ print_help () {
 }
 
 install_monitor () {
+    config_file="/etc/srvcheck.conf"
+    apt -qq update
+    apt -qq install git python3-pip -y
     if pip install --dry-run requests 2>&1 | grep -q "error: externally-managed-environment"; then
         breaksystem="--break-system-packages"
     else
         breaksystem=""
     fi
-    config_file="/etc/srvcheck.conf"
-    apt -qq update
-    apt -qq install git python3-pip -y
     systemctl stop node-monitor.service
     rm -rf /etc/srvcheck.conf
     rm -rf /etc/systemd/system/node-monitor.service
@@ -103,6 +103,10 @@ install_monitor () {
         sed -i -e "s/^infoLevelChatId =.*/infoLevelChatId = $info_level_chat/" $config_file
         sed -i -e "s/^warningLevelChatId =.*/warningLevelChatId = $warning_level_chat/" $config_file
         sed -i -e "s/^errorLevelChatId =.*/errorLevelChatId = $error_level_chat/" $config_file
+    fi
+    if [ "$branch" != "main" ]
+    then
+        sed -i -e "s/^disabled =.*/disabled = TaskAutoUpdater/" $config_file
     fi
 }
 
