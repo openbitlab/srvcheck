@@ -73,9 +73,9 @@ class TaskSystemDiskAlert(Task):
                 noCheck=True if is_critical else False,
             )
 
-        if usage.diskSize > self.prevDiskSize:
+        if abs(toGB(usage.diskSize) - toGB(self.prevDiskSize)) > 1.0:
             c = self.notify(
-                "disk size increased (%.1fG -> %.1fG) %s"
+                "disk size changed (%.1fG -> %.1fG) %s"
                 % (toGB(self.prevDiskSize), toGB(usage.diskSize), Emoji.Disk),
                 True,
             )
