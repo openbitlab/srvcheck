@@ -418,7 +418,7 @@ class Substrate(Chain):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         era = self.getEra()
         result = self.sub_iface.query(
-            module="Staking", storage_function="ErasStakers", params=[era, collator]
+            module="Staking", storage_function="ErasStakersOverview", params=[era, collator]
         )
         if result.value["total"] > 0:
             return True
