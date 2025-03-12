@@ -421,7 +421,7 @@ class Substrate(Chain):
             result = self.sub_iface.query(
                 module="Staking", storage_function="ErasStakersOverview", params=[era, collator]
             )
-            if result and result.value["total"] > 0:
+            if result and result.value and result.value["total"] > 0:
                 return True
         return False
 
