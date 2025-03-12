@@ -56,7 +56,7 @@ class SystemParachain(Substrate):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
             result = self.sub_iface.query(
-                module="CollatorSelection", storage_function="Candidates", params=[]
+                module="CollatorSelection", storage_function="CandidateList", params=[]
             )
             for c in result.value:
                 if c["who"].lower() == f"{collator}".lower():
