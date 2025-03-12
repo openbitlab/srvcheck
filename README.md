@@ -143,7 +143,7 @@ curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | 
 #### Update
 
 ```
-pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@master#egg=srvcheck --exists-action w --ignore-installed --break-system-packages
+pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@main#egg=srvcheck --exists-action w --ignore-installed --break-system-packages
 systemctl restart node-monitor
 ```
 
