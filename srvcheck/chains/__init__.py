@@ -20,20 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .amplitude import Amplitude  # noqa: F401
 from .aptos import Aptos  # noqa: F401
 from .astar import Astar  # noqa: F401
-from .bridgeHubPolka import BridgeHubPolka  # noqa: F401
+from .systemparachain import SystemParachain  # noqa: F401
 from .celestia import Celestia  # noqa: F401
 from .celestiadas import CelestiaDas  # noqa: F401
 from .chain import Chain  # noqa: F401
-from .mangata import Mangata  # noqa: F401
 from .moonbeam import Moonbeam  # noqa: F401
 from .near import Near  # noqa: F401
 from .solana import Solana  # noqa: F401
 from .substrate import Polkasama, Substrate  # noqa: F401
-from .t3rn import T3rn  # noqa: F401
-from .tanssi import Tanssi  # noqa: F401
 from .tendermint import Tendermint  # noqa: F401
 from .tezos import Tezos  # noqa: F401
 
@@ -44,13 +40,10 @@ CHAINS = [
     Solana,
     Aptos,
     Near,
-    Amplitude,
     Astar,
-    Mangata,
     Moonbeam,
     Polkasama,
-    Tanssi,
-    BridgeHubPolka,
+    SystemParachain,
     Celestia,
     CelestiaDas,
 ]

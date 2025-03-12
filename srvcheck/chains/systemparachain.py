@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from .astar import TaskAstarBlockProductionCheck
 from .substrate import (
     Substrate,
     TaskSubstrateBlockProductionReportCharts,
@@ -28,12 +29,13 @@ from .substrate import (
 )
 
 
-class Amplitude(Substrate):
+class SystemParachain(Substrate):
     TYPE = "parachain"
     CUSTOM_TASKS = [
         TaskSubstrateRelayChainStuck,
         TaskSubstrateBlockProductionReportParachain,
         TaskSubstrateBlockProductionReportCharts,
+        TaskAstarBlockProductionCheck,
     ]
 
     def __init__(self, conf):
@@ -42,30 +44,41 @@ class Amplitude(Substrate):
     @staticmethod
     def detect(conf):
         try:
-            Amplitude(conf).getVersion()
+            SystemParachain(conf).getVersion()
             return (
-                Amplitude(conf).isParachain()
-                and Amplitude(conf).getNodeName() == "Pendulum Collator"
+                SystemParachain(conf).isParachain()
+                and SystemParachain(conf).getNodeName() == "polkadot-parachain"
             )
         except:
             return False
-
-    def getRoundInfo(self):
-        result = self.sub_iface.query(
-            module="ParachainStaking", storage_function="Round", params=[]
-        )
-        return result.value
 
     def isCollating(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         if collator:
             result = self.sub_iface.query(
-                module="ParachainStaking", storage_function="TopCandidates", params=[]
+                module="CollatorSelection", storage_function="Candidates", params=[]
             )
             for c in result.value:
-                if c["owner"].lower() == collator.lower():
+                if c["who"].lower() == f"{collator}".lower():
+                    return True
+            result = self.sub_iface.query(
+                module="CollatorSelection", storage_function="Invulnerables", params=[]
+            )
+            for c in result.value:
+                if c.lower() == f"{collator}".lower():
                     return True
         return False
 
+    def latestBlockProduced(self):
+        collator = self.conf.getOrDefault("chain.validatorAddress")
+        if collator:
+            result = self.sub_iface.query(
+                module="CollatorSelection",
+                storage_function="LastAuthoredBlock",
+                params=[collator],
+            )
+            return result.value
+        return 0
+
     def getStartingRoundBlock(self):
-        return self.getRoundInfo()["first"]
+        return -1

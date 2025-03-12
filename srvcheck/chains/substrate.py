@@ -417,11 +417,13 @@ class Substrate(Chain):
     def isStaking(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         era = self.getEra()
-        result = self.sub_iface.query(
-            module="Staking", storage_function="ErasStakers", params=[era, collator]
-        )
-        if result.value["total"] > 0:
-            return True
+        if collator:
+            result = self.sub_iface.query(
+                module="Staking", storage_function="ErasStakersOverview", params=[era, collator]
+            )
+            if result.value["total"] > 0:
+                return True
+        return False
 
     def isSynching(self):
         c = self.rpcCall("system_syncState")["currentBlock"]
@@ -491,12 +493,13 @@ class Substrate(Chain):
     def getBlockAuthor(self, block):
         return self.checkAuthoredBlock(block)
 
-    def getSeals(self, block):
+    def getSeals(self, block, since=60):
+        serv = self.conf.getOrDefault("chain.service")
         seals = (
             Bash(
-                "grep -Eo 'block for proposal at {}. Hash now 0x[0-9a-fA-F]+' /var/log/syslog --text | rev | cut -d ' ' -f1 | rev".format(  # noqa: E501
-                    block
-                )
+                f"journalctl -u {serv} --no-pager --since '{since} min ago' | grep -Eo "
+                + f"'block for proposal at {block}. Hash now 0x[0-9a-fA-F]+' | "
+                + "rev | cut -d ' ' -f1 | rev"
             )
             .value()
             .split("\n")
