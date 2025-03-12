@@ -417,11 +417,13 @@ class Substrate(Chain):
     def isStaking(self):
         collator = self.conf.getOrDefault("chain.validatorAddress")
         era = self.getEra()
-        result = self.sub_iface.query(
-            module="Staking", storage_function="ErasStakersOverview", params=[era, collator]
-        )
-        if result.value["total"] > 0:
-            return True
+        if collator:
+            result = self.sub_iface.query(
+                module="Staking", storage_function="ErasStakersOverview", params=[era, collator]
+            )
+            if result.value["total"] > 0:
+                return True
+        return False
 
     def isSynching(self):
         c = self.rpcCall("system_syncState")["currentBlock"]
