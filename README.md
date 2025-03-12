@@ -140,6 +140,14 @@ Install with `--admin` and `--gov` flags to be tagged once new proposals are out
 curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> --admin @MyTelegramUsername --gov
 ```
 
+#### Update
+
+```
+pip3 $verbosity install git+https://github.com/openbitlab/srvcheck.git@main#egg=srvcheck --exists-action w --ignore-installed --break-system-packages
+systemctl restart node-monitor
+```
+
+
 ## Outcomes
 
 The following screenshots represent the chat outputs when the monitor is triggered by predetermined events.
