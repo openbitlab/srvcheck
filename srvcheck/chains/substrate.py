@@ -188,6 +188,57 @@ class TaskSubstrateTurboflakesGrade(Task):
         return notified
 
 
+class TaskSubstratePayouts(Task):
+    def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(60)):
+        super().__init__("TaskSubstratePayouts", services, checkEvery, notifyEvery)
+
+    @staticmethod
+    def isPluggable(services):
+        if services.chain.getNetwork() in ["Kusama", "Polkadot"]:
+            return True
+        return False
+
+    def get_unpaid_eras(self, stash_account, window=31):
+        missing_eras = []
+        current_era = self.s.chain.sub_iface.query("Staking", "ActiveEra").value[
+            "index"
+        ]
+        for i in range(1, window + 1):
+            era = current_era - i - 1
+            claimed = self.s.chain.sub_iface.query(
+                "Staking", "ClaimedRewards", [era, stash_account]
+            )
+
+            if len(claimed.value) == 0:
+                exposure = self.s.chain.sub_iface.query(
+                    "Staking", "ErasStakersOverview", [era, stash_account]
+                )
+                # NOTE: The following check is necessary since the is not None doesnt work
+                if str(exposure) != "None":  # is not None:
+                    missing_eras.append(era)
+        return missing_eras
+
+    def run(self):
+        unpaid_eras = self.get_unpaid_eras(
+            self.s.conf.getOrDefault("chain.validatorAddress"), 31
+        )
+        if unpaid_eras:
+            level = NotificationLevel.Warning
+            if (
+                unpaid_eras > 2
+                and self.s.chain.getNetwork() == "Polkadot"
+                or unpaid_eras > 6
+                and self.s.chain.getNetwork() == "Kusama"
+            ):
+                level = NotificationLevel.Error
+
+            return self.notify(
+                f"Validator has unpaid eras: {unpaid_eras} {Emoji.Health}",
+                level=level,
+            )
+        return False
+
+
 class TaskSubstrateNewReferenda(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=60 * 10 * 60):
         super().__init__("TaskSubstrateNewReferenda", services, checkEvery, notifyEvery)
@@ -657,6 +708,7 @@ class Polkasama(Substrate):
         TaskSubstrateBlockProductionReport,
         TaskSubstrateBlockProductionReportCharts,
         TaskSubstrateTurboflakesGrade,
+        TaskSubstratePayouts,
     ]
 
     def __init__(self, conf):
