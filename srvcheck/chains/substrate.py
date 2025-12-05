@@ -553,6 +553,7 @@ class Substrate(Chain):
         TaskSubstrateBlockProductionReport,
         TaskSubstrateBlockProductionReportCharts,
         TaskSubstrateTurboflakesGrade,
+        TaskSubstratePayouts,
     ]
 
     def __init__(self, conf):

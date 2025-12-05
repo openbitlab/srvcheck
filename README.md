@@ -57,6 +57,7 @@ And it offers many features thanks to the following tasks:
 - **TaskTendermintHealthError**
 
 **Substrate** specific tasks:
+- **TaskSubstratePayouts**
 - **TaskSubstrateTurboflakesGrade**
 - **TaskSubstrateNewReferenda**
 - **TaskBlockProductionCheck**
