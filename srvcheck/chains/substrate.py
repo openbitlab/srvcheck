@@ -200,8 +200,8 @@ class TaskSubstratePayouts(Task):
 
     def get_unpaid_eras(self, stash_account, window=31):
         missing_eras = []
-        current_era = self.s.getEra()
-        
+        current_era = self.s.chain.getEra()
+
         for i in range(1, window + 1):
             era = current_era - i - 1
             claimed = self.s.chain.sub_iface.query(
