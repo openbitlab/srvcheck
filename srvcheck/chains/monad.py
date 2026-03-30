@@ -261,6 +261,13 @@ class Monad(Chain):
         TaskMonadFinalizationLag,
     ]
 
+    def __init__(self, conf):
+        super().__init__(conf)
+        disabled = conf.getOrDefault("tasks.disabled") or ""
+        if "TaskChainLowPeer" not in disabled:
+            extra = "TaskChainLowPeer" if not disabled else f",TaskChainLowPeer"
+            ConfSet.setDefaultValue("tasks.disabled", disabled + extra)
+
     @staticmethod
     def detect(conf):
         try:
