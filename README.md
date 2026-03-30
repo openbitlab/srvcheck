@@ -71,9 +71,9 @@ And it offers many features thanks to the following tasks:
 - **TaskNearCheckKicked**
 
 **Monad** specific tasks:
-- **TaskMonadBlockSigning**: monitor validator block signing via monad-ledger-tail journal logs and alert on consecutive timeouts
-- **TaskMonadBlockProductionReport**: per-epoch report of blocks proposed by the validator, with persistent stats
-- **TaskMonadFinalizationLag**: alert when finalization lag exceeds threshold (default 5000ms), notify on recovery
+- **TaskMonadBlockSigning**: check if the validator is missing rounds by monitoring timeout events from the monad-ledger-tail journal, and notify on recovery
+- **TaskMonadBlockProductionReport**: report block production stats at the end of each epoch, including the number of blocks proposed by the validator and the overall percentage
+- **TaskMonadFinalizationLag**: check if the time between block creation and finalization exceeds a configurable threshold (default 5000ms), and notify when lag recovers
 
 **Celestia** Light and Full node specific tasks:
 - **TaskNodeIsSynching**: check if the node is synching blocks
@@ -141,6 +141,12 @@ Install with `--git` flag to get alerts on new node releases (in this case [cele
 curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> --git celestiaorg/celestia-node
 ```
 
+Install for a **Monad** validator node (the validator address is the compressed SECP public key from monad-ledger-tail logs)
+
+```bash
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s monad-ledger-tail -a <validator_secp_pubkey> -b 1 -n "Monad Validator"
+```
+
 Install with `--admin` and `--gov` flags to be tagged once new proposals are out
 
 ```bash 
@@ -192,7 +198,7 @@ enabled = true
 [chain]
 ; name to be displayed on notifications
 name = 
-; chain type (e.g. "tendermint" | "substrate")
+; chain type (e.g. "tendermint" | "substrate" | "monad")
 type = 
 ; systemd service name
 service = 
@@ -212,6 +218,15 @@ localVersion =
 validatorAddress = 
 ; mount point
 mountPoint = 
+
+; monad specific settings
+[monad]
+; systemd service name for monad-ledger-tail
+ledgerTailService = monad-ledger-tail
+; number of consecutive timeouts before alerting
+timeoutThreshold = 5
+; finalization lag threshold in milliseconds before alerting
+finalizationLagThreshold = 5000
 
 ; task specific settings
 [tasks]
