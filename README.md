@@ -107,7 +107,7 @@ errorLevelChatId =
 ## Install & Update
 
 ```bash 
-curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> <optional_flags>
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> -a <validator_address> <optional_flags>
 ```
 
 The install script can be customized with these flags (most of them are optional):
