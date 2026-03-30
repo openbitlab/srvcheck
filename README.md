@@ -71,7 +71,6 @@ And it offers many features thanks to the following tasks:
 - **TaskNearCheckKicked**
 
 **Monad** specific tasks:
-- **TaskMonadValidatorBalance**: check if the validator balance has decreased
 - **TaskMonadBlockSigning**: monitor validator block signing via monad-ledger-tail journal logs and alert on consecutive timeouts
 
 **Celestia** Light and Full node specific tasks:

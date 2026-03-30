@@ -24,7 +24,7 @@ import json
 import subprocess
 
 from ..notification import Emoji, NotificationLevel
-from ..tasks import Task, hours, minutes
+from ..tasks import Task, minutes
 from ..utils import ConfItem, ConfSet
 from .chain import Chain
 
@@ -36,32 +36,6 @@ ConfSet.addItem(
     ConfItem("monad.timeoutThreshold", 5, int,
              "number of consecutive timeouts before alerting")
 )
-
-
-class TaskMonadValidatorBalance(Task):
-    def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(1)):
-        super().__init__(
-            "TaskMonadValidatorBalance", services, checkEvery, notifyEvery
-        )
-        self.prev = None
-
-    @staticmethod
-    def isPluggable(services):
-        return services.conf.getOrDefault("chain.validatorAddress") is not None
-
-    def run(self):
-        try:
-            addr = self.s.conf.getOrDefault("chain.validatorAddress")
-            balance = self.s.chain.getValidatorBalance(addr)
-            if self.prev is not None and balance < self.prev:
-                return self.notify(
-                    f"validator balance decreased: {balance:.4f} MON {Emoji.LowBal}",
-                    level=NotificationLevel.Warning,
-                )
-            self.prev = balance
-        except Exception:
-            pass
-        return False
 
 
 class TaskMonadBlockSigning(Task):
@@ -154,7 +128,6 @@ class Monad(Chain):
     BLOCKTIME = 1
     EP = "http://localhost:8080/"
     CUSTOM_TASKS = [
-        TaskMonadValidatorBalance,
         TaskMonadBlockSigning,
     ]
 
@@ -192,7 +165,3 @@ class Monad(Chain):
     def isSynching(self):
         result = self.rpcCall("eth_syncing")
         return result is not False and result is not None
-
-    def getValidatorBalance(self, address):
-        result = self.rpcCall("eth_getBalance", [address, "latest"])
-        return int(result, 16) / 1e18
