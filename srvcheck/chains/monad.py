@@ -133,9 +133,10 @@ class TaskMonadBlockSigning(Task):
         self.consecutiveTimeouts += timeouts
 
         if recovered:
+            missed = self.consecutiveTimeouts
             self.consecutiveTimeouts = 0
             return self.notify(
-                f"validator recovered after timeouts {Emoji.SyncOk}",
+                f"validator recovered after {missed} missed rounds {Emoji.SyncOk}",
                 level=NotificationLevel.Info,
             )
 
@@ -154,7 +155,9 @@ class TaskMonadBlockProductionReport(Task):
         super().__init__(
             "TaskMonadBlockProductionReport", services, checkEvery, notifyEvery
         )
-        self.prevEpoch = None
+        self.currentEpoch = None
+        self.reportedEpoch = None
+        self.lastRound = None
         self.proposed = 0
         self.totalProposed = 0
 
@@ -174,30 +177,43 @@ class TaskMonadBlockProductionReport(Task):
         for fields in events:
             event_type = fields.get("message", "")
             epoch = fields.get("epoch")
+            round_num = fields.get("round")
 
-            if self.prevEpoch is None:
-                self.prevEpoch = epoch
+            # Skip already processed events
+            if self.lastRound is not None and round_num is not None \
+                    and str(round_num) <= str(self.lastRound):
+                continue
 
-            if epoch != self.prevEpoch:
-                perc = 0
-                if self.totalProposed > 0:
-                    perc = self.proposed / self.totalProposed * 100
+            if self.currentEpoch is None:
+                self.currentEpoch = epoch
 
-                self.s.persistent.timedAdd(f"{name}_blocksProduced", self.proposed)
-                self.s.persistent.timedAdd(f"{name}_blocksChecked", self.totalProposed)
-                self.s.persistent.timedAdd(f"{name}_blocksPercentageProduced", perc)
+            if epoch != self.currentEpoch:
+                # Only report if we haven't reported this epoch yet
+                if self.currentEpoch != self.reportedEpoch:
+                    perc = 0
+                    if self.totalProposed > 0:
+                        perc = self.proposed / self.totalProposed * 100
 
-                self.notify(
-                    f"epoch {self.prevEpoch} ended: proposed "
-                    f"{self.proposed}/{self.totalProposed} blocks "
-                    f"({perc:.1f}%) {Emoji.BlockProd}",
-                    noCheck=True,
-                    level=NotificationLevel.Info,
-                )
+                    self.s.persistent.timedAdd(
+                        f"{name}_blocksProduced", self.proposed)
+                    self.s.persistent.timedAdd(
+                        f"{name}_blocksChecked", self.totalProposed)
+                    self.s.persistent.timedAdd(
+                        f"{name}_blocksPercentageProduced", perc)
+
+                    self.notify(
+                        f"epoch {self.currentEpoch} ended: proposed "
+                        f"{self.proposed}/{self.totalProposed} blocks "
+                        f"({perc:.1f}%) {Emoji.BlockProd}",
+                        noCheck=True,
+                        level=NotificationLevel.Info,
+                    )
+
+                    self.reportedEpoch = self.currentEpoch
 
                 self.proposed = 0
                 self.totalProposed = 0
-                self.prevEpoch = epoch
+                self.currentEpoch = epoch
 
             if event_type == "proposed_block":
                 self.totalProposed += 1
@@ -208,6 +224,8 @@ class TaskMonadBlockProductionReport(Task):
                     and author.lower() == validator_addr.lower()
                 ):
                     self.proposed += 1
+
+            self.lastRound = round_num
 
         return False
 
