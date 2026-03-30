@@ -29,25 +29,38 @@ from ..utils import ConfItem, ConfSet
 from .chain import Chain
 
 ConfSet.addItem(
-    ConfItem("monad.ledgerTailService", "monad-ledger-tail", str,
-             "systemd service name for monad-ledger-tail")
+    ConfItem(
+        "monad.ledgerTailService",
+        "monad-ledger-tail",
+        str,
+        "systemd service name for monad-ledger-tail",
+    )
 )
 ConfSet.addItem(
-    ConfItem("monad.timeoutThreshold", 5, int,
-             "number of consecutive timeouts before alerting")
+    ConfItem(
+        "monad.timeoutThreshold",
+        5,
+        int,
+        "number of consecutive timeouts before alerting",
+    )
 )
 ConfSet.addItem(
-    ConfItem("monad.finalizationLagThreshold", 5000, int,
-             "finalization lag threshold in milliseconds before alerting")
+    ConfItem(
+        "monad.finalizationLagThreshold",
+        5000,
+        int,
+        "finalization lag threshold in milliseconds before alerting",
+    )
 )
 
 
 def readLedgerTailLogs(service, since="5m ago"):
     try:
         result = subprocess.run(
-            ["journalctl", "-u", service, "--no-pager", "-o", "json",
-             "--since", since],
-            capture_output=True, text=True, timeout=30,
+            ["journalctl", "-u", service, "--no-pager", "-o", "json", "--since", since],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         lines = []
         for line in result.stdout.strip().split("\n"):
@@ -78,9 +91,7 @@ def parseLedgerTailLogs(logs):
 
 class TaskMonadBlockSigning(Task):
     def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(10)):
-        super().__init__(
-            "TaskMonadBlockSigning", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskMonadBlockSigning", services, checkEvery, notifyEvery)
         self.consecutiveTimeouts = 0
         self.lastRound = None
 
@@ -110,8 +121,11 @@ class TaskMonadBlockSigning(Task):
                     self.lastRound = round_num
 
             elif event_type in ("finalized_block", "proposed_block"):
-                if author and validator_addr and \
-                        author.lower() == validator_addr.lower():
+                if (
+                    author
+                    and validator_addr
+                    and author.lower() == validator_addr.lower()
+                ):
                     if self.consecutiveTimeouts > 0:
                         recovered = True
                     timeouts = 0
@@ -169,15 +183,9 @@ class TaskMonadBlockProductionReport(Task):
                 if self.totalProposed > 0:
                     perc = self.proposed / self.totalProposed * 100
 
-                self.s.persistent.timedAdd(
-                    f"{name}_blocksProduced", self.proposed
-                )
-                self.s.persistent.timedAdd(
-                    f"{name}_blocksChecked", self.totalProposed
-                )
-                self.s.persistent.timedAdd(
-                    f"{name}_blocksPercentageProduced", perc
-                )
+                self.s.persistent.timedAdd(f"{name}_blocksProduced", self.proposed)
+                self.s.persistent.timedAdd(f"{name}_blocksChecked", self.totalProposed)
+                self.s.persistent.timedAdd(f"{name}_blocksPercentageProduced", perc)
 
                 self.notify(
                     f"epoch {self.prevEpoch} ended: proposed "
@@ -194,8 +202,11 @@ class TaskMonadBlockProductionReport(Task):
             if event_type == "proposed_block":
                 self.totalProposed += 1
                 author = fields.get("author", "")
-                if author and validator_addr and \
-                        author.lower() == validator_addr.lower():
+                if (
+                    author
+                    and validator_addr
+                    and author.lower() == validator_addr.lower()
+                ):
                     self.proposed += 1
 
         return False
@@ -203,9 +214,7 @@ class TaskMonadBlockProductionReport(Task):
 
 class TaskMonadFinalizationLag(Task):
     def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(10)):
-        super().__init__(
-            "TaskMonadFinalizationLag", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskMonadFinalizationLag", services, checkEvery, notifyEvery)
         self.wasLagging = False
 
     @staticmethod
@@ -265,7 +274,7 @@ class Monad(Chain):
         super().__init__(conf)
         disabled = conf.getOrDefault("tasks.disabled") or ""
         if "TaskChainLowPeer" not in disabled:
-            extra = "TaskChainLowPeer" if not disabled else f",TaskChainLowPeer"
+            extra = "TaskChainLowPeer" if not disabled else ",TaskChainLowPeer"
             ConfSet.setDefaultValue("tasks.disabled", disabled + extra)
 
     @staticmethod
