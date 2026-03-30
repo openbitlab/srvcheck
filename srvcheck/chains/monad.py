@@ -112,11 +112,12 @@ class TaskMonadBlockSigning(Task):
             except (json.JSONDecodeError, TypeError):
                 continue
 
-            event_type = data.get("message", "")
-            author = data.get("author_address", data.get("author", ""))
+            fields = data.get("fields", {})
+            event_type = fields.get("message", "")
+            author = fields.get("author", "")
 
             if event_type == "timeout":
-                round_num = data.get("round", data.get("round_number"))
+                round_num = fields.get("round")
                 if round_num != self.lastRound:
                     timeouts += 1
                     self.lastRound = round_num
@@ -151,7 +152,7 @@ class Monad(Chain):
     TYPE = "monad"
     NAME = "monad"
     BLOCKTIME = 1
-    EP = "http://localhost:4317/"
+    EP = "http://localhost:8080/"
     CUSTOM_TASKS = [
         TaskMonadValidatorBalance,
         TaskMonadBlockSigning,
@@ -176,7 +177,7 @@ class Monad(Chain):
         return block["hash"]
 
     def getPeerCount(self):
-        return int(self.rpcCall("net_peerCount"), 16)
+        raise Exception("net_peerCount not supported by Monad RPC")
 
     def getNetwork(self):
         chain_id = self.rpcCall("eth_chainId")
