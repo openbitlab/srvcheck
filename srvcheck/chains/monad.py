@@ -24,7 +24,7 @@ import json
 import subprocess
 
 from ..notification import Emoji, NotificationLevel
-from ..tasks import Task, minutes
+from ..tasks import Task, hours, minutes
 from ..utils import ConfItem, ConfSet
 from .chain import Chain
 
@@ -36,6 +36,44 @@ ConfSet.addItem(
     ConfItem("monad.timeoutThreshold", 5, int,
              "number of consecutive timeouts before alerting")
 )
+ConfSet.addItem(
+    ConfItem("monad.finalizationLagThreshold", 5000, int,
+             "finalization lag threshold in milliseconds before alerting")
+)
+
+
+def readLedgerTailLogs(service, since="5m ago"):
+    try:
+        result = subprocess.run(
+            ["journalctl", "-u", service, "--no-pager", "-o", "json",
+             "--since", since],
+            capture_output=True, text=True, timeout=30,
+        )
+        lines = []
+        for line in result.stdout.strip().split("\n"):
+            if line:
+                try:
+                    lines.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+        return lines
+    except Exception:
+        return []
+
+
+def parseLedgerTailLogs(logs):
+    events = []
+    for entry in logs:
+        msg = entry.get("MESSAGE", "")
+        try:
+            data = json.loads(msg)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        fields = data.get("fields", {})
+        event_type = fields.get("message", "")
+        if event_type in ("timeout", "finalized_block", "proposed_block"):
+            events.append(fields)
+    return events
 
 
 class TaskMonadBlockSigning(Task):
@@ -50,28 +88,10 @@ class TaskMonadBlockSigning(Task):
     def isPluggable(services):
         return services.conf.getOrDefault("chain.validatorAddress") is not None
 
-    def _readLedgerTailLogs(self, since="5m ago"):
-        service = self.s.conf.getOrDefault("monad.ledgerTailService")
-        try:
-            result = subprocess.run(
-                ["journalctl", "-u", service, "--no-pager", "-o", "json",
-                 "--since", since],
-                capture_output=True, text=True, timeout=30,
-            )
-            lines = []
-            for line in result.stdout.strip().split("\n"):
-                if line:
-                    try:
-                        lines.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        continue
-            return lines
-        except Exception:
-            return []
-
     def run(self):
-        logs = self._readLedgerTailLogs()
-        if not logs:
+        service = self.s.conf.getOrDefault("monad.ledgerTailService")
+        events = parseLedgerTailLogs(readLedgerTailLogs(service))
+        if not events:
             return False
 
         validator_addr = self.s.conf.getOrDefault("chain.validatorAddress")
@@ -79,14 +99,7 @@ class TaskMonadBlockSigning(Task):
         timeouts = 0
         recovered = False
 
-        for entry in logs:
-            msg = entry.get("MESSAGE", "")
-            try:
-                data = json.loads(msg)
-            except (json.JSONDecodeError, TypeError):
-                continue
-
-            fields = data.get("fields", {})
+        for fields in events:
             event_type = fields.get("message", "")
             author = fields.get("author", "")
 
@@ -122,6 +135,121 @@ class TaskMonadBlockSigning(Task):
         return False
 
 
+class TaskMonadBlockProductionReport(Task):
+    def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
+        super().__init__(
+            "TaskMonadBlockProductionReport", services, checkEvery, notifyEvery
+        )
+        self.prevEpoch = None
+        self.proposed = 0
+        self.totalProposed = 0
+
+    @staticmethod
+    def isPluggable(services):
+        return services.conf.getOrDefault("chain.validatorAddress") is not None
+
+    def run(self):
+        service = self.s.conf.getOrDefault("monad.ledgerTailService")
+        events = parseLedgerTailLogs(readLedgerTailLogs(service, since="15m ago"))
+        if not events:
+            return False
+
+        validator_addr = self.s.conf.getOrDefault("chain.validatorAddress")
+        name = self.s.conf.getOrDefault("chain.name")
+
+        for fields in events:
+            event_type = fields.get("message", "")
+            epoch = fields.get("epoch")
+
+            if self.prevEpoch is None:
+                self.prevEpoch = epoch
+
+            if epoch != self.prevEpoch:
+                perc = 0
+                if self.totalProposed > 0:
+                    perc = self.proposed / self.totalProposed * 100
+
+                self.s.persistent.timedAdd(
+                    f"{name}_blocksProduced", self.proposed
+                )
+                self.s.persistent.timedAdd(
+                    f"{name}_blocksChecked", self.totalProposed
+                )
+                self.s.persistent.timedAdd(
+                    f"{name}_blocksPercentageProduced", perc
+                )
+
+                self.notify(
+                    f"epoch {self.prevEpoch} ended: proposed "
+                    f"{self.proposed}/{self.totalProposed} blocks "
+                    f"({perc:.1f}%) {Emoji.BlockProd}",
+                    noCheck=True,
+                    level=NotificationLevel.Info,
+                )
+
+                self.proposed = 0
+                self.totalProposed = 0
+                self.prevEpoch = epoch
+
+            if event_type == "proposed_block":
+                self.totalProposed += 1
+                author = fields.get("author", "")
+                if author and validator_addr and \
+                        author.lower() == validator_addr.lower():
+                    self.proposed += 1
+
+        return False
+
+
+class TaskMonadFinalizationLag(Task):
+    def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(10)):
+        super().__init__(
+            "TaskMonadFinalizationLag", services, checkEvery, notifyEvery
+        )
+        self.wasLagging = False
+
+    @staticmethod
+    def isPluggable(services):
+        return True
+
+    def run(self):
+        service = self.s.conf.getOrDefault("monad.ledgerTailService")
+        events = parseLedgerTailLogs(readLedgerTailLogs(service))
+        if not events:
+            return False
+
+        threshold = self.s.conf.getOrDefault("monad.finalizationLagThreshold")
+        max_lag = 0
+
+        for fields in events:
+            if fields.get("message") != "finalized_block":
+                continue
+            try:
+                block_ts = int(fields["block_ts_ms"])
+                now_ts = int(fields["now_ts_ms"])
+                lag = now_ts - block_ts
+                if lag > max_lag:
+                    max_lag = lag
+            except (KeyError, ValueError, TypeError):
+                continue
+
+        if max_lag >= threshold:
+            self.wasLagging = True
+            return self.notify(
+                f"finalization lag is high: {max_lag}ms {Emoji.Slow}",
+                level=NotificationLevel.Warning,
+            )
+
+        if self.wasLagging:
+            self.wasLagging = False
+            return self.notify(
+                f"finalization lag recovered: {max_lag}ms {Emoji.SyncOk}",
+                level=NotificationLevel.Info,
+            )
+
+        return False
+
+
 class Monad(Chain):
     TYPE = "monad"
     NAME = "monad"
@@ -129,6 +257,8 @@ class Monad(Chain):
     EP = "http://localhost:8080/"
     CUSTOM_TASKS = [
         TaskMonadBlockSigning,
+        TaskMonadBlockProductionReport,
+        TaskMonadFinalizationLag,
     ]
 
     @staticmethod

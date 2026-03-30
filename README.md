@@ -72,6 +72,8 @@ And it offers many features thanks to the following tasks:
 
 **Monad** specific tasks:
 - **TaskMonadBlockSigning**: monitor validator block signing via monad-ledger-tail journal logs and alert on consecutive timeouts
+- **TaskMonadBlockProductionReport**: per-epoch report of blocks proposed by the validator, with persistent stats
+- **TaskMonadFinalizationLag**: alert when finalization lag exceeds threshold (default 5000ms), notify on recovery
 
 **Celestia** Light and Full node specific tasks:
 - **TaskNodeIsSynching**: check if the node is synching blocks
