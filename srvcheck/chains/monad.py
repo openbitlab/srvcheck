@@ -151,7 +151,7 @@ class Monad(Chain):
     TYPE = "monad"
     NAME = "monad"
     BLOCKTIME = 1
-    EP = "http://localhost:8545/"
+    EP = "http://localhost:4317/"
     CUSTOM_TASKS = [
         TaskMonadValidatorBalance,
         TaskMonadBlockSigning,
