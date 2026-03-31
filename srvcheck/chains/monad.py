@@ -92,9 +92,7 @@ def parseLedgerTailLogs(logs):
 
 class TaskMonadTimeoutDetection(Task):
     def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(1)):
-        super().__init__(
-            "TaskMonadTimeoutDetection", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskMonadTimeoutDetection", services, checkEvery, notifyEvery)
         self.timeoutCount = 0
         self.lastTimeoutRound = None
         self.seenEvents = {}
@@ -112,9 +110,7 @@ class TaskMonadTimeoutDetection(Task):
         self.seenEvents[key] = now + 120
         # Cleanup expired entries
         if len(self.seenEvents) > 4000:
-            self.seenEvents = {
-                k: v for k, v in self.seenEvents.items() if v > now
-            }
+            self.seenEvents = {k: v for k, v in self.seenEvents.items() if v > now}
         return True
 
     def run(self):
@@ -132,8 +128,9 @@ class TaskMonadTimeoutDetection(Task):
         for fields in events:
             event_type = fields.get("message", "")
             author = fields.get("author", fields.get("validator", ""))
-            round_num = fields.get("round", fields.get("height",
-                                   fields.get("round_number")))
+            round_num = fields.get(
+                "round", fields.get("height", fields.get("round_number"))
+            )
 
             if not self._dedupe(event_type, round_num):
                 continue
@@ -147,9 +144,11 @@ class TaskMonadTimeoutDetection(Task):
 
                 if author_norm == validator_norm:
                     self.timeoutCount += 1
-                    level = NotificationLevel.Warning \
-                        if self.timeoutCount >= threshold \
+                    level = (
+                        NotificationLevel.Warning
+                        if self.timeoutCount >= threshold
                         else NotificationLevel.Info
+                    )
                     self.notify(
                         f"timeout detected (#{self.timeoutCount}/{threshold}) "
                         f"round {round_num} {Emoji.BlockMiss}",
@@ -192,12 +191,9 @@ class TaskMonadBlockProductionReport(Task):
         expected = self.totalBlocks / num_validators
         missed = max(0, round(expected) - self.produced)
 
-        self.s.persistent.timedAdd(
-            f"{name}_blocksProduced", self.produced)
-        self.s.persistent.timedAdd(
-            f"{name}_blocksExpected", round(expected))
-        self.s.persistent.timedAdd(
-            f"{name}_blocksMissed", missed)
+        self.s.persistent.timedAdd(f"{name}_blocksProduced", self.produced)
+        self.s.persistent.timedAdd(f"{name}_blocksExpected", round(expected))
+        self.s.persistent.timedAdd(f"{name}_blocksMissed", missed)
 
         self.notify(
             f"epoch {self.currentEpoch} ended: "
@@ -210,7 +206,7 @@ class TaskMonadBlockProductionReport(Task):
 
         self.reportedEpoch = self.currentEpoch
 
-    def run(self):
+    def run(self):  # noqa: C901
         service = self.s.conf.getOrDefault("monad.ledgerTailService")
         events = parseLedgerTailLogs(readLedgerTailLogs(service, since="15m ago"))
         if not events:
@@ -225,8 +221,11 @@ class TaskMonadBlockProductionReport(Task):
             round_num = fields.get("round")
 
             # Skip already processed events
-            if self.lastRound is not None and round_num is not None \
-                    and int(round_num) <= self.lastRound:
+            if (
+                self.lastRound is not None
+                and round_num is not None
+                and int(round_num) <= self.lastRound
+            ):
                 continue
 
             if self.currentEpoch is None:
