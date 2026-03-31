@@ -89,65 +89,67 @@ def parseLedgerTailLogs(logs):
     return events
 
 
-class TaskMonadBlockSigning(Task):
-    def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(10)):
-        super().__init__("TaskMonadBlockSigning", services, checkEvery, notifyEvery)
-        self.consecutiveTimeouts = 0
-        self.lastRound = None
-
-    @staticmethod
-    def isPluggable(services):
-        return services.conf.getOrDefault("chain.validatorAddress") is not None
-
-    def run(self):
-        service = self.s.conf.getOrDefault("monad.ledgerTailService")
-        events = parseLedgerTailLogs(readLedgerTailLogs(service))
-        if not events:
-            return False
-
-        validator_addr = self.s.conf.getOrDefault("chain.validatorAddress")
-        threshold = self.s.conf.getOrDefault("monad.timeoutThreshold")
-        timeouts = 0
-        recovered = False
-
-        for fields in events:
-            event_type = fields.get("message", "")
-            author = fields.get("author", "")
-
-            if event_type == "timeout":
-                round_num = fields.get("round")
-                if round_num != self.lastRound:
-                    timeouts += 1
-                    self.lastRound = round_num
-
-            elif event_type in ("finalized_block", "proposed_block"):
-                if (
-                    author
-                    and validator_addr
-                    and author.lower() == validator_addr.lower()
-                ):
-                    if self.consecutiveTimeouts > 0:
-                        recovered = True
-                    timeouts = 0
-
-        self.consecutiveTimeouts += timeouts
-
-        if recovered:
-            missed = self.consecutiveTimeouts
-            self.consecutiveTimeouts = 0
-            return self.notify(
-                f"validator recovered after {missed} missed rounds {Emoji.SyncOk}",
-                level=NotificationLevel.Info,
-            )
-
-        if self.consecutiveTimeouts >= threshold:
-            count = self.consecutiveTimeouts
-            return self.notify(
-                f"validator missed {count} rounds (timeout) {Emoji.BlockMiss}",
-                level=NotificationLevel.Warning,
-            )
-
-        return False
+# TODO: TaskMonadBlockSigning is disabled until we can properly test
+# timeout event parsing from monad-ledger-tail logs.
+# class TaskMonadBlockSigning(Task):
+#     def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(10)):
+#         super().__init__("TaskMonadBlockSigning", services, checkEvery, notifyEvery)
+#         self.consecutiveTimeouts = 0
+#         self.lastRound = None
+#
+#     @staticmethod
+#     def isPluggable(services):
+#         return services.conf.getOrDefault("chain.validatorAddress") is not None
+#
+#     def run(self):
+#         service = self.s.conf.getOrDefault("monad.ledgerTailService")
+#         events = parseLedgerTailLogs(readLedgerTailLogs(service))
+#         if not events:
+#             return False
+#
+#         validator_addr = self.s.conf.getOrDefault("chain.validatorAddress")
+#         threshold = self.s.conf.getOrDefault("monad.timeoutThreshold")
+#         timeouts = 0
+#         recovered = False
+#
+#         for fields in events:
+#             event_type = fields.get("message", "")
+#             author = fields.get("author", "")
+#
+#             if event_type == "timeout":
+#                 round_num = fields.get("round")
+#                 if round_num != self.lastRound:
+#                     timeouts += 1
+#                     self.lastRound = round_num
+#
+#             elif event_type in ("finalized_block", "proposed_block"):
+#                 if (
+#                     author
+#                     and validator_addr
+#                     and author.lower() == validator_addr.lower()
+#                 ):
+#                     if self.consecutiveTimeouts > 0:
+#                         recovered = True
+#                     timeouts = 0
+#
+#         self.consecutiveTimeouts += timeouts
+#
+#         if recovered:
+#             missed = self.consecutiveTimeouts
+#             self.consecutiveTimeouts = 0
+#             return self.notify(
+#                 f"validator recovered after {missed} missed rounds {Emoji.SyncOk}",
+#                 level=NotificationLevel.Info,
+#             )
+#
+#         if self.consecutiveTimeouts >= threshold:
+#             count = self.consecutiveTimeouts
+#             return self.notify(
+#                 f"validator missed {count} rounds (timeout) {Emoji.BlockMiss}",
+#                 level=NotificationLevel.Warning,
+#             )
+#
+#         return False
 
 
 class TaskMonadBlockProductionReport(Task):
@@ -158,12 +160,36 @@ class TaskMonadBlockProductionReport(Task):
         self.currentEpoch = None
         self.reportedEpoch = None
         self.lastRound = None
-        self.proposed = 0
-        self.totalProposed = 0
+        self.produced = 0
+        self.totalBlocks = 0
+        self.authors = set()
 
     @staticmethod
     def isPluggable(services):
         return services.conf.getOrDefault("chain.validatorAddress") is not None
+
+    def _report(self, name):
+        num_validators = len(self.authors) if self.authors else 1
+        expected = self.totalBlocks / num_validators
+        missed = max(0, round(expected) - self.produced)
+
+        self.s.persistent.timedAdd(
+            f"{name}_blocksProduced", self.produced)
+        self.s.persistent.timedAdd(
+            f"{name}_blocksExpected", round(expected))
+        self.s.persistent.timedAdd(
+            f"{name}_blocksMissed", missed)
+
+        self.notify(
+            f"epoch {self.currentEpoch} ended: "
+            f"produced {self.produced}, "
+            f"expected {round(expected)}, "
+            f"missed {missed} {Emoji.BlockProd}",
+            noCheck=True,
+            level=NotificationLevel.Info,
+        )
+
+        self.reportedEpoch = self.currentEpoch
 
     def run(self):
         service = self.s.conf.getOrDefault("monad.ledgerTailService")
@@ -188,42 +214,25 @@ class TaskMonadBlockProductionReport(Task):
                 self.currentEpoch = epoch
 
             if epoch != self.currentEpoch:
-                # Only report if we haven't reported this epoch yet
                 if self.currentEpoch != self.reportedEpoch:
-                    perc = 0
-                    if self.totalProposed > 0:
-                        perc = self.proposed / self.totalProposed * 100
+                    self._report(name)
 
-                    self.s.persistent.timedAdd(
-                        f"{name}_blocksProduced", self.proposed)
-                    self.s.persistent.timedAdd(
-                        f"{name}_blocksChecked", self.totalProposed)
-                    self.s.persistent.timedAdd(
-                        f"{name}_blocksPercentageProduced", perc)
-
-                    self.notify(
-                        f"epoch {self.currentEpoch} ended: proposed "
-                        f"{self.proposed}/{self.totalProposed} blocks "
-                        f"({perc:.1f}%) {Emoji.BlockProd}",
-                        noCheck=True,
-                        level=NotificationLevel.Info,
-                    )
-
-                    self.reportedEpoch = self.currentEpoch
-
-                self.proposed = 0
-                self.totalProposed = 0
+                self.produced = 0
+                self.totalBlocks = 0
+                self.authors = set()
                 self.currentEpoch = epoch
 
             if event_type == "proposed_block":
-                self.totalProposed += 1
                 author = fields.get("author", "")
+                self.totalBlocks += 1
+                if author:
+                    self.authors.add(author.lower())
                 if (
                     author
                     and validator_addr
                     and author.lower() == validator_addr.lower()
                 ):
-                    self.proposed += 1
+                    self.produced += 1
 
             self.lastRound = round_num
 
@@ -283,7 +292,6 @@ class Monad(Chain):
     BLOCKTIME = 1
     EP = "http://localhost:8080/"
     CUSTOM_TASKS = [
-        TaskMonadBlockSigning,
         TaskMonadBlockProductionReport,
         TaskMonadFinalizationLag,
     ]
