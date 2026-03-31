@@ -71,7 +71,7 @@ And it offers many features thanks to the following tasks:
 - **TaskNearCheckKicked**
 
 **Monad** specific tasks:
-- **TaskMonadBlockSigning**: check if the validator is missing rounds by monitoring timeout events from the monad-ledger-tail journal, and notify on recovery
+- **TaskMonadTimeoutDetection**: detect skipped rounds for the validator with per-timeout alerts and recovery notifications when a finalized block is observed
 - **TaskMonadBlockProductionReport**: report block production stats at the end of each epoch, including the number of blocks proposed by the validator and the overall percentage
 - **TaskMonadFinalizationLag**: check if the time between block creation and finalization exceeds a configurable threshold (default 5000ms), and notify when lag recovers
 

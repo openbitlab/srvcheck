@@ -22,6 +22,7 @@
 
 import json
 import subprocess
+import time as _time
 
 from ..notification import Emoji, NotificationLevel
 from ..tasks import Task, hours, minutes
@@ -89,67 +90,85 @@ def parseLedgerTailLogs(logs):
     return events
 
 
-# TODO: TaskMonadBlockSigning is disabled until we can properly test
-# timeout event parsing from monad-ledger-tail logs.
-# class TaskMonadBlockSigning(Task):
-#     def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(10)):
-#         super().__init__("TaskMonadBlockSigning", services, checkEvery, notifyEvery)
-#         self.consecutiveTimeouts = 0
-#         self.lastRound = None
-#
-#     @staticmethod
-#     def isPluggable(services):
-#         return services.conf.getOrDefault("chain.validatorAddress") is not None
-#
-#     def run(self):
-#         service = self.s.conf.getOrDefault("monad.ledgerTailService")
-#         events = parseLedgerTailLogs(readLedgerTailLogs(service))
-#         if not events:
-#             return False
-#
-#         validator_addr = self.s.conf.getOrDefault("chain.validatorAddress")
-#         threshold = self.s.conf.getOrDefault("monad.timeoutThreshold")
-#         timeouts = 0
-#         recovered = False
-#
-#         for fields in events:
-#             event_type = fields.get("message", "")
-#             author = fields.get("author", "")
-#
-#             if event_type == "timeout":
-#                 round_num = fields.get("round")
-#                 if round_num != self.lastRound:
-#                     timeouts += 1
-#                     self.lastRound = round_num
-#
-#             elif event_type in ("finalized_block", "proposed_block"):
-#                 if (
-#                     author
-#                     and validator_addr
-#                     and author.lower() == validator_addr.lower()
-#                 ):
-#                     if self.consecutiveTimeouts > 0:
-#                         recovered = True
-#                     timeouts = 0
-#
-#         self.consecutiveTimeouts += timeouts
-#
-#         if recovered:
-#             missed = self.consecutiveTimeouts
-#             self.consecutiveTimeouts = 0
-#             return self.notify(
-#                 f"validator recovered after {missed} missed rounds {Emoji.SyncOk}",
-#                 level=NotificationLevel.Info,
-#             )
-#
-#         if self.consecutiveTimeouts >= threshold:
-#             count = self.consecutiveTimeouts
-#             return self.notify(
-#                 f"validator missed {count} rounds (timeout) {Emoji.BlockMiss}",
-#                 level=NotificationLevel.Warning,
-#             )
-#
-#         return False
+class TaskMonadTimeoutDetection(Task):
+    def __init__(self, services, checkEvery=minutes(1), notifyEvery=minutes(1)):
+        super().__init__(
+            "TaskMonadTimeoutDetection", services, checkEvery, notifyEvery
+        )
+        self.timeoutCount = 0
+        self.lastTimeoutRound = None
+        self.seenEvents = {}
+
+    @staticmethod
+    def isPluggable(services):
+        return services.conf.getOrDefault("chain.validatorAddress") is not None
+
+    def _dedupe(self, event_type, round_num):
+        """Returns True if event should be processed, False if already seen."""
+        key = f"{event_type}:{round_num}"
+        now = _time.time()
+        if key in self.seenEvents and self.seenEvents[key] > now:
+            return False
+        self.seenEvents[key] = now + 120
+        # Cleanup expired entries
+        if len(self.seenEvents) > 4000:
+            self.seenEvents = {
+                k: v for k, v in self.seenEvents.items() if v > now
+            }
+        return True
+
+    def run(self):
+        service = self.s.conf.getOrDefault("monad.ledgerTailService")
+        events = parseLedgerTailLogs(readLedgerTailLogs(service))
+        if not events:
+            return False
+
+        validator_addr = self.s.conf.getOrDefault("chain.validatorAddress")
+        if not validator_addr:
+            return False
+        validator_norm = validator_addr.lower().removeprefix("0x")
+        threshold = self.s.conf.getOrDefault("monad.timeoutThreshold")
+
+        for fields in events:
+            event_type = fields.get("message", "")
+            author = fields.get("author", fields.get("validator", ""))
+            round_num = fields.get("round", fields.get("height",
+                                   fields.get("round_number")))
+
+            if not self._dedupe(event_type, round_num):
+                continue
+
+            author_norm = author.lower().removeprefix("0x") if author else ""
+
+            if event_type == "timeout":
+                if round_num == self.lastTimeoutRound:
+                    continue
+                self.lastTimeoutRound = round_num
+
+                if author_norm == validator_norm:
+                    self.timeoutCount += 1
+                    level = NotificationLevel.Warning \
+                        if self.timeoutCount >= threshold \
+                        else NotificationLevel.Info
+                    self.notify(
+                        f"timeout detected (#{self.timeoutCount}/{threshold}) "
+                        f"round {round_num} {Emoji.BlockMiss}",
+                        noCheck=True,
+                        level=level,
+                    )
+
+            elif event_type == "finalized_block":
+                if author_norm == validator_norm and self.timeoutCount > 0:
+                    self.notify(
+                        f"recovered on round {round_num}, "
+                        f"previous timeout streak: "
+                        f"{self.timeoutCount} {Emoji.SyncOk}",
+                        noCheck=True,
+                        level=NotificationLevel.Info,
+                    )
+                    self.timeoutCount = 0
+
+        return False
 
 
 class TaskMonadBlockProductionReport(Task):
@@ -207,7 +226,7 @@ class TaskMonadBlockProductionReport(Task):
 
             # Skip already processed events
             if self.lastRound is not None and round_num is not None \
-                    and str(round_num) <= str(self.lastRound):
+                    and int(round_num) <= self.lastRound:
                 continue
 
             if self.currentEpoch is None:
@@ -234,7 +253,8 @@ class TaskMonadBlockProductionReport(Task):
                 ):
                     self.produced += 1
 
-            self.lastRound = round_num
+            if round_num is not None:
+                self.lastRound = int(round_num)
 
         return False
 
@@ -292,6 +312,7 @@ class Monad(Chain):
     BLOCKTIME = 1
     EP = "http://localhost:8080/"
     CUSTOM_TASKS = [
+        TaskMonadTimeoutDetection,
         TaskMonadBlockProductionReport,
         TaskMonadFinalizationLag,
     ]
