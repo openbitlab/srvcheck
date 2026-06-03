@@ -73,22 +73,14 @@ class TaskAptosValidatorPerformanceCheck(Task):
         if self.prevEp != ep:
             self.prevEp = ep
             performance = self.s.chain.getValidatorPerformance()
-            thisEpoch = list(
-                filter(lambda item: item, performance[1].replace("|", "").split(" "))
-            )
-            lastEpoch = list(
-                filter(lambda item: item, performance[0].replace("|", "").split(" "))
-            )
+            thisEpoch = list(filter(lambda item: item, performance[1].replace("|", "").split(" ")))
+            lastEpoch = list(filter(lambda item: item, performance[0].replace("|", "").split(" ")))
             activeStakeOut = (
                 "active stake increased"
                 if int(thisEpoch[7]) > int(lastEpoch[7])
                 else "active stake remained the same"
             )
-            stakeEmoji = (
-                Emoji.ActStake
-                if int(thisEpoch[7]) > int(lastEpoch[7])
-                else Emoji.LowBal
-            )
+            stakeEmoji = Emoji.ActStake if int(thisEpoch[7]) > int(lastEpoch[7]) else Emoji.LowBal
             activeStakeOut += f", {thisEpoch[7]} active stake {stakeEmoji}"
             print(
                 f"#Debug TaskAptosValidatorPerformanceCheck: {ep}, {lastEpoch[0]} new "
@@ -137,9 +129,7 @@ class TaskAptosCurrentConsensusStuck(Task):
             self.prev = cur_round
             return False
         if cur_round == self.prev:
-            return self.notify(
-                f"consensus round stuck {Emoji.BlockMiss}", NotificationLevel.Error
-            )
+            return self.notify(f"consensus round stuck {Emoji.BlockMiss}", NotificationLevel.Error)
 
         self.prev = cur_round
         return False
@@ -221,9 +211,7 @@ class TaskAptosStateSyncCheck(Task):
         if self.prev is None:
             self.prev = sync
         elif sync == self.prev:
-            return self.notify(
-                f"is not state synching {Emoji.Stuck}", NotificationLevel.Error
-            )
+            return self.notify(f"is not state synching {Emoji.Stuck}", NotificationLevel.Error)
 
         self.prev = sync
         return False
@@ -285,9 +273,7 @@ class Aptos(Chain):
 
     def getAptosStateSyncVersion(self):
         out = requests.get(self.EP_METRICS).text.split("\n")
-        state_sync = [
-            s for s in out if "aptos_state_sync_version" in s and "synced" in s
-        ]
+        state_sync = [s for s in out if "aptos_state_sync_version" in s and "synced" in s]
         return state_sync
 
     def getNetwork(self):

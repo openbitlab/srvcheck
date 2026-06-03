@@ -49,12 +49,8 @@ except:
 
 ConfSet.addItem(ConfItem("chain.type", None, str, "type of the chain"))
 ConfSet.addItem(ConfItem("chain.name", None, str, "name of the chain"))
-ConfSet.addItem(
-    ConfItem("tasks.autoRecover", False, bool, "enable auto recoverable tasks")
-)
-ConfSet.addItem(
-    ConfItem("tasks.disabled", "", str, "comma separated list of disabled tasks")
-)
+ConfSet.addItem(ConfItem("tasks.autoRecover", False, bool, "enable auto recoverable tasks"))
+ConfSet.addItem(ConfItem("tasks.disabled", "", str, "comma separated list of disabled tasks"))
 ConfSet.addItem(ConfItem("chain.service", None, str, "node service name"))
 ConfSet.addItem(ConfItem("tasks.govAdmin", None, str, "Proposal voter nickname"))
 ConfSet.addItem(ConfItem("tasks.exporterPort", 9001, int, "Prometheus exporter port"))
@@ -89,9 +85,7 @@ class Services:
 
 def main():  # noqa: C901
     cf = "/etc/srvcheck.conf"
-    parser = argparse.ArgumentParser(
-        description="Srvcheck helps you to monitor blockchain nodes."
-    )
+    parser = argparse.ArgumentParser(description="Srvcheck helps you to monitor blockchain nodes.")
     parser.add_argument("--config", type=str, default=cf, help="srvcheck config file")
     args = parser.parse_args()
     cf = args.config

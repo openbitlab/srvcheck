@@ -37,9 +37,7 @@ from .chain import Chain
 
 class TaskCelestiaDasCheckSamplesHeight(Task):
     def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(5)):
-        super().__init__(
-            "TaskCelestiaDasCheckSamplesHeight", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskCelestiaDasCheckSamplesHeight", services, checkEvery, notifyEvery)
         self.since = None
         self.prev = None
         self.oc = 0
@@ -75,9 +73,7 @@ class TaskCelestiaDasCheckSamplesHeight(Task):
 
             if self.oc > 0:
                 elapsed = elapsedToString(self.since)
-                self.notify(
-                    f"is back sampling new headers (after {elapsed}) {Emoji.SyncOk}"
-                )
+                self.notify(f"is back sampling new headers (after {elapsed}) {Emoji.SyncOk}")
 
             self.prev = bhSampled
             self.since = time.time()
@@ -91,28 +87,18 @@ class TaskExporter(Task):
     def __init__(self, services, checkEvery=seconds(15), notifyEvery=seconds(15)):
         super().__init__("TaskExporter", services, checkEvery, notifyEvery)
         metrics = {
-            Gauge(
-                "peers_count", "Number of connected peers"
-            ): self.s.chain.getPeerCount,
+            Gauge("peers_count", "Number of connected peers"): self.s.chain.getPeerCount,
             Gauge("node_height", "Node height"): self.s.chain.getHeight,
             Gauge("network_height", "Network height"): self.s.chain.getNetworkHeight,
             Counter(
                 "out_of_sync_counter", "How many times node has gone out of sync"
             ): self.s.chain.isSynching,
-            Gauge(
-                "first_header", "First sampled header height"
-            ): self.s.chain.getFirstHeader,
-            Gauge(
-                "latest_header", "First sampled header height"
-            ): self.s.chain.getLatestHeader,
-            Gauge(
-                "finished_s", "Processing time of block range"
-            ): self.s.chain.getProcessingTime,
+            Gauge("first_header", "First sampled header height"): self.s.chain.getFirstHeader,
+            Gauge("latest_header", "First sampled header height"): self.s.chain.getLatestHeader,
+            Gauge("finished_s", "Processing time of block range"): self.s.chain.getProcessingTime,
             Gauge("errors", "Header sampling errors"): self.s.chain.getErrors,
         }
-        self.exporter = Exporter(
-            metrics, self.s.chain.conf.getOrDefault("tasks.exporterPort")
-        )
+        self.exporter = Exporter(metrics, self.s.chain.conf.getOrDefault("tasks.exporterPort"))
 
     @staticmethod
     def isPluggable(services):
@@ -246,15 +232,10 @@ class CelestiaDas(Chain):
         serv = self.conf.getOrDefault("chain.service")
         if serv:
             synching = (
-                Bash(f'journalctl -u {serv} --no-pager --since "1 min ago"')
-                .value()
-                .split("\n")
+                Bash(f'journalctl -u {serv} --no-pager --since "1 min ago"').value().split("\n")
             )
             synchingBlocks = [b for b in synching if "finished syncing headers" in b]
-        return (
-            not self.rpcCall("das.SamplingStats")["catch_up_done"]
-            and len(synchingBlocks) > 0
-        )
+        return not self.rpcCall("das.SamplingStats")["catch_up_done"] and len(synchingBlocks) > 0
 
     def getSamplesHeight(self):
         # RPC call return inconsistent data (different from logs)
@@ -262,9 +243,7 @@ class CelestiaDas(Chain):
         lastSampledHeadRpc = self.rpcCall("das.SamplingStats")["head_of_sampled_chain"]
         if serv:
             blocks = (
-                Bash(f'journalctl -u {serv} --no-pager --since "1 min ago"')
-                .value()
-                .split("\n")
+                Bash(f'journalctl -u {serv} --no-pager --since "1 min ago"').value().split("\n")
             )
             lastSampledHead = json.loads(
                 re.findall(
@@ -280,9 +259,7 @@ class CelestiaDas(Chain):
         serv = self.conf.getOrDefault("chain.service")
         if serv:
             blocks = (
-                Bash(f'journalctl -u {serv} --no-pager --since "1 min ago"')
-                .value()
-                .split("\n")
+                Bash(f'journalctl -u {serv} --no-pager --since "1 min ago"').value().split("\n")
             )
             self.LATEST_SAMPLED_HEADERS = json.loads(
                 re.findall(

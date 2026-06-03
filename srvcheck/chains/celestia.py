@@ -101,9 +101,7 @@ class TaskCelestiaNewProposal(Task):
             return proposal["content"]["title"]
 
     def notifyAboutLatestProposals(self, proposals, key):
-        nProposalUnread = [
-            prop for prop in proposals if int(self.prev[0][key]) < int(prop[key])
-        ]
+        nProposalUnread = [prop for prop in proposals if int(self.prev[0][key]) < int(prop[key])]
         c = len(nProposalUnread)
         if c > 0:
             out = f"got {c} new proposal: "
@@ -111,9 +109,7 @@ class TaskCelestiaNewProposal(Task):
                 if i > 0 and i < len(nProposalUnread):
                     out += "\n"
                 out += f"{self.getProposalTitle(p)}"
-                out += (
-                    f'{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
-                )
+                out += f'{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
             self.prev = proposals
             if self.admin_gov:
                 out += f" {self.admin_gov}"
@@ -138,9 +134,7 @@ class TaskCelestiaNewProposal(Task):
 
 class TaskCelestiaPositionChanged(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(10)):
-        super().__init__(
-            "TaskCelestiaPositionChanged", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskCelestiaPositionChanged", services, checkEvery, notifyEvery)
         self.ACTIVE_SET = self.s.conf.getOrDefault("chain.activeSet")
         self.prev = None
 
@@ -162,13 +156,9 @@ class TaskCelestiaPositionChanged(Task):
             self.prev = npos
 
             if npos > prev:
-                return self.notify(
-                    f"position decreased from {prev} to {npos} {Emoji.PosDown}"
-                )
+                return self.notify(f"position decreased from {prev} to {npos} {Emoji.PosDown}")
             else:
-                return self.notify(
-                    f"position increased from {prev} to {npos} {Emoji.PosUp}"
-                )
+                return self.notify(f"position increased from {prev} to {npos} {Emoji.PosUp}")
 
         return False
 
@@ -183,14 +173,14 @@ class TaskCelestiaPositionChanged(Task):
             it = active_s // 100
             diff = active_s
             for i in range(it):
-                active_vals += self.s.chain.rpcCall(
-                    "validators", [bh, str(i + 1), "100"]
-                )["validators"]
+                active_vals += self.s.chain.rpcCall("validators", [bh, str(i + 1), "100"])[
+                    "validators"
+                ]
                 diff -= 100
             if diff > 0:
-                active_vals += self.s.chain.rpcCall(
-                    "validators", [bh, str(i + 2), "100"]
-                )["validators"]
+                active_vals += self.s.chain.rpcCall("validators", [bh, str(i + 2), "100"])[
+                    "validators"
+                ]
         else:
             active_vals += self.s.chain.rpcCall("validators", [bh, "1", str(active_s)])[
                 "validators"
@@ -205,9 +195,7 @@ class TaskCelestiaPositionChanged(Task):
 
 class TaskCelestiaBridgeNotRunningError(Task):
     def __init__(self, services, checkEvery=minutes(5), notifyEvery=hours(1)):
-        super().__init__(
-            "TaskCelestiaBridgeNotRunningError", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskCelestiaBridgeNotRunningError", services, checkEvery, notifyEvery)
         self.prev = None
 
     @staticmethod
@@ -270,19 +258,13 @@ class Celestia(Chain):
         raise Exception("Abstract getNetwork()")
 
     def isStaking(self):
-        return (
-            True
-            if int(self.rpcCall("status")["validator_info"]["voting_power"]) > 0
-            else False
-        )
+        return True if int(self.rpcCall("status")["validator_info"]["voting_power"]) > 0 else False
 
     def getValidatorAddress(self):
         return self.rpcCall("status")["validator_info"]["address"]
 
     def getSignatures(self, height):
-        return self.rpcCall("block", [str(height)])["block"]["last_commit"][
-            "signatures"
-        ]
+        return self.rpcCall("block", [str(height)])["block"]["last_commit"]["signatures"]
 
     def isSynching(self):
         return self.rpcCall("status")["sync_info"]["catching_up"]
@@ -296,11 +278,7 @@ class Celestia(Chain):
             props = Bash(cmd + " q gov proposals --reverse --output json")
             if props:
                 proposals = json.loads(props.value())["proposals"]
-                return [
-                    p
-                    for p in proposals
-                    if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-                ]
+                return [p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
             else:
                 return []
         raise Exception("No service file name specified!")

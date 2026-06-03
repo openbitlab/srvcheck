@@ -43,9 +43,7 @@ class TaskSolanaHealthError(Task):
             self.s.chain.getHealth()
             return False
         except:
-            return self.notify(
-                f"health error! {Emoji.Health}", level=NotificationLevel.Error
-            )
+            return self.notify(f"health error! {Emoji.Health}", level=NotificationLevel.Error)
 
 
 class TaskSolanaDelinquentCheck(Task):
@@ -111,9 +109,7 @@ class TaskSolanaLastVoteCheck(Task):
 
 class TaskSolanaEpochActiveStake(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(24)):
-        super().__init__(
-            "TaskSolanaEpochActiveStake", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskSolanaEpochActiveStake", services, checkEvery, notifyEvery)
         self.prev = None
         self.prevEpoch = None
 
@@ -265,9 +261,9 @@ class Solana(Chain):
 
     def getBlockProduction(self):
         identityAddr = self.getIdentityAddress()
-        b_prod_info = self.rpcCall("getBlockProduction", [{"identity": identityAddr}])[
-            "value"
-        ]["byIdentity"]
+        b_prod_info = self.rpcCall("getBlockProduction", [{"identity": identityAddr}])["value"][
+            "byIdentity"
+        ]
         if len(b_prod_info) == 1:
             return b_prod_info[identityAddr]
         raise Exception("No blocks produced in the current epoch")
@@ -288,9 +284,7 @@ class Solana(Chain):
         return Bash(f"solana address --url {self.EP}").value()
 
     def getGeneralValidatorsInfo(self):
-        return json.loads(
-            Bash(f"solana validators --url {self.EP} --output json-compact").value()
-        )
+        return json.loads(Bash(f"solana validators --url {self.EP} --output json-compact").value())
 
     def getValidators(self):
         return self.getGeneralValidatorsInfo()["validators"]

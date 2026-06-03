@@ -30,10 +30,7 @@ def elapsedToString(since):
     elapsed = time.time() - since
     if (elapsed / 60) > 60:
         elapsed = (
-            str(int(elapsed / 60 / 60))
-            + " hours and "
-            + str(int(elapsed / 60 % 60))
-            + " minutes"
+            str(int(elapsed / 60 / 60)) + " hours and " + str(int(elapsed / 60 % 60)) + " minutes"
         )
     elif (elapsed / 60) >= 1:
         elapsed = str(int(elapsed / 60)) + " minutes"

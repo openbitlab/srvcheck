@@ -92,9 +92,7 @@ class Chain:
         """Returns software local version"""
         gh_repo = self.conf.getOrDefault("chain.ghRepository")
         if gh_repo:
-            c = requests.get(
-                f"https://api.github.com/repos/{gh_repo}/releases/latest"
-            ).json()
+            c = requests.get(f"https://api.github.com/repos/{gh_repo}/releases/latest").json()
             return c["tag_name"]
         raise Exception("No github repo specified!")
 

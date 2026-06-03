@@ -29,9 +29,7 @@ from .chain import Chain
 
 class TaskTezosValidatorProcesses(Task):
     def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(10)):
-        super().__init__(
-            "TaskTezosValidatorProcesses", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskTezosValidatorProcesses", services, checkEvery, notifyEvery)
 
     @staticmethod
     def isPluggable(services):

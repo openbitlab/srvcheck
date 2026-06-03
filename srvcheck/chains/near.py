@@ -150,9 +150,7 @@ class TaskNearCheckKicked(Task):
                         )
                     elif "NotEnoughStake" in reason:
                         stake = int(reason["NotEnoughStake"]["stake_u128"][:-24])
-                        threshold = int(
-                            reason["NotEnoughStake"]["threshold_u128"][:-24]
-                        )
+                        threshold = int(reason["NotEnoughStake"]["threshold_u128"][:-24])
                         missing = threshold - stake
                         return self.notify(
                             f"kicked out, missing {missing} Near to stake threshold {Emoji.LowBal}",

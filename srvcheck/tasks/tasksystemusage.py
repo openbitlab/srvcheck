@@ -57,12 +57,8 @@ class TaskSystemUsage(Task):
         # Saving historical data
         if self.s.persistent.hasPassedNHoursSinceLast(self.name + "_ramSize", 23):
             self.s.persistent.timedAdd(self.name + "_diskUsed", usage.diskUsed)
-            self.s.persistent.timedAdd(
-                self.name + "_diskPercentageUsed", usage.diskPercentageUsed
-            )
-            self.s.persistent.timedAdd(
-                self.name + "_diskUsedByLog", usage.diskUsedByLog
-            )
+            self.s.persistent.timedAdd(self.name + "_diskPercentageUsed", usage.diskPercentageUsed)
+            self.s.persistent.timedAdd(self.name + "_diskUsedByLog", usage.diskUsedByLog)
             self.s.persistent.timedAdd(self.name + "_ramUsed", usage.ramUsed)
             self.s.persistent.timedAdd(self.name + "_ramSize", usage.ramSize)
 
@@ -83,9 +79,7 @@ class TaskSystemUsage(Task):
         pc.subplots.append(sp)
 
         sp = SubPlotConf()
-        sp.data = cropData(
-            self.s.persistent.getN(self.name + "_diskPercentageUsed", 30)
-        )
+        sp.data = cropData(self.s.persistent.getN(self.name + "_diskPercentageUsed", 30))
         sp.label = "Used (%)"
         sp.data_mod = lambda y: y
         sp.color = "r"

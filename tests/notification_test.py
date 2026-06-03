@@ -35,9 +35,7 @@ class TestNotification(unittest.TestCase):
         mn = MockNotification(ConfSet({}))
         n.addProvider(mn)
         n.send("Hello WorldS!")
-        self.assertEqual(
-            mn.getFirstEvent()[0], urllib.parse.quote("#Test Hello WorldS!")
-        )
+        self.assertEqual(mn.getFirstEvent()[0], urllib.parse.quote("#Test Hello WorldS!"))
 
     def test_sendPhoto(self):
         n = Notification("Test")

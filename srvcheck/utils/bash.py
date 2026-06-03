@@ -34,9 +34,7 @@ class Bash(object):
         self.bash(*args, **kwargs)
 
     def bash(self, cmd, env=None, stdout=PIPE, stderr=PIPE, timeout=None, sync=True):
-        self.p = Popen(
-            cmd, shell=True, stdout=stdout, stdin=PIPE, stderr=stderr, env=env
-        )
+        self.p = Popen(cmd, shell=True, stdout=stdout, stdin=PIPE, stderr=stderr, env=env)
         if sync:
             self.sync(timeout)
         return self
