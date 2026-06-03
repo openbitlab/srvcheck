@@ -24,14 +24,10 @@ from ..notification import Emoji, NotificationLevel
 from ..utils import Bash, ConfItem, ConfSet, toGB
 from . import Task, hours, minutes
 
-ConfSet.addItem(
-    ConfItem("system.log_size_threshold", 4, int, "threshold for log size in GB")
-)
+ConfSet.addItem(ConfItem("system.log_size_threshold", 4, int, "threshold for log size in GB"))
 ConfSet.addItem(ConfItem("system.disk_limit", 90, int, "threshold for disk usage in %"))
 ConfSet.addItem(
-    ConfItem(
-        "system.disk_limit_critical", 96, int, "critical threshold for disk usage in %"
-    )
+    ConfItem("system.disk_limit_critical", 96, int, "critical threshold for disk usage in %")
 )
 
 
@@ -65,11 +61,7 @@ class TaskSystemDiskAlert(Task):
                     toGB(usage.diskUsed),
                     Emoji.Disk,
                 ),
-                level=(
-                    NotificationLevel.Error
-                    if is_critical
-                    else NotificationLevel.Warning
-                ),
+                level=(NotificationLevel.Error if is_critical else NotificationLevel.Warning),
                 noCheck=True if is_critical else False,
             )
 

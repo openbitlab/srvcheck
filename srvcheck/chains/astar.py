@@ -34,9 +34,7 @@ from .substrate import (
 
 class TaskAstarBlockProductionCheck(Task):
     def __init__(self, services, checkEvery=minutes(30), notifyEvery=minutes(30)):
-        super().__init__(
-            "TaskAstarBlockProductionCheck", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskAstarBlockProductionCheck", services, checkEvery, notifyEvery)
         self.prev = None
 
     @staticmethod
@@ -75,10 +73,7 @@ class Astar(Substrate):
     def detect(conf):
         try:
             Astar(conf).getVersion()
-            return (
-                Astar(conf).isParachain()
-                and Astar(conf).getNodeName() == "Astar Collator"
-            )
+            return Astar(conf).isParachain() and Astar(conf).getNodeName() == "Astar Collator"
         except:
             return False
 

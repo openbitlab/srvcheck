@@ -1,0 +1,18 @@
+[flake8]
+ignore =
+    E722,
+    E203,
+    E231,
+    W503,
+    RST201,RST203,RST301,
+max_line_length = 100
+max-complexity = 10
+exclude =
+    __pycache__
+    .tox
+    .git
+    bin
+    build
+    venv
+rst-roles =
+    py:func,py:mod,mod

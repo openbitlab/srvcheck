@@ -29,9 +29,7 @@ import requests
 from .bash import Bash
 from .confset import ConfItem, ConfSet
 
-ConfSet.addItem(
-    ConfItem("chain.mountPoint", defaultValue="/", description="Mount point")
-)
+ConfSet.addItem(ConfItem("chain.mountPoint", defaultValue="/", description="Mount point"))
 
 
 def toGB(size):
@@ -81,9 +79,7 @@ class SystemUsage:
         return (
             "\n\tBoot time: %s\n\tDisk (size, used, %%): %.1fG %.1fG %d%% (/var/log: %.1fG)\n\tRam (size, used, free): %.1fG %.1fG %.1fG\n\tCPU: %d%%"  # noqa: 501
             % (
-                datetime.datetime.fromtimestamp(self.bootTime).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                datetime.datetime.fromtimestamp(self.bootTime).strftime("%Y-%m-%d %H:%M:%S"),
                 toGB(self.diskSize),
                 toGB(self.diskUsed),
                 self.diskPercentageUsed,

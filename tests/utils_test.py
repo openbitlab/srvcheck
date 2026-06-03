@@ -90,9 +90,7 @@ class TestUtilConfSet(unittest.TestCase):
     ConfSet.addItem(ConfItem("chain.service", None, str))
 
     def test_getFromConfExistingString(self):
-        self.assertEqual(
-            self.conf.getOrDefault("chain.endpoint"), "http://localhost:8080"
-        )
+        self.assertEqual(self.conf.getOrDefault("chain.endpoint"), "http://localhost:8080")
 
     def test_getFromConfExistingInteger(self):
         self.assertEqual(self.conf.getOrDefault("chain.blockTime"), 10)
@@ -101,9 +99,7 @@ class TestUtilConfSet(unittest.TestCase):
         self.assertEqual(self.conf.getOrDefault("chain.service"), None)
 
     def test_getFromConfNotExistingDefault(self):
-        self.assertEqual(
-            self.conf.getOrDefault("chain.activeSet", failSafe=True, cast=int), None
-        )
+        self.assertEqual(self.conf.getOrDefault("chain.activeSet", failSafe=True, cast=int), None)
 
     def test_getFromConfExistingButEmptyDefault(self):
         self.assertEqual(self.conf.getOrDefault("chain.type"), "mockchain")

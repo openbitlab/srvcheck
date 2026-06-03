@@ -82,9 +82,7 @@ class TestTaskSystemCpuAlert(unittest.TestCase):
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
             n.getFirstEvent()[0],
-            urllib.parse.quote(
-                "#CPU average usage is above 90% (99% in the last 2 checks) ⚠ "
-            ),
+            urllib.parse.quote("#CPU average usage is above 90% (99% in the last 2 checks) ⚠ "),
         )
 
 
@@ -104,9 +102,7 @@ class TestTaskSystemDiskAlert(unittest.TestCase):
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
             n.getFirstEvent()[0],
-            urllib.parse.quote(
-                "#disk usage is above 90% (99%) (/var/log: 0.0G, /: 0.0G) 💾 "
-            ),
+            urllib.parse.quote("#disk usage is above 90% (99%) (/var/log: 0.0G, /: 0.0G) 💾 "),
         )
 
 
@@ -187,10 +183,7 @@ class TestTaskChainStuck(unittest.TestCase):
         self.assertEqual(
             n.getFirstEvent()[0],
             urllib.parse.quote(
-                "#chain is stuck at block 1 since 0 seconds (1)"
-                + " "
-                + Emoji.Stuck
-                + " "
+                "#chain is stuck at block 1 since 0 seconds (1)" + " " + Emoji.Stuck + " "
             ),
         )
 

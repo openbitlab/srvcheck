@@ -38,9 +38,7 @@ class TaskChainSynching(Task):
         if self.s.chain.isSynching():
             self.prev = True
             if self.s.chain.TYPE == "Validator node":
-                return self.notify(
-                    f"chain is synching {Emoji.Slow}", level=NotificationLevel.Info
-                )
+                return self.notify(f"chain is synching {Emoji.Slow}", level=NotificationLevel.Info)
             else:
                 return self.notify(
                     f"is synching data availability samples {Emoji.Slow}",
@@ -49,9 +47,7 @@ class TaskChainSynching(Task):
         elif self.prev:
             self.prev = False
             if self.s.chain.TYPE == "Validator node":
-                return self.notify(
-                    f"chain synched {Emoji.SyncOk}", level=NotificationLevel.Info
-                )
+                return self.notify(f"chain synched {Emoji.SyncOk}", level=NotificationLevel.Info)
             else:
                 return self.notify(
                     f"synched all data availability samples {Emoji.SyncOk}",

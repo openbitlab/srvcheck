@@ -28,9 +28,7 @@ MIN_PEERS = 3
 
 class TaskChainLowPeer(Task):
     def __init__(self, services):
-        super().__init__(
-            "TaskChainLowPeer", services, services.chain.BLOCKTIME * 2, minutes(5)
-        )
+        super().__init__("TaskChainLowPeer", services, services.chain.BLOCKTIME * 2, minutes(5))
 
     @staticmethod
     def isPluggable(services):

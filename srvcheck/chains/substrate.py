@@ -51,9 +51,7 @@ class SubstrateInterfaceWrapper(SubstrateInterface):
 
     def rpc_request(self, method, params):
         try:
-            return super(SubstrateInterfaceWrapper, self).rpc_request(
-                method=method, params=params
-            )
+            return super(SubstrateInterfaceWrapper, self).rpc_request(method=method, params=params)
         except (  # noqa: F841
             WebSocketConnectionClosedException,
             ConnectionRefusedError,
@@ -68,9 +66,7 @@ class TaskSubstrateTurboflakesGrade(Task):
     "https://github.com/turboflakes/one-t/blob/main/LEGENDS.md#val-performance-report-legend"
 
     def __init__(self, services, checkEvery=minutes(5), notifyEvery=minutes(5)):
-        super().__init__(
-            "TaskSubstrateTurboflakesGrade", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskSubstrateTurboflakesGrade", services, checkEvery, notifyEvery)
 
         self.lastRatio = None
         self.ratio = None
@@ -106,9 +102,7 @@ class TaskSubstrateTurboflakesGrade(Task):
             return None
 
         mvr = float(data["para_summary"]["mv"]) / float(
-            data["para_summary"]["iv"]
-            + data["para_summary"]["ev"]
-            + data["para_summary"]["mv"]
+            data["para_summary"]["iv"] + data["para_summary"]["ev"] + data["para_summary"]["mv"]
         )
         bvr = 1.0 - mvr
         bar = float(data["para"]["bitfields"]["ba"]) / float(
@@ -195,9 +189,7 @@ class TaskSubstrateNewReferenda(Task):
 
     @staticmethod
     def getCount(si):
-        return si.query(
-            module="Referenda", storage_function="ReferendumCount", params=[]
-        ).value
+        return si.query(module="Referenda", storage_function="ReferendumCount", params=[]).value
 
     @staticmethod
     def isPluggable(services):
@@ -223,9 +215,7 @@ class TaskSubstrateNewReferenda(Task):
 
 class TaskSubstrateReferendaVotingCheck(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=60 * 10 * 60):
-        super().__init__(
-            "TaskSubstrateReferendaVotingCheck", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskSubstrateReferendaVotingCheck", services, checkEvery, notifyEvery)
         self.prev = None
 
     @staticmethod
@@ -248,9 +238,7 @@ class TaskSubstrateReferendaVotingCheck(Task):
 
         vt = {}
         vtl = []
-        for votes in map(
-            lambda y: list(y.values())[0]["votes"], map(lambda y: y[1].value, result)
-        ):
+        for votes in map(lambda y: list(y.values())[0]["votes"], map(lambda y: y[1].value, result)):
             for n, v in votes:
                 vt[n] = v
                 vtl.append(n)
@@ -277,9 +265,7 @@ class TaskSubstrateReferendaVotingCheck(Task):
 
 class TaskSubstrateRelayChainStuck(Task):
     def __init__(self, services, checkEvery=30, notifyEvery=60 * 5):
-        super().__init__(
-            "TaskSubstrateRelayChainStuck", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskSubstrateRelayChainStuck", services, checkEvery, notifyEvery)
         self.prev = None
 
     @staticmethod
@@ -299,9 +285,7 @@ class TaskSubstrateRelayChainStuck(Task):
 
 class TaskSubstrateBlockProductionReport(Task):
     def __init__(self, services, checkEvery=minutes(10), notifyEvery=hours(1)):
-        super().__init__(
-            "TaskSubstrateBlockProductionReport", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskSubstrateBlockProductionReport", services, checkEvery, notifyEvery)
         self.prev = None
         self.lastBlockChecked = None
         self.totalBlockChecked = 0
@@ -350,8 +334,7 @@ class TaskSubstrateBlockProductionReport(Task):
                     self.s.conf.getOrDefault("chain.name") + "_blocksProduced", self.oc
                 )
                 self.s.persistent.timedAdd(
-                    self.s.conf.getOrDefault("chain.name")
-                    + "_blocksPercentageProduced",
+                    self.s.conf.getOrDefault("chain.name") + "_blocksPercentageProduced",
                     perc,
                 )
                 self.oc = 0
@@ -444,9 +427,7 @@ class TaskSubstrateBlockProductionReportCharts(Task):
 
         sp = SubPlotConf()
         sp.data = cropData(
-            self.s.persistent.getN(
-                self.s.conf.getOrDefault("chain.name") + "_blocksProduced", 30
-            )
+            self.s.persistent.getN(self.s.conf.getOrDefault("chain.name") + "_blocksProduced", 30)
         )
         sp.label = "Produced"
         sp.data_mod = lambda y: y
@@ -454,9 +435,7 @@ class TaskSubstrateBlockProductionReportCharts(Task):
 
         sp.label2 = "Produced"
         sp.data2 = cropData(
-            self.s.persistent.getN(
-                self.s.conf.getOrDefault("chain.name") + "_blocksChecked", 30
-            )
+            self.s.persistent.getN(self.s.conf.getOrDefault("chain.name") + "_blocksChecked", 30)
         )
         sp.data_mod2 = lambda y: y
         sp.color2 = "r"
@@ -507,9 +486,7 @@ class Substrate(Chain):
     def __init__(self, conf):
         super().__init__(conf)
         self.sub_iface = SubstrateInterfaceWrapper(url=self.EP)
-        self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"][
-            "methods"
-        ]
+        self.rpcMethods = self.sub_iface.rpc_request("rpc_methods", [])["result"]["methods"]
 
     def rpcCall(self, method, params=[]):
         if method in self.rpcMethods:
@@ -580,9 +557,7 @@ class Substrate(Chain):
             return False
 
     def getSession(self):
-        result = self.sub_iface.query(
-            module="Session", storage_function="CurrentIndex", params=[]
-        )
+        result = self.sub_iface.query(module="Session", storage_function="CurrentIndex", params=[])
         return result.value
 
     def getEra(self):

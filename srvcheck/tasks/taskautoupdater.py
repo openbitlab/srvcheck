@@ -61,9 +61,7 @@ class TaskAutoUpdater(Task):
 
     def run(self):
         nTag = (
-            requests.get(
-                "https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags"
-            )
+            requests.get("https://api.github.com/repos/openbitlab/srvcheck/git/refs/tags")
             .json()[-1]["ref"]
             .split("/")[-1]
             .split("v")[1]
@@ -88,7 +86,5 @@ class TaskAutoUpdater(Task):
                 self.notify("Srvcheck update succesfully, restarting...")
                 Bash("systemctl restart node-monitor.service")
             else:
-                self.notify(
-                    "Srvcheck is unable to auto-update itself. Please check the logs."
-                )
+                self.notify("Srvcheck is unable to auto-update itself. Please check the logs.")
                 print(inst_val)

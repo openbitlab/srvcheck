@@ -23,10 +23,7 @@
 import unittest
 import urllib.parse
 
-from srvcheck.chains.tendermint import (
-    TaskTendermintHealthError,
-    TaskTendermintNewProposal,
-)
+from srvcheck.chains.tendermint import TaskTendermintHealthError, TaskTendermintNewProposal
 from srvcheck.notification.notification import Emoji
 from tests.mocks.mockchain import (
     MockChainTendermint,
@@ -131,9 +128,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
             n.getFirstEvent()[0],
-            urllib.parse.quote(
-                "#got 1 new proposal: upgrade client " + Emoji.Proposal + " "
-            ),
+            urllib.parse.quote("#got 1 new proposal: upgrade client " + Emoji.Proposal + " "),
         )
 
     def test_alert_first_run(self):
@@ -143,9 +138,7 @@ class TestTaskTendermintNewProposal(unittest.TestCase):
         self.assertEqual(len(n.events), 1)
         self.assertEqual(
             n.getFirstEvent()[0],
-            urllib.parse.quote(
-                "#got latest proposal: \nupgrade client " + Emoji.Proposal + " "
-            ),
+            urllib.parse.quote("#got latest proposal: \nupgrade client " + Emoji.Proposal + " "),
         )
 
     def test_alert_multiple_proposals(self):

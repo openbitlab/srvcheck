@@ -131,18 +131,12 @@ class TaskTendermintNewProposal(Task):
     def getProposalTitle(self, proposal):
         if "id" in proposal:
             content = proposal["messages"][0]
-            return (
-                content["content"]["title"]
-                if "content" in content
-                else proposal["title"]
-            )
+            return content["content"]["title"] if "content" in content else proposal["title"]
         elif "proposal_id" in proposal:
             return proposal["content"]["title"]
 
     def notifyAboutLatestProposals(self, proposals, key):
-        nProposalUnread = [
-            prop for prop in proposals if int(self.prev[0][key]) < int(prop[key])
-        ]
+        nProposalUnread = [prop for prop in proposals if int(self.prev[0][key]) < int(prop[key])]
         c = len(nProposalUnread)
         if c > 0:
             out = f"got {c} new proposal: "
@@ -150,9 +144,7 @@ class TaskTendermintNewProposal(Task):
                 if i > 0 and i < len(nProposalUnread):
                     out += "\n"
                 out += f"{self.getProposalTitle(p)}"
-                out += (
-                    f'{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
-                )
+                out += f'{" " + Emoji.Proposal if i == len(nProposalUnread) - 1 else ""}'
             self.prev = proposals
             if self.admin_gov:
                 out += f" {self.admin_gov}"
@@ -183,9 +175,7 @@ class TaskTendermintNewProposal(Task):
 
 class TaskTendermintProposalVotingCheck(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(6)):
-        super().__init__(
-            "TaskTendermintProposalVotingCheck", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskTendermintProposalVotingCheck", services, checkEvery, notifyEvery)
         self.prev = None
         self.validator_address = self.s.conf.getOrDefault("chain.validatorAddress")
 
@@ -197,9 +187,7 @@ class TaskTendermintProposalVotingCheck(Task):
 
     def getValidatorProposalVote(self, proposalId):
         cmd = self.s.chain.getNodeBinary()
-        stderr = Bash(
-            cmd + f" q gov vote {proposalId} {self.validator_address}"
-        ).error()
+        stderr = Bash(cmd + f" q gov vote {proposalId} {self.validator_address}").error()
         if f"voter: {self.validator_address} not found for proposal" in stderr:
             return proposalId
         return None
@@ -230,9 +218,7 @@ class TaskTendermintProposalVotingCheck(Task):
 
 class TaskTendermintPositionChanged(Task):
     def __init__(self, services, checkEvery=hours(1), notifyEvery=hours(10)):
-        super().__init__(
-            "TaskTendermintPositionChanged", services, checkEvery, notifyEvery
-        )
+        super().__init__("TaskTendermintPositionChanged", services, checkEvery, notifyEvery)
         self.ACTIVE_SET = self.s.conf.getOrDefault("chain.activeSet")
         self.prev = None
 
@@ -280,14 +266,14 @@ class TaskTendermintPositionChanged(Task):
             it = active_s // 100
             diff = active_s
             for i in range(it):
-                active_vals += self.s.chain.rpcCall(
-                    "validators", [bh, str(i + 1), "100"]
-                )["validators"]
+                active_vals += self.s.chain.rpcCall("validators", [bh, str(i + 1), "100"])[
+                    "validators"
+                ]
                 diff -= 100
             if diff > 0:
-                active_vals += self.s.chain.rpcCall(
-                    "validators", [bh, str(i + 2), "100"]
-                )["validators"]
+                active_vals += self.s.chain.rpcCall("validators", [bh, str(i + 2), "100"])[
+                    "validators"
+                ]
         else:
             active_vals += self.s.chain.rpcCall("validators", [bh, "1", str(active_s)])[
                 "validators"
@@ -314,9 +300,7 @@ class TaskTendermintHealthError(Task):
             self.s.chain.getHealth()
             return False
         except:
-            return self.notify(
-                f"health error! {Emoji.Health}", level=NotificationLevel.Error
-            )
+            return self.notify(f"health error! {Emoji.Health}", level=NotificationLevel.Error)
 
 
 class Tendermint(Chain):
@@ -368,9 +352,7 @@ class Tendermint(Chain):
             self.rpcCall("block", [str(current_height)])["block"]["header"]["time"]
         )
         past_block_time = parser.parse(
-            self.rpcCall("block", [str(current_height - span)])["block"]["header"][
-                "time"
-            ]
+            self.rpcCall("block", [str(current_height - span)])["block"]["header"]["time"]
         )
         time_diff = (current_block_time - past_block_time).total_seconds()
         average_block_time = int(time_diff / span)
@@ -383,26 +365,20 @@ class Tendermint(Chain):
         raise Exception("Abstract getNetwork()")
 
     def isStaking(self):
-        return (
-            True
-            if int(self.rpcCall("status")["validator_info"]["voting_power"]) > 0
-            else False
-        )
+        return True if int(self.rpcCall("status")["validator_info"]["voting_power"]) > 0 else False
 
     def getValidatorAddress(self):
         return self.rpcCall("status")["validator_info"]["address"]
 
     def getSignatures(self, height):
-        return self.rpcCall("block", [str(height)])["block"]["last_commit"][
-            "signatures"
-        ]
+        return self.rpcCall("block", [str(height)])["block"]["last_commit"]["signatures"]
 
     def isSynching(self):
         return self.rpcCall("status")["sync_info"]["catching_up"]
 
     def getLatestProposals(self):
         cmd = self.getNodeBinary()
-        proposals = json.loads(
-            Bash(cmd + " q gov proposals --reverse --output json").value()
-        )["proposals"]
+        proposals = json.loads(Bash(cmd + " q gov proposals --reverse --output json").value())[
+            "proposals"
+        ]
         return [p for p in proposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]

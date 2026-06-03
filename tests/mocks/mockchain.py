@@ -118,11 +118,7 @@ class MockChainTendermint(MockChain):
     ]
 
     def getLatestProposals(self):
-        return [
-            p
-            for p in self.latestProposals
-            if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-        ]
+        return [p for p in self.latestProposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
 
 
 class MockChainTendermint1(MockChain):
@@ -174,11 +170,7 @@ class MockChainTendermint1(MockChain):
     ]
 
     def getLatestProposals(self):
-        return [
-            p
-            for p in self.latestProposals
-            if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-        ]
+        return [p for p in self.latestProposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
 
 
 class MockChainTendermint2(MockChain):
@@ -208,11 +200,7 @@ class MockChainTendermint2(MockChain):
     ]
 
     def getLatestProposals(self):
-        return [
-            p
-            for p in self.latestProposals
-            if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-        ]
+        return [p for p in self.latestProposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
 
 
 class MockChainTendermint3(MockChain):
@@ -286,11 +274,7 @@ class MockChainTendermint3(MockChain):
     ]
 
     def getLatestProposals(self):
-        return [
-            p
-            for p in self.latestProposals
-            if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"
-        ]
+        return [p for p in self.latestProposals if p["status"] == "PROPOSAL_STATUS_VOTING_PERIOD"]
 
 
 class MockChainNear(MockChain):
