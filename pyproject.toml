@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "srvcheck"
+dynamic = ["version"]
+description = ""
+authors = [{ name = "Davide Gessa", email = "gessadavide@gmail.com" }]
+requires-python = ">=3.8"
+dependencies = [
+    "requests",
+    "psutil",
+    "substrate-interface",
+    "packaging_legacy",
+    "python-dateutil",
+    "matplotlib",
+    "prometheus-client",
+]
+
+[project.scripts]
+srvcheck = "srvcheck.main:main"
+srvcheck-defaultconf = "srvcheck.main:defaultConf"
+
+[tool.setuptools.packages.find]
+include = ["srvcheck*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "srvcheck.__version__" }
+
+[tool.isort]
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+
+[tool.black]
+line-length = 100
+
+[tool.mypy]
+ignore_missing_imports = true
