@@ -12,6 +12,7 @@ It supports these ecosystems:
 - **Solana**
 - **Aptos**
 - **Near**
+- **Monad**
 
 It also supports all types of Celestia nodes:
 - **Light node**
@@ -69,6 +70,11 @@ And it offers many features thanks to the following tasks:
 - **TaskNearCheckProposal**
 - **TaskNearCheckKicked**
 
+**Monad** specific tasks:
+- **TaskMonadTimeoutDetection**: detect skipped rounds for the validator with per-timeout alerts and recovery notifications when a finalized block is observed
+- **TaskMonadBlockProductionReport**: report block production stats at the end of each epoch, including the number of blocks proposed by the validator and the overall percentage
+- **TaskMonadFinalizationLag**: check if the time between block creation and finalization exceeds a configurable threshold (default 5000ms), and notify when lag recovers
+
 **Celestia** Light and Full node specific tasks:
 - **TaskNodeIsSynching**: check if the node is synching blocks
 - **TaskCelestiaDasCheckSamplesHeight**: check if the node is sampling new headers
@@ -101,7 +107,7 @@ errorLevelChatId =
 ## Install & Update
 
 ```bash 
-curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> <optional_flags>
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> -a <validator_address> <optional_flags>
 ```
 
 The install script can be customized with these flags (most of them are optional):
@@ -133,6 +139,12 @@ Install with `--git` flag to get alerts on new node releases (in this case [cele
 
 ```bash 
 curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> --git celestiaorg/celestia-node
+```
+
+Install for a **Monad** validator node (the validator address is the compressed SECP public key from monad-ledger-tail logs)
+
+```bash
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s monad-ledger-tail -a <validator_secp_pubkey> -b 1 -n "Monad Validator"
 ```
 
 Install with `--admin` and `--gov` flags to be tagged once new proposals are out
@@ -186,7 +198,7 @@ enabled = true
 [chain]
 ; name to be displayed on notifications
 name = 
-; chain type (e.g. "tendermint" | "substrate")
+; chain type (e.g. "tendermint" | "substrate" | "monad")
 type = 
 ; systemd service name
 service = 
@@ -206,6 +218,15 @@ localVersion =
 validatorAddress = 
 ; mount point
 mountPoint = 
+
+; monad specific settings
+[monad]
+; systemd service name for monad-ledger-tail
+ledgerTailService = monad-ledger-tail
+; number of consecutive timeouts before alerting
+timeoutThreshold = 5
+; finalization lag threshold in milliseconds before alerting
+finalizationLagThreshold = 5000
 
 ; task specific settings
 [tasks]
