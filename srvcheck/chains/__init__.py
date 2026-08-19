@@ -27,6 +27,7 @@ from .celestiadas import CelestiaDas  # noqa: F401
 from .chain import Chain  # noqa: F401
 from .moonbeam import Moonbeam  # noqa: F401
 from .near import Near  # noqa: F401
+from .octra import Octra  # noqa: F401
 from .solana import Solana  # noqa: F401
 from .substrate import Polkasama, Substrate  # noqa: F401
 from .systemparachain import SystemParachain  # noqa: F401
@@ -46,4 +47,5 @@ CHAINS = [
     SystemParachain,
     Celestia,
     CelestiaDas,
+    Octra,
 ]
