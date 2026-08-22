@@ -309,3 +309,37 @@ class MockChainNear(MockChain):
 class MockChainNoBlockHash(MockChain):
     def getBlockHash(self):
         raise Exception("No block hash")
+
+
+class MockChainOctra(MockChain):
+    TYPE = "octra"
+    validatorAddress = "octGkyJTiAJBvcRAjpmPU77DfqWYn1QiWaFWcD9Pn88wWPS"
+    voting = True
+    votingReason = None
+    consensusPeers = 13
+    membership = {"active": True, "scheduled": False, "activateEpoch": None, "setSize": 13}
+    balance = 10145.25
+    weight = 1.0
+    version = "75d9ed1d73a0e3731f7d7a4262d29b672ad3c24e"
+    latestVersion = "75d9ed1d73a0e3731f7d7a4262d29b672ad3c24e"
+
+    def isValidator(self):
+        return self.validatorAddress is not None
+
+    def getValidatorAddress(self):
+        return self.validatorAddress
+
+    def getVotingStatus(self):
+        return (self.voting, self.votingReason)
+
+    def getConsensusPeerCount(self):
+        return self.consensusPeers
+
+    def getValidatorMembership(self):
+        return self.membership
+
+    def getValidatorBalance(self):
+        return self.balance
+
+    def getValidatorWeight(self):
+        return self.weight

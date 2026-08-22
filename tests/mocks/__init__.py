@@ -20,6 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .mockchain import MockChain, MockChainNoBlockHash, MockChainTendermint
+from .mockchain import MockChain, MockChainNoBlockHash, MockChainOctra, MockChainTendermint
 from .mocknotification import MockNotification
 from .mocksystem import MockSystem

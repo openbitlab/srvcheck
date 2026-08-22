@@ -12,6 +12,7 @@ It supports these ecosystems:
 - **Solana**
 - **Aptos**
 - **Near**
+- **Octra**
 
 It also supports all types of Celestia nodes:
 - **Light node**
@@ -68,6 +69,13 @@ And it offers many features thanks to the following tasks:
 - **TaskNearChunksMissed**
 - **TaskNearCheckProposal**
 - **TaskNearCheckKicked**
+
+**Octra** specific tasks:
+- **TaskOctraVotingStatus**: check if the validator stopped voting (`voting = disabled`), alerting after a configurable number of consecutive checks and notifying on recovery
+- **TaskOctraValidatorActive**: check if the validator is in the active validator set (or scheduled for activation)
+- **TaskOctraConsensusPeers**: check if the number of consensus peers is too low
+- **TaskOctraNewRelease**: check if the running `source_commit` differs from the upstream `SOURCE_COMMIT` of the lite_node repository
+- **TaskOctraBalanceReport**: daily report of the validator account balance (where rewards accrue), its delta, and the consensus weight
 
 **Celestia** Light and Full node specific tasks:
 - **TaskNodeIsSynching**: check if the node is synching blocks
@@ -141,6 +149,12 @@ Install with `--admin` and `--gov` flags to be tagged once new proposals are out
 curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s <service_name> --admin @MyTelegramUsername --gov
 ```
 
+Install for an **Octra** validator node (lite_node). The validator address is auto-detected from the node RPC (`octra_runtimeVersion`), but can be forced with `-a`; the node RPC is expected at `http://127.0.0.1:8080` (override with `--endpoint`). The node runs under PM2, so use the PM2 systemd unit (e.g. `pm2-octra`) as service name
+
+```bash 
+curl -s https://raw.githubusercontent.com/openbitlab/srvcheck/main/install.sh | bash -s -- -t <tg_chat_id> <tg_token> -s pm2-octra -b 10 -n "Octra Validator"
+```
+
 #### Update
 
 ```
@@ -186,7 +200,7 @@ enabled = true
 [chain]
 ; name to be displayed on notifications
 name = 
-; chain type (e.g. "tendermint" | "substrate")
+; chain type (e.g. "tendermint" | "substrate" | "octra")
 type = 
 ; systemd service name
 service = 
@@ -217,6 +231,13 @@ autoRecover = true
 govAdmin =
 ; Prometheus exporter port
 exporterPort =
+
+; octra specific settings
+[octra]
+; minimum number of consensus peers before alerting
+minConsensusPeers = 4
+; consecutive checks (5 min apart) with voting disabled before alerting
+votingDisabledChecks = 2
 ```
 
 ## Prometheus custom exporter: metrics
